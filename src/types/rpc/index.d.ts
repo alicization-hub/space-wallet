@@ -172,47 +172,47 @@ declare namespace IMempool {
 
 declare namespace IWallet {
   export type Created = {
-    /* The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path. */
+    /** The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path. */
     name: string
-    /* Warning message if wallet was not loaded cleanly. */
+    /** Warning message if wallet was not loaded cleanly. */
     warning: string
   }
 
   export type Scanning = {
-    /* elapsed seconds since scan start */
+    /** elapsed seconds since scan start */
     duration: number
-    /* scanning progress percentage [0.0, 1.0] */
+    /** scanning progress percentage [0.0, 1.0] */
     progress: number
   }
 
   export type Info = {
-    /* the wallet name */
+    /** the wallet name */
     walletname: string
-    /* the wallet version */
+    /** the wallet version */
     walletversion: number
-    /* the database format (bdb or sqlite) */
+    /** the database format (bdb or sqlite) */
     format: string
-    /* the total number of transactions in the wallet */
+    /** the total number of transactions in the wallet */
     txcount: number
-    /* the UNIX epoch time of the oldest pre-generated key in the key pool. Legacy wallets only. */
+    /** the UNIX epoch time of the oldest pre-generated key in the key pool. Legacy wallets only. */
     keypoololdest: number
-    /* how many new keys are pre-generated (only counts external keys) */
+    /** how many new keys are pre-generated (only counts external keys) */
     keypoolsize: number
-    /* how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used) */
+    /** how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used) */
     keypoolsize_hd_internal: number
-    /* the UNIX epoch time until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets) */
+    /** the UNIX epoch time until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets) */
     unlocked_until?: number
-    /* the transaction fee configuration, set in BTC/kvB */
+    /** the transaction fee configuration, set in BTC/kvB */
     paytxfee: string
-    /* the Hash160 of the HD seed (only present when HD is enabled) */
+    /** the Hash160 of the HD seed (only present when HD is enabled) */
     hdseedid?: string
-    /* false if privatekeys are disabled for this wallet (enforced watch-only wallet) */
+    /** false if privatekeys are disabled for this wallet (enforced watch-only wallet) */
     private_keys_enabled: boolean
-    /* whether this wallet tracks clean/dirty coins in terms of reuse */
+    /** whether this wallet tracks clean/dirty coins in terms of reuse */
     avoid_reuse: boolean
-    /* current scanning details, or false if no scan is in progress */
+    /** current scanning details, or false if no scan is in progress */
     scanning: GetwalletinfoScanning
-    /* whether this wallet uses descriptors for scriptPubKey management */
+    /** whether this wallet uses descriptors for scriptPubKey management */
     descriptors: boolean
   }
 }

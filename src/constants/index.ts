@@ -1,4 +1,3 @@
-
 import { Locales } from './enum'
 import { ENV } from './env'
 
@@ -29,3 +28,5 @@ export const headers = new Headers({
   [CONTENT_TYPE]: 'application/json',
   [CONTENT_LANG]: Locales.US
 })
+
+export const blockExplorerUrl = 'https://www.blockchain.com/explorer'

@@ -4,6 +4,8 @@ import { getAddress, NETWORK } from '@scure/btc-signer'
 
 import { wordlist } from '@/constants/wordlists/english'
 
+import { derivationPathBuilder } from './derivation'
+
 /**
  * The amount of satoshis in one BTC.
  */
@@ -58,53 +60,71 @@ export class AddressBuilder {
   }
 
   /**
+   * Generate a address.
+   *
+   * P2PKH (Pay-to-Public-Key-Hash).
+   * P2WPKH (Pay-to-Witness-Public-Key-Hash).
+   * P2TR (Pay-to-Taproot) address.
+   *
+   * @param purpose - The purpose of the address.
+   * @param accountNo - The account index.
+   * @param addressIndex - The address index.
+   * @param isChange - The change boolean.
+   */
+  public create(purpose: 44 | 84 | 86, accountNo: number, addressIndex: number, isChange?: boolean) {
+    const derivationPath = derivationPathBuilder()
+      .purpose(purpose)
+      .coinType(0)
+      .account(accountNo)
+      .change(isChange ? 1 : 0)
+      .address(addressIndex)
+      .build()
+    const privateKey = this.createPrivateKey(derivationPath)
+    const type: 'pkh' | 'wpkh' | 'tr' = {
+      44: 'pkh',
+      84: 'wpkh',
+      86: 'tr'
+    }[purpose] as any
+
+    return {
+      derivationPath,
+      address: getAddress(type, privateKey, NETWORK)!
+    }
+  }
+
+  /**
    * Generate a P2PKH (Pay-to-Public-Key-Hash).
    *
-   * @param {number} accountNo - The account index.
-   * @param {number} addressIndex - The address index.
-   * @param {boolean} isChange - The change boolean.
+   * @param accountNo - The account index.
+   * @param addressIndex - The address index.
+   * @param isChange - The change boolean.
    * @returns P2PKH legacy address.
    */
   public legacy(accountNo: number, addressIndex: number, isChange?: boolean) {
-    const derivationPath = `m/44'/0'/${accountNo}'/${isChange ? 1 : 0}/${addressIndex}`
-    const privateKey = this.createPrivateKey(derivationPath)
-    return {
-      derivationPath,
-      address: getAddress('pkh', privateKey, NETWORK)
-    }
+    return this.create(44, accountNo, addressIndex, isChange)
   }
 
   /**
    * Generate a P2WPKH (Pay-to-Witness-Public-Key-Hash).
    *
-   * @param {number} accountNo - The account index.
-   * @param {number} addressIndex - The address index.
-   * @param {boolean} isChange - The change boolean.
+   * @param accountNo - The account index.
+   * @param addressIndex - The address index.
+   * @param isChange - The change boolean.
    * @returns P2WPKH SegWit address.
    */
   public segWit(accountNo: number, addressIndex: number, isChange?: boolean) {
-    const derivationPath = `m/84'/0'/${accountNo}'/${isChange ? 1 : 0}/${addressIndex}`
-    const privateKey = this.createPrivateKey(derivationPath)
-    return {
-      derivationPath,
-      address: getAddress('wpkh', privateKey, NETWORK)
-    }
+    return this.create(84, accountNo, addressIndex, isChange)
   }
 
   /**
    * Generate a P2TR (Pay-to-Taproot).
    *
-   * @param {number} accountNo - The account index.
-   * @param {number} addressIndex - The address index.
-   * @param {boolean} isChange - The change boolean.
+   * @param accountNo - The account index.
+   * @param addressIndex - The address index.
+   * @param isChange - The change boolean.
    * @returns P2TR Taproot address.
    */
   public taproot(accountNo: number, addressIndex: number, isChange?: boolean) {
-    const derivationPath = `m/86'/0'/${accountNo}'/${isChange ? 1 : 0}/${addressIndex}`
-    const privateKey = this.createPrivateKey(derivationPath)
-    return {
-      derivationPath,
-      address: getAddress('tr', privateKey, NETWORK)
-    }
+    return this.create(86, accountNo, addressIndex, isChange)
   }
 }

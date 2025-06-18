@@ -5,8 +5,8 @@ import { pick } from 'ramda'
 import { mnemonic } from '../bitcoin/mnemonic'
 import { ciphers } from '../ciphers'
 import { db } from '../db'
+import { useAuthGuard } from '../jwt/guard'
 import { password } from '../password'
-import { nanoId } from '../utils'
 import type { CreateWalletValidator, UpdateWalletValidator } from './wallet.validator'
 
 /**
@@ -30,11 +30,11 @@ export async function createWallet(values: CreateWalletValidator) {
     const passphraseEncrypted = await ciphers.encrypt(values.passphrase, passwordHash)
 
     const result = await db.wallets.create({
-      slug: nanoId(), // Generate a unique identifier for the wallet
+      slug: values.name.trim().toLowerCase().replace(/\s+/g, '-'), // Generate a unique identifier for the wallet
       name: values.name,
       mnemonic: mnemonicEncrypted,
       passphrase: passphraseEncrypted,
-      password: passwordHash,
+      passkey: passwordHash,
       accounts: [],
       balance: {
         confirmed: 0,
@@ -43,7 +43,8 @@ export async function createWallet(values: CreateWalletValidator) {
         total: 0,
         spendable: 0
       },
-      lastSyncHeight: 0
+      lastSyncHeight: 0,
+      timestamp: null
     })
 
     return {
@@ -63,9 +64,10 @@ export async function createWallet(values: CreateWalletValidator) {
 /**
  * Updates an existing wallet using the provided values.
  */
-export async function updateWallet(id: string, values: UpdateWalletValidator) {
+export async function updateWallet(values: UpdateWalletValidator) {
   try {
-    await db.wallets.update(id, values)
+    const auth = await useAuthGuard()
+    await db.wallets.update(auth.sub, values)
 
     return {
       success: true,
@@ -83,9 +85,10 @@ export async function updateWallet(id: string, values: UpdateWalletValidator) {
 /**
  * Deletes a wallet.
  */
-export async function deleteWallet(id: string) {
+export async function deleteWallet() {
   try {
-    await db.wallets.delete(id)
+    const auth = await useAuthGuard()
+    await db.wallets.delete(auth.sub)
 
     return {
       success: true,

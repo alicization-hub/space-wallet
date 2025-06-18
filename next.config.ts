@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
 
   experimental: {
     serverActions: {
-      bodySizeLimit: '4mb'
+      bodySizeLimit: '2mb'
     }
   },
 
@@ -19,11 +19,12 @@ const nextConfig: NextConfig = {
 
   logging: {
     fetches: {
-      fullUrl: true
+      fullUrl: false,
+      hmrRefreshes: false
     }
   },
 
-  poweredByHeader: true,
+  poweredByHeader: false,
   productionBrowserSourceMaps: false
 }
 

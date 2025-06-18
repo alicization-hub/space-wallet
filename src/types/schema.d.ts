@@ -1,44 +1,20 @@
 declare namespace Schema {
-  export type Table = 'wallets' | 'transactions'
+  export type Table = 'wallets' | 'accounts' | 'addresses' | 'transactions'
 }
 
 declare namespace Wallet {
   export type Schema = {
-    id: string
+    id: UUID
     slug: string
     name: string
     mnemonic: string
     passphrase: string
     passkey: string
-    accounts: Account[]
+    accounts: Account.Schema[]
     balance: Balance
     lastSyncHeight: number
-    createdAt: string
-    updatedAt?: string | null
-  }
-
-  export type Account = {
-    id: string
-    purpose: 44 | 84 | 86
-    coinType: number
-    index: number
-    addresses?: Address[]
-    utxos?: UTXO[]
-    createdAt: string
-    updatedAt?: string | null
-  }
-
-  export type Address = {
-    accountId: Account['id']
-    address: string
-    index: number
-    /* `0` = receive, `1` = change */
-    change: 0 | 1
-    type: 'pkh' | 'wpkh' | 'tr'
-    /* Unit in satoshi. */
-    balance: number
-    hasUTXO?: boolean
-    isUsed?: boolean
+    /** Start scan data. */
+    timestamp: string | null
     createdAt: string
     updatedAt?: string | null
   }
@@ -47,50 +23,61 @@ declare namespace Wallet {
    * Unit in satoshi.
    */
   export type Balance = {
-    /* Confirmed amount. */
+    /** Confirmed amount. */
     confirmed: number
-    /* Pending/Unconfirmed amount. */
+    /** Pending/Unconfirmed amount. */
     unconfirmed: number
-    /* Immature amount. */
+    /** Immature amount. */
     immature: number
-    /* Total amount. */
+    /** Total amount. */
     total: number
-    /* Actually spendable amount */
+    /** Actually spendable amount */
     spendable: number
+  }
+}
+
+declare namespace Account {
+  export type Schema = {
+    walletId: Wallet.Schema['id']
+    id: UUID
+    purpose: 44 | 84 | 86
+    coinType: number
+    index: number
+    addresses: Address[]
+    utxos: UTXO[]
+    createdAt: string
+    updatedAt?: string | null
+  }
+
+  export type Address = {
+    accountId: Account.Schema['id']
+    address: string
+    path: string
+    type: 'receive' | 'change'
+    index: number
+    balance: number
+    isUsed: boolean
+    createdAt: string
+    updatedAt?: string | null
   }
 
   export type UTXO = {
-    accountId: Account['id']
+    accountId: Account.Schema['id']
     txid: string
     vout: number
-    /* Unit in satoshi. */
+    /** Unit in satoshi. */
     amount: number
     address: string
     derivationPath: string
-    /* Hex string */
+    /** Hex string */
     scriptPubKey: string
     confirmations: number
-    /* `true` if the UTXO is spent */
+    /** `true` if the UTXO is spent */
     spent: boolean
-    /* txid of the transaction that spent the UTXO */
+    /** txid of the transaction that spent the UTXO */
     spendTxid?: string
     createdAt: string
     updatedAt: string
-  }
-
-  export type TwoFA = {
-    secretCode: string
-    recoveryCodes: RecoveryCode[]
-  }
-
-  export type RecoveryCode = {
-    /* argon2-hash of recovery code */
-    hash: string
-    used: boolean
-    /* Date string */
-    usedAt?: string
-    /* Date string */
-    createdAt: string
   }
 }
 
@@ -103,11 +90,11 @@ declare namespace Transaction {
     txid: string
     status: Status
     confirmations: number
-    /* Unix timestamp (block time) */
+    /** Unix timestamp (block time) */
     timestamp: number
-    /* Unit in satoshi */
+    /** Unit in satoshi */
     fee: number
-    /* Virtual bytes (vbytes) */
+    /** Virtual bytes (vbytes) */
     size: number
     inputs: {
       address: string

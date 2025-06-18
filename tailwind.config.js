@@ -9,11 +9,13 @@ module.exports = {
     './src/components/**/*.{ts,tsx}',
     './node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}'
   ],
-  plugins: [heroui({
+  plugins: [
+    heroui({
       themes: {
         dark: {
-          colors: {},
-        },
-      },
-    }),]
+          colors: {}
+        }
+      }
+    })
+  ]
 }
