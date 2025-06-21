@@ -141,7 +141,7 @@ export class RPCClient {
    */
   public async listUnspent(
     minConfirmation: number = 1,
-    maxConfirmation: number = 100,
+    maxConfirmation: number = 1e6,
     addresses: string[] = [],
     includeUnsafe: boolean = true,
     queryOptions?: Unspent.QueryOptions

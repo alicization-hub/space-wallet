@@ -9,12 +9,11 @@ export const envSchema = z.object({
 })
 
 export const dbSchema = z.object({
-  dir: z.string().default('%APP_DATA%/Local/Bitcoin/Wallets'),
-  passkey: z.string().default('passkey'),
-  security: z
-    .string()
-    .default('18')
-    .transform((value) => Math.pow(2, parseInt(value)))
+  host: z.string().default('127.0.0.1'),
+  port: z.string().default('5432'),
+  name: z.string().default('postgres'),
+  user: z.string().default('postgres'),
+  password: z.string().default('password')
 })
 
 export const rpcSchema = z.object({
@@ -26,31 +25,13 @@ export const rpcSchema = z.object({
 })
 
 export const ciphersSchema = z.object({
-  salt: z
-    .string()
-    .default('16')
-    .transform((value) => parseInt(value)), // 16 bytes salt
-  key: z
-    .string()
-    .default('32')
-    .transform((value) => parseInt(value)), // 32 bytes key for XChaCha20
-  nonce: z
-    .string()
-    .default('24')
-    .transform((value) => parseInt(value)), // 24 bytes nonce for XChaCha20
-  security: z
-    .string()
-    .default('20')
-    .transform((value) => Math.pow(2, parseInt(value))), // requires 1GB of RAM to calculate
+  salt: z.string().transform((value) => parseInt(value)),
+  key: z.string().transform((value) => parseInt(value)),
+  nonce: z.string().transform((value) => parseInt(value)),
+  security: z.string().transform((value) => Math.pow(2, parseInt(value))),
   argon2: z.object({
-    iterations: z
-      .string()
-      .default('4')
-      .transform((value) => parseInt(value)),
-    parallelism: z
-      .string()
-      .default('1')
-      .transform((value) => parseInt(value))
+    iterations: z.string().transform((value) => parseInt(value)),
+    parallelism: z.string().transform((value) => parseInt(value))
   })
 })
 

@@ -19,8 +19,8 @@ const store = create<States & Actions>((setState) => ({
   // STATE's
   appVersion: 'v0.1-beta (July, 2025)',
   loader: true,
-  theme: Theme.LIGHT,
-  language: Locales.TH,
+  theme: Theme.DARK,
+  language: Locales.UK,
 
   // ACTION's
   setLanguage: (language) => setState({ language }),

@@ -11,7 +11,7 @@ declare namespace Unspent {
     /** the script key */
     scriptPubKey: string
     /** the transaction output amount in BTC */
-    amount: string
+    amount: number
     /** The number of confirmations */
     confirmations: number
     /** The redeemScript if scriptPubKey is P2SH */

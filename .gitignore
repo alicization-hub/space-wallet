@@ -21,6 +21,7 @@
 /build
 
 # misc
+/src/libs/main.ts
 /certificates
 .DS_Store
 *.pem

@@ -5,7 +5,7 @@ export class password {
     return await hash(password, {
       type: argon2id,
       timeCost: 3,
-      memoryCost: 2 ** 16, // 64MB
+      memoryCost: Math.pow(2, 16), // 32MB
       parallelism: 1
     })
   }

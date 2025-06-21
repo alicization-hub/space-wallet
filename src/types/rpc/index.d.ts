@@ -192,27 +192,38 @@ declare namespace IWallet {
     walletversion: number
     /** the database format (bdb or sqlite) */
     format: string
+    /** the total balance of the wallet */
+    balance: number
+    /** the unconfirmed balance of the wallet */
+    unconfirmed_balance: number
+    /** the immature balance of the wallet */
+    immature_balance: number
     /** the total number of transactions in the wallet */
     txcount: number
-    /** the UNIX epoch time of the oldest pre-generated key in the key pool. Legacy wallets only. */
-    keypoololdest: number
     /** how many new keys are pre-generated (only counts external keys) */
     keypoolsize: number
     /** how many new keys are pre-generated for internal use (used for change outputs, only appears if the wallet is using this feature, otherwise external keys are used) */
     keypoolsize_hd_internal: number
-    /** the UNIX epoch time until which the wallet is unlocked for transfers, or 0 if the wallet is locked (only present for passphrase-encrypted wallets) */
-    unlocked_until?: number
     /** the transaction fee configuration, set in BTC/kvB */
     paytxfee: string
-    /** the Hash160 of the HD seed (only present when HD is enabled) */
-    hdseedid?: string
     /** false if privatekeys are disabled for this wallet (enforced watch-only wallet) */
     private_keys_enabled: boolean
     /** whether this wallet tracks clean/dirty coins in terms of reuse */
     avoid_reuse: boolean
     /** current scanning details, or false if no scan is in progress */
-    scanning: GetwalletinfoScanning
+    scanning: Scanning | null
     /** whether this wallet uses descriptors for scriptPubKey management */
     descriptors: boolean
+    /** whether this wallet uses an external signer */
+    external_signer: boolean
+    /** the Hash160 of the HD seed (only present when HD is enabled) */
+    blank: string
+    /** the creation time of the wallet */
+    birthtime: number
+    /** the last processed block */
+    lastprocessedblock: {
+      hash: string
+      height: number
+    }
   }
 }

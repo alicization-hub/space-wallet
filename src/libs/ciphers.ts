@@ -23,7 +23,7 @@ export class ciphers {
     const toBytes = utf8ToBytes(password)
     const key = await argon2idAsync(toBytes, salt, {
       t: CIPHERS.argon2.iterations,
-      m: security ?? CIPHERS.security,
+      m: security || CIPHERS.security,
       p: CIPHERS.argon2.parallelism,
       dkLen: CIPHERS.key
     })
@@ -65,7 +65,7 @@ export class ciphers {
     const toBytes = utf8ToBytes(password)
     const key = await argon2idAsync(toBytes, salt, {
       t: CIPHERS.argon2.iterations,
-      m: security ?? CIPHERS.security,
+      m: security || CIPHERS.security,
       p: CIPHERS.argon2.parallelism,
       dkLen: CIPHERS.key
     })

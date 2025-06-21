@@ -1,4 +1,4 @@
-# Project Alicization - Bitcoin Wallet.
+# Project Artifact - Bitcoin Wallet.
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with
 [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
@@ -10,14 +10,15 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with
 ## ⚙️ Tech Stack
 
 - [TypeScript](https://www.typescriptlang.org)
-- [Next.js](https://nextjs.org/docs/getting-started)
+- [Next.js](https://nextjs.org)
 - [HeroUI](https://www.heroui.com)
 - [Framer Motion](https://www.framer.com/motion)
-- [React Hook Form](https://www.react-hook-form.com)
 - [Tailwind CSS](https://tailwindcss.com)
-- [Tailwind Variants](https://tailwind-variants.org)
 - [Zod](https://zod.dev)
-- [TypeScript](https://www.typescriptlang.org)
+- [DrizzleORM](https://orm.drizzle.team)
+- [Argon2](https://github.com/ranisalt/node-argon2)
+- [@noble/*](https://paulmillr.com/noble/)
+- [@scure/*](https://paulmillr.com/noble/#scure)
 
 ## 🧩 VS Code Extensions
 
@@ -34,6 +35,7 @@ src               # App entry point.
 └─ constants      # Constant variable.
 └─ hooks          # Customs hooks.
 └─ libs           # Libraries, utilities.
+└─ services       # Services and scheduler.
 └─ styles         # Stylesheet.
 └─ types          # TypeScript decorators.
 ```
@@ -52,7 +54,7 @@ bun install
 bun run start:dev
 ```
 
-Open [http://localhost:8443](http://localhost:8443) with your browser to see the result.
+Open [http://localhost:8338](http://localhost:8338) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
@@ -73,7 +75,7 @@ installed correctly.
 ## 📦 Compiles and minifies for production
 
 ```bash
-pnpm build
+bun run build
 ```
 
 ## Learn More

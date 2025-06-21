@@ -26,7 +26,7 @@ export const headers = new Headers({
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE',
   'Access-Control-Allow-Headers': `Authorization, ${CONTENT_TYPE}, ${CONTENT_LANG}`,
   [CONTENT_TYPE]: 'application/json',
-  [CONTENT_LANG]: Locales.US
+  [CONTENT_LANG]: Locales.UK
 })
 
 export const blockExplorerUrl = 'https://www.blockchain.com/explorer'

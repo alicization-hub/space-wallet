@@ -8,10 +8,12 @@ export const ENV = envSchema.parse({
   TZ: process.env.NEXT_PUBLIC_APP_TZ
 })
 
-export const DATABASE = dbSchema.parse({
-  dir: process.env.DB_DIR,
-  passkey: process.env.DB_PASSKEY,
-  security: process.env.DB_SECURITY
+export const DB = dbSchema.parse({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  name: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD
 })
 
 export const RPC = rpcSchema.parse({

@@ -11,7 +11,6 @@ export async function txFormatter(rpcClient: RPCClient, tx: ITransaction.List) {
       const { address = '', hex: pkScript = '' } = prevOut.scriptPubKey || {}
 
       return {
-        coinbase: false,
         txid,
         output: vout,
         sigScript: scriptSig?.hex || '',
@@ -24,13 +23,19 @@ export async function txFormatter(rpcClient: RPCClient, tx: ITransaction.List) {
     })
   )
 
-  const outputs = raw.vout.map(({ value, scriptPubKey }) => ({
-    address: scriptPubKey?.address || '',
-    pkScript: scriptPubKey.hex,
-    value: Math.round(value * COIN),
-    spent: false,
-    spender: null
-  }))
+  const outputs = raw.vout
+    .filter(
+      ({ scriptPubKey }) =>
+        scriptPubKey?.address === tx.address ||
+        inputs.some(({ address }) => address === scriptPubKey?.address)
+    )
+    .map(({ value, scriptPubKey }) => ({
+      address: scriptPubKey?.address || '',
+      pkScript: scriptPubKey.hex,
+      value: Math.round(value * COIN),
+      spent: false,
+      spender: null
+    }))
 
   const inputSum = inputs.reduce((sum, { value }) => sum + value, 0)
   const outputSum = outputs.reduce((sum, { value }) => sum + value, 0)
@@ -46,7 +51,7 @@ export async function txFormatter(rpcClient: RPCClient, tx: ITransaction.List) {
     inputs,
     outputs,
     type: tx.category,
-    status: tx.confirmations > 0 ? (tx.abandoned ? 'abandoned' : 'confirmed') : 'pending',
+    status: tx.confirmations < 1 ? 'pending' : tx.abandoned ? 'abandoned' : 'confirmed',
     confirmations: tx.confirmations || 0,
     blockHash: tx.blockhash,
     blockHeight: tx.blockheight,

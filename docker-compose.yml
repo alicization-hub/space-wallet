@@ -1,0 +1,26 @@
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:17.5
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+      TZ: ${DB_TZ}
+    ports:
+      - '${DB_PORT}:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - pg_network
+
+networks:
+  pg_network:
+    name: pg_network
+    driver: bridge
+
+volumes:
+  pg_data:
+    name: pg_data

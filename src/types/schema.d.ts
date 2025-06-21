@@ -1,20 +1,35 @@
-declare namespace Schema {
-  export type Table = 'wallets' | 'accounts' | 'addresses' | 'transactions'
-}
-
 declare namespace Wallet {
   export type Schema = {
     id: UUID
     slug: string
     name: string
-    mnemonic: string
-    passphrase: string
+    bio: string
     passkey: string
-    accounts: Account.Schema[]
+    createdAt: string
+    updatedAt?: string | null
+  }
+
+  export type Account = {
+    walletId: Schema['id']
+    id: UUID
+    label: string
+    purpose: 84 | 86
+    index: number
     balance: Balance
     lastSyncHeight: number
-    /** Start scan data. */
-    timestamp: string | null
+    startedAt: string
+    createdAt: string
+    updatedAt?: string | null
+  }
+
+  export type Address = {
+    accountId: Account['id']
+    label: string
+    address: string
+    path: string
+    type: 'receive' | 'change'
+    index: number
+    isUsed: boolean
     createdAt: string
     updatedAt?: string | null
   }
@@ -33,51 +48,6 @@ declare namespace Wallet {
     total: number
     /** Actually spendable amount */
     spendable: number
-  }
-}
-
-declare namespace Account {
-  export type Schema = {
-    walletId: Wallet.Schema['id']
-    id: UUID
-    purpose: 44 | 84 | 86
-    coinType: number
-    index: number
-    addresses: Address[]
-    utxos: UTXO[]
-    createdAt: string
-    updatedAt?: string | null
-  }
-
-  export type Address = {
-    accountId: Account.Schema['id']
-    address: string
-    path: string
-    type: 'receive' | 'change'
-    index: number
-    balance: number
-    isUsed: boolean
-    createdAt: string
-    updatedAt?: string | null
-  }
-
-  export type UTXO = {
-    accountId: Account.Schema['id']
-    txid: string
-    vout: number
-    /** Unit in satoshi. */
-    amount: number
-    address: string
-    derivationPath: string
-    /** Hex string */
-    scriptPubKey: string
-    confirmations: number
-    /** `true` if the UTXO is spent */
-    spent: boolean
-    /** txid of the transaction that spent the UTXO */
-    spendTxid?: string
-    createdAt: string
-    updatedAt: string
   }
 }
 
