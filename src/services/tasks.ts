@@ -4,27 +4,17 @@ import { and, eq } from 'drizzle-orm'
 import { RPCClient } from '@/libs/bitcoin/rpc'
 import { bitcoinToSats } from '@/libs/bitcoin/unit'
 import { db, schema } from '@/libs/drizzle'
-import { jwt } from '@/libs/jwt'
 import { txsFormatter } from '@/libs/tx'
 import { logger } from '@/libs/utils'
+
+import { currentWallet } from './auth'
 
 async function start() {
   logger('🚀 Bitcoin wallet data syncing...')
   const startTime = Date.now()
 
   try {
-    const { payload, error } = await jwt.verify(process.env.JWT_CURRENT!)
-    if (error) throw new Error(error.message)
-
-    const [wallet, account] = await db.transaction(async (tx) => {
-      const [w] = await tx.select().from(schema.wallets).where(eq(schema.wallets.id, payload.sub))
-      const [a] = await tx
-        .select()
-        .from(schema.accounts)
-        .where(and(eq(schema.accounts.walletId, payload.sub), eq(schema.accounts.id, payload.uid)))
-
-      return [w, a]
-    })
+    const [{ account, ...wallet }] = await currentWallet(process.env.JWT_CURRENT)
 
     const rpcClient = new RPCClient()
     await rpcClient.setWallet(wallet.slug)
@@ -69,7 +59,7 @@ async function start() {
     }
 
     logger('✅ The wallet has been successfully synced.', startTime)
-    setTimeout(() => start(), minutesToMilliseconds(1))
+    // setTimeout(() => start(), minutesToMilliseconds(1))
   } catch (error) {
     console.error('⚠️', ' An error occurred:')
     console.log(error)

@@ -16,6 +16,8 @@ export const DB = dbSchema.parse({
   password: process.env.DB_PASSWORD
 })
 
+export const DATABASE_URL = `postgresql://${DB.user}:${DB.password}@${DB.host}:${DB.port}/${DB.name}`
+
 export const RPC = rpcSchema.parse({
   protocol: process.env.RPC_PROTOCOL,
   hostname: process.env.RPC_HOST,

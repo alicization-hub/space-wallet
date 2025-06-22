@@ -1,24 +1,51 @@
 # Project Artifact - Bitcoin Wallet.
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with
-[`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+#### This is a private, web-based Bitcoin wallet application built primarily with Next.js 15. It prioritizes user control and privacy, designed to run with own Bitcoin Core full node.
+
+### ✨ Features
+
+Here are the initial features implemented, with more planned for future updates:
+
+- **Secure Key Management**: Generate mnemonics, build custom derivation paths, and create `xpub` descriptors
+  only for wallet accounts.
+- **Transaction History**: View a clear and concise history of your Bitcoin transactions.
+- **Send/Receive Functionality**: Easily send and receive Bitcoin directly from wallet.
+
+---
 
 <img src="https://img.shields.io/badge/-Next_JS-black?style=for-the-badge&logoColor=white&logo=nextdotjs&color=000000" alt="nextdotjs" />
 <img src="https://img.shields.io/badge/-TypeScript-black?style=for-the-badge&logoColor=white&logo=typescript&color=3178C6" alt="typescript" />
 <img src="https://img.shields.io/badge/-Tailwind_CSS-black?style=for-the-badge&logoColor=white&logo=tailwindcss&color=06B6D4" alt="tailwindcss" />
 
-## ⚙️ Tech Stack
+### ⚙️ Tech Stack
 
-- [TypeScript](https://www.typescriptlang.org)
-- [Next.js](https://nextjs.org)
-- [HeroUI](https://www.heroui.com)
-- [Framer Motion](https://www.framer.com/motion)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Zod](https://zod.dev)
-- [DrizzleORM](https://orm.drizzle.team)
-- [Argon2](https://github.com/ranisalt/node-argon2)
-- [@noble/*](https://paulmillr.com/noble/)
-- [@scure/*](https://paulmillr.com/noble/#scure)
+- **Framework:**
+
+  - [Next.js 15](https://nextjs.org/docs)
+    - Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+- **User Interface:**
+
+  - [HeroUI](https://www.heroui.com)
+  - [Tailwind CSS](https://tailwindcss.com)
+  - [Framer Motion](https://www.framer.com/motion)
+
+- **Cryptographic Libraries:**
+
+  - `@noble/*` (e.g., `@noble/secp256k1`, `@noble/hashes`) for cryptographic operations.
+  - `@scure/*` (e.g., `@scure/bip39`) for BIP-39 mnemonic generation.
+  - `Argon2` for secure keys.
+
+- **Database:**
+
+  - [DrizzleORM](https://orm.drizzle.team)
+  - `pg` (PostgreSQL) - running on WSL2 Ubuntu for locally.
+
+- **Bitcoin Core Integration**: Connects to **Bitcoin Core Full Node** for direct interaction with the Bitcoin
+  network.
+
+- **Privacy**: Integrated with **Tor** for enhanced privacy when communicating with **Bitcoin Core Full
+  Node**.
 
 ## 🧩 VS Code Extensions
 
@@ -40,18 +67,30 @@ src               # App entry point.
 └─ types          # TypeScript decorators.
 ```
 
-## 💽 Install dependencies
+## 🚀 Getting Started
 
-You can use one of them `yarn`, `pnpm`, `bun`, Example using `bun`:
+More detailed setup instructions will be provided soon. In the meantime, here's a brief overview of what
+you'll need:
+
+1. **Bitcoin Core Full Node**: Ensure you have a synced _Bitcoin Core full node_ running, preferably
+   configured to accept connections over _Tor_.
+
+2. **PostgreSQL Database**: Set up a PostgreSQL database instance. For locally use _WSL2 Ubuntu_.
+
+3. **Dependencies**: Install project dependencies using your preferred package manager, use one of them
+   `yarn`, `pnpm`, `bun`, Example using `bun`:
 
 ```bash
 bun install
 ```
 
+4. **Environment Variables**: Configure your environment variables for database connection, Bitcoin Core RPC,
+   and Tor.
+
 ## 🚀 Compiles and hot-reloads for development
 
 ```bash
-bun run start:dev
+bun run start:dev --port 8338
 ```
 
 Open [http://localhost:8338](http://localhost:8338) with your browser to see the result.
@@ -78,20 +117,7 @@ installed correctly.
 bun run build
 ```
 
-## Learn More
+## 🛑 Disclaimer
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and
-contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the
-[Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
-from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+This is a private project. If you encounter any issues, please fix them yourself. Once you've successfully
+resolved something, do let me know!
