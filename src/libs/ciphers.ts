@@ -40,6 +40,10 @@ export class ciphers {
     result.set(nonce, salt.length)
     result.set(ciphertext, salt.length + nonce.length)
 
+    // Clear sensitive data
+    toBytes.fill(0)
+    key.fill(0)
+
     // Return as hex string
     return bytesToHex(result)
   }
@@ -72,6 +76,10 @@ export class ciphers {
 
     // Decrypt using XChaCha20-Poly1305
     const plaintextBytes = xchacha20poly1305(key, nonce).decrypt(ciphertext)
+
+    // Clear sensitive data
+    toBytes.fill(0)
+    key.fill(0)
 
     // Convert bytes to string
     return bytesToUtf8(plaintextBytes)

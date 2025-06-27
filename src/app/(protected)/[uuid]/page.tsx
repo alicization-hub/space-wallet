@@ -4,7 +4,8 @@ import { paramValidator } from '@/libs/validator.zod'
 
 export default async function IndexPage({ params }: Readonly<{ params: Promise<{ uuid: string }> }>) {
   // __STATE's
-  const { uuid } = await paramValidator.parseAsync(await params)
+  const { uuid } = await params
+  paramValidator.parse({ uuid })
 
   // __RENDER
   return (

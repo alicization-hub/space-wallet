@@ -3,6 +3,7 @@ import { integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-co
 
 import { sharedTimestampConumns } from '../utils'
 import { addresses } from './addresses.schema'
+import { transactions } from './transactions.schema'
 import { wallets } from './wallets.schema'
 
 export const accounts = pgTable(
@@ -31,5 +32,6 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
     fields: [accounts.walletId],
     references: [wallets.id]
   }),
-  addresses: many(addresses)
+  addresses: many(addresses),
+  transactions: many(transactions)
 }))

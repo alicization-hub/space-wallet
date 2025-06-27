@@ -14,7 +14,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
-      - pg_network
+      - space_network
 
   # New Next.js v15 Service (using Bun for production)
   webapp:
@@ -29,11 +29,11 @@ services:
     environment:
       NODE_ENV: production
     networks:
-      - pg_network
+      - space_network
 
 networks:
-  pg_network:
-    name: pg_network
+  space_network:
+    name: space_network
     driver: bridge
 
 volumes:

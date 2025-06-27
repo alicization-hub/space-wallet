@@ -5,6 +5,7 @@ import { DATABASE_URL } from '@/constants/env'
 
 import * as accounts from './schema/accounts.schema'
 import * as addresses from './schema/addresses.schema'
+import * as transactions from './schema/transactions.schema'
 import * as wallets from './schema/wallets.schema'
 
 /**
@@ -15,6 +16,7 @@ const pool = new Pool({ connectionString: DATABASE_URL, allowExitOnIdle: true })
 export const schema = Object.freeze({
   ...accounts,
   ...addresses,
+  ...transactions,
   ...wallets
 })
 

@@ -9,7 +9,6 @@ import { db, schema } from '@/libs/drizzle'
 import { useAuthGuard } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
 
-import { syncAccountData } from './tasks'
 import type { CreateWalletValidator, UpdateWalletValidator } from './validator'
 
 /**
@@ -32,7 +31,6 @@ export async function getWallet() {
     .select({ slug: schema.wallets.slug })
     .from(schema.wallets)
     .where(eq(schema.wallets.id, auth.sub))
-  await syncAccountData(wallet.slug, auth.uid)
 
   const walletColumns = getTableColumns(schema.wallets)
   const accountColumns = getTableColumns(schema.accounts)

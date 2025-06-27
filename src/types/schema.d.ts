@@ -51,30 +51,36 @@ declare namespace Wallet {
 }
 
 declare namespace Transaction {
-  export type Type = 'in' | 'out'
-  export type Status = 'pending' | 'confirmed'
+  export type Type = 'send' | 'receive' | 'generate' | 'immature' | 'orphan'
+  export type Status = 'pending' | 'confirmed' | 'abandoned'
 
   export type Schema = {
-    accountId: Account['id']
     txid: string
-    status: Status
-    confirmations: number
-    /** Unix timestamp (block time) */
-    timestamp: number
-    /** Unit in satoshi */
-    fee: number
-    /** Virtual bytes (vbytes) */
     size: number
-    inputs: {
-      address: string
-      amount: number
-      path?: string
-    }[]
-    outputs: {
-      address: string
-      amount: number
-      isChange: boolean
-      path?: string
-    }[]
+    version: number
+    lockTime: number
+    weight: number
+    fee: number
+    inputs: Array<Input>
+    outputs: Array<Output>
+    type: Type
+    status: Status
+    timestamp: number
+    confirmations: number
+    blockHash?: string
+    blockHeight?: number
+    blockIndex?: number
+    blockTime?: number
+  }
+
+  export type Input = {
+    txid: string
+    address: string
+    value: number
+  }
+
+  export type Output = {
+    address: string
+    value: number
   }
 }
