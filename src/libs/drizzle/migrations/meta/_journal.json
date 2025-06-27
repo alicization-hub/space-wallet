@@ -8,6 +8,20 @@
       "when": 1750477300568,
       "tag": "0000_strange_mother_askani",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1750729305606,
+      "tag": "0001_young_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750902599607,
+      "tag": "0002_empty_hobgoblin",
+      "breakpoints": true
     }
   ]
 }

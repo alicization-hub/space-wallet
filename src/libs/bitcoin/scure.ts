@@ -12,6 +12,12 @@ import { derivationPathBuilder } from './derivation'
 export const COIN = 100_000_000
 
 /**
+ * The maximum number of consecutive unused addresses to generate.
+ * `range(0, GAP_LIMIT)`
+ */
+export const GAP_LIMIT = 23
+
+/**
  * Creates a root key from a mnemonic phrase for the Bitcoin main chain.
  *
  * @param mnemonic - The BIP-39 mnemonic phrase (12 or 24 words).
@@ -86,10 +92,7 @@ export class AddressBuilder {
       86: 'tr'
     }[purpose] as any
 
-    return {
-      derivationPath,
-      address: getAddress(type, privateKey, NETWORK)!
-    }
+    return getAddress(type, privateKey, NETWORK)!
   }
 
   /**

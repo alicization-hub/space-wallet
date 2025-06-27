@@ -60,6 +60,10 @@ export class RPCClient {
     return this.call<INetwork.Info>('getnetworkinfo')
   }
 
+  public async getPeer() {
+    return this.call<INetwork.Peer[]>('getpeerinfo')
+  }
+
   public async getMempool() {
     return this.call<IMempool.Info>('getmempoolinfo')
   }

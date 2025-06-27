@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import './theme.css';
 
-@config '../../tailwind.config.js';
+@config "../../tailwind.config.js";
 
 @layer base {
   * {
@@ -12,10 +12,44 @@
   html,
   body {
     @apply text-foreground bg-background overflow-x-hidden antialiased;
-    font-family: var(--font-inter), var(--font-thai), 'sans-serif';
-    text-rendering: 'optimizeLegibility';
-    background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAACXBIWXMAAAsTAAALEwEAmpwYAAAATElEQVQYlZWPMQ7AMAwCz53w/z/Llk5Ro9SOWiYECEQAQxIAtulwzRDAyl/B1tmD69xpOoDxqbEzJJGZ58b9lO0fZypxnoqIh1fTFW5x5hYTMRqsQAAAAABJRU5ErkJggg==)
-      repeat center center;
-    background-size: 0.1rem 0.1rem;
+    font-family: var(--font-inter), 'sans-serif';
+    text-rendering: optimizeLegibility;
   }
+
+  button {
+    @apply flex cursor-pointer items-center justify-center;
+  }
+}
+
+@layer components {
+  .app-wrapper {
+    @apply relative p-4;
+  }
+
+  .app-router {
+    @apply pt-10;
+    min-height: calc(100svh - 2rem);
+  }
+
+  .text-number {
+    font-family: var(--font-number);
+    word-spacing: -3px;
+  }
+
+  .mirror {
+    @apply bg-foreground/5 ring-foreground/10 ring-1;
+  }
+
+  .btn-light {
+    @apply hover:bg-foreground/5 hover:ring-foreground/10 hover:ring-1;
+  }
+}
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+}
+
+@utility word-* {
+  word-spacing: --value(--word-spacing-*);
 }

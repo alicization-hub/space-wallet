@@ -2,22 +2,24 @@
 
 import 'server-only'
 
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
+
+import { APP_TOKEN } from '@/constants'
 
 import { jwt } from './index'
 
 export async function useAuthGuard() {
-  const headerStore = await headers()
-  const bearerToken = headerStore.get('Authorization')
-  if (bearerToken) {
-    const token = bearerToken.replace(/^(B|b)earer/g, '').trim()
-    const { payload, error } = await jwt.verify(token)
+  const cookieStore = await cookies()
+  const token = cookieStore.get(APP_TOKEN)
+  if (token?.value) {
+    const { payload, error } = await jwt.verify(token.value)
     if (payload) {
-      return payload
+      return {
+        ...payload,
+        token: token.value
+      }
     }
   }
 
-  throw new Error('Unauthorized (401)')
+  throw new Error('401 Unauthorized')
 }
-
-export async function useProtector() {}

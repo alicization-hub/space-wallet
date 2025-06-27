@@ -25,7 +25,16 @@ const nextConfig: NextConfig = {
   },
 
   poweredByHeader: false,
-  productionBrowserSourceMaps: false
+  productionBrowserSourceMaps: false,
+
+  async rewrites() {
+    return [
+      {
+        source: '/v0/:path*',
+        destination: '/services/:path*'
+      }
+    ]
+  }
 }
 
 export default nextConfig

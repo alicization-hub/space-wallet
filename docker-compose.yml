@@ -16,6 +16,21 @@ services:
     networks:
       - pg_network
 
+  # New Next.js v15 Service (using Bun for production)
+  webapp:
+    container_name: nextjs
+    image: space-webapp:latest
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 8338:8338
+    environment:
+      NODE_ENV: production
+    networks:
+      - pg_network
+
 networks:
   pg_network:
     name: pg_network

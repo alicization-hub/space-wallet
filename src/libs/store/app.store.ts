@@ -7,12 +7,17 @@ type States = {
   loader: boolean
   theme: Theme
   language: Locales
+  node: {
+    blocks: string
+    network: string
+  }
 }
 
 type Actions = {
-  setLanguage: (language: Locales) => void
-  setTheme: (theme: Theme) => void
-  setLoader: (value: boolean) => void
+  setLanguage: (language: States['language']) => void
+  setTheme: (theme: States['theme']) => void
+  setLoader: (value: States['loader']) => void
+  setNode: (node: States['node']) => void
 }
 
 const store = create<States & Actions>((setState) => ({
@@ -21,11 +26,16 @@ const store = create<States & Actions>((setState) => ({
   loader: true,
   theme: Theme.DARK,
   language: Locales.UK,
+  node: {
+    blocks: '',
+    network: ''
+  },
 
   // ACTION's
   setLanguage: (language) => setState({ language }),
   setTheme: (theme) => setState({ theme }),
-  setLoader: (value) => setState({ loader: value })
+  setLoader: (value) => setState({ loader: value }),
+  setNode: (node) => setState({ node })
 }))
 
 export const useStore = store

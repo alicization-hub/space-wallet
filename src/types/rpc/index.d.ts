@@ -135,6 +135,87 @@ declare namespace INetwork {
     /** any network and blockchain warnings */
     warnings: string
   }
+
+  export type Peer = {
+    /** Peer index */
+    id: number
+    /** (host:port) The IP address and port of the peer */
+    addr: string
+    /** (ip:port) Bind address of the connection to the peer */
+    addrbind: string
+    /** (ip:port) Local address as reported by the peer */
+    addrlocal: string
+    /** Network (ipv4, ipv6, onion, i2p, not_publicly_routable) */
+    network: string
+    /**
+     * The AS in the BGP route to the peer used for diversifying
+     * peer selection (only available if the asmap config flag is set)
+     */
+    mapped_as: number
+    /** The services offered */
+    services: string
+    /** the services offered, in human-readable form */
+    servicesnames: string[]
+    /** Whether peer has asked us to relay transactions to it */
+    relaytxes: boolean
+    /** The UNIX epoch time of the last send */
+    lastsend: number
+    /** The UNIX epoch time of the last receive */
+    lastrecv: number
+    /** The UNIX epoch time of the last valid transaction received from this peer */
+    last_transaction: number
+    /** The UNIX epoch time of the last block received from this peer */
+    last_block: number
+    /** The total bytes sent */
+    bytessent: number
+    /** The total bytes received */
+    bytesrecv: number
+    /** The UNIX epoch time of the connection */
+    conntime: number
+    /** The time offset in seconds */
+    timeoffset: number
+    /** ping time (if available) */
+    pingtime: number
+    /** minimum observed ping time (if any at all) */
+    minping: number
+    /** ping wait (if non-zero) */
+    pingwait: number
+    /** The peer version, such as 70001 */
+    version: number
+    /** The string version */
+    subver: string
+    /** Inbound (true) or Outbound (false) */
+    inbound: boolean
+    /** Whether we selected peer as (compact blocks) high-bandwidth peer */
+    bip152_hb_to: boolean
+    /** Whether peer selected us as (compact blocks) high-bandwidth peer */
+    bip152_hb_from: boolean
+    /** The starting height (block) of the peer */
+    startingheight: number
+    /** The last header we have in common with this peer */
+    synced_headers: number
+    /** The last block we have in common with this peer */
+    synced_blocks: number
+    inflight: number[]
+    /** Any special permissions that have been granted to this peer */
+    permissions: string[]
+    /** The minimum fee rate for transactions this peer accepts */
+    minfeefilter: number
+    bytessent_per_msg: Dict<number>
+    bytesrecv_per_msg: Dict<number>
+    /**
+     * Type of connection:
+     * outbound-full-relay (default automatic connections),
+     * block-relay-only (does not relay transactions or addresses),
+     * inbound (initiated by the peer),
+     * manual (added via addnode RPC or -addnode/-connect configuration options),
+     * addr-fetch (short-lived automatic connection for soliciting addresses),
+     * feeler (short-lived automatic connection for testing addresses).
+     * Please note this output is unlikely to be stable in upcoming releases as we iterate to
+     * best capture connection behaviors.
+     */
+    connection_type: string
+  }
 }
 
 declare namespace IMempool {

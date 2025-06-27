@@ -6,15 +6,15 @@ export type FeeRates = {
 }
 
 export type CoinSelectionData = {
-  availableUTXOs: Wallet.UTXO[]
-  dustUTXOs: Wallet.UTXO[]
-  confirmedUTXOs: Wallet.UTXO[]
-  priorityUTXOs: Wallet.UTXO[]
-  unconfirmedUTXOs: Wallet.UTXO[]
-  largeUTXOs: Wallet.UTXO[]
-  smallUTXOs: Wallet.UTXO[]
-  recentUTXOs: Wallet.UTXO[]
-  privacyRiskyUTXOs: Wallet.UTXO[]
+  availableUTXOs: Unspent.List[]
+  dustUTXOs: Unspent.List[]
+  confirmedUTXOs: Unspent.List[]
+  priorityUTXOs: Unspent.List[]
+  unconfirmedUTXOs: Unspent.List[]
+  largeUTXOs: Unspent.List[]
+  smallUTXOs: Unspent.List[]
+  recentUTXOs: Unspent.List[]
+  privacyRiskyUTXOs: Unspent.List[]
 }
 
 export class UTXOClassifier {
@@ -41,7 +41,7 @@ export class UTXOClassifier {
   /**
    * Classify UTXOs into different categories
    */
-  public classifyUTXOs(utxos: Wallet.UTXO[]): CoinSelectionData {
+  public classifyUTXOs(utxos: Unspent.List[]): CoinSelectionData {
     const result: CoinSelectionData = {
       availableUTXOs: [],
       dustUTXOs: [],
@@ -56,7 +56,8 @@ export class UTXOClassifier {
 
     for (const utxo of utxos) {
       // Skip spent UTXOs
-      if (utxo.spent) continue
+      // if (utxo.spent) continue
+      if (utxo.reused) continue
 
       // Basic availability check
       result.availableUTXOs.push(utxo)
@@ -138,8 +139,8 @@ export class UTXOClassifier {
     classifiedUTXOs: CoinSelectionData,
     targetAmount: number,
     strategy: 'privacy' | 'efficiency' | 'consolidation' = 'efficiency'
-  ): Wallet.UTXO[] {
-    let candidateUTXOs: Wallet.UTXO[] = []
+  ): Unspent.List[] {
+    let candidateUTXOs: Unspent.List[] = []
 
     // Filter out dust and unconfirmed UTXOs for safety
     candidateUTXOs = classifiedUTXOs.availableUTXOs.filter(
@@ -164,7 +165,7 @@ export class UTXOClassifier {
   /**
    * Check if UTXO is considered dust
    */
-  private isDustUTXO(utxo: Wallet.UTXO): boolean {
+  private isDustUTXO(utxo: Unspent.List): boolean {
     // Calculate cost to spend this UTXO
     const inputSize = this.getInputSize(utxo)
     const costToSpend = inputSize * this.feeRates.standardFeeRate
@@ -181,7 +182,7 @@ export class UTXOClassifier {
   /**
    * Check if UTXO should be prioritized for spending
    */
-  private isPriorityUTXO(utxo: Wallet.UTXO): boolean {
+  private isPriorityUTXO(utxo: Unspent.List): boolean {
     // Priority criteria:
 
     // 1. Well-confirmed UTXOs
@@ -207,7 +208,7 @@ export class UTXOClassifier {
   /**
    * Check if UTXO poses privacy risks
    */
-  private isPrivacyRiskyUTXO(utxo: Wallet.UTXO): boolean {
+  private isPrivacyRiskyUTXO(utxo: Unspent.List): boolean {
     // Privacy risk factors:
 
     // 1. Round number amounts (likely change)
@@ -230,7 +231,7 @@ export class UTXOClassifier {
   /**
    * Check if UTXO amount improves privacy
    */
-  private improvesPrivacy(utxo: Wallet.UTXO): boolean {
+  private improvesPrivacy(utxo: Unspent.List): boolean {
     // Non-round numbers are better for privacy
     return !this.isRoundNumber(utxo.amount)
   }
@@ -254,7 +255,7 @@ export class UTXOClassifier {
   /**
    * Get input size in virtual bytes for fee calculation
    */
-  private getInputSize(utxo: Wallet.UTXO): number {
+  private getInputSize(utxo: Unspent.List): number {
     // Approximate input sizes for different script types
     // P2WPKH: ~68 vBytes (31 + 41*0.25 witness discount)
     // P2SH-P2WPKH: ~91 vBytes
@@ -268,10 +269,10 @@ export class UTXOClassifier {
    * Privacy-optimized coin selection
    */
   private privacyOptimizedSelection(
-    utxos: Wallet.UTXO[],
+    utxos: Unspent.List[],
     targetAmount: number,
     classified: CoinSelectionData
-  ): Wallet.UTXO[] {
+  ): Unspent.List[] {
     // Prefer UTXOs that don't pose privacy risks
     const privacySafeUTXOs = utxos.filter((utxo) => !classified.privacyRiskyUTXOs.includes(utxo))
 
@@ -287,10 +288,10 @@ export class UTXOClassifier {
    * Efficiency-optimized coin selection (minimize fees)
    */
   private efficiencyOptimizedSelection(
-    utxos: Wallet.UTXO[],
+    utxos: Unspent.List[],
     targetAmount: number,
     classified: CoinSelectionData
-  ): Wallet.UTXO[] {
+  ): Unspent.List[] {
     // Prefer priority UTXOs first
     const priorityUTXOs = utxos.filter((utxo) => classified.priorityUTXOs.includes(utxo))
 
@@ -306,15 +307,15 @@ export class UTXOClassifier {
    * Consolidation-optimized selection (use many small UTXOs)
    */
   private consolidationOptimizedSelection(
-    utxos: Wallet.UTXO[],
+    utxos: Unspent.List[],
     targetAmount: number,
     classified: CoinSelectionData
-  ): Wallet.UTXO[] {
+  ): Unspent.List[] {
     // Prefer smaller UTXOs to consolidate them
     const smallUTXOs = classified.smallUTXOs.filter((utxo) => utxos.includes(utxo))
 
     // Use as many small UTXOs as reasonable
-    let selected: Wallet.UTXO[] = []
+    let selected: Unspent.List[] = []
     let totalAmount = 0
 
     // Sort by amount (smallest first)
@@ -346,12 +347,12 @@ export class UTXOClassifier {
   /**
    * Simple knapsack solver for coin selection
    */
-  private knapsackSolver(utxos: Wallet.UTXO[], targetAmount: number): Wallet.UTXO[] {
+  private knapsackSolver(utxos: Unspent.List[], targetAmount: number): Unspent.List[] {
     // Sort UTXOs by amount (descending)
     const sorted = utxos.sort((a, b) => b.amount - a.amount)
 
     // Simple greedy approach
-    const selected: Wallet.UTXO[] = []
+    const selected: Unspent.List[] = []
     let totalAmount = 0
 
     for (const utxo of sorted) {
@@ -367,11 +368,11 @@ export class UTXOClassifier {
   /**
    * Minimize number of inputs
    */
-  private minimizeInputsSelection(utxos: Wallet.UTXO[], targetAmount: number): Wallet.UTXO[] {
+  private minimizeInputsSelection(utxos: Unspent.List[], targetAmount: number): Unspent.List[] {
     // Sort by amount (descending) to use fewer, larger UTXOs
     const sorted = utxos.sort((a, b) => b.amount - a.amount)
 
-    const selected: Wallet.UTXO[] = []
+    const selected: Unspent.List[] = []
     let totalAmount = 0
 
     for (const utxo of sorted) {
@@ -396,7 +397,7 @@ const feeRates: FeeRates = {
 const classifier = new UTXOClassifier(feeRates)
 
 // Example usage
-function demonstrateClassification(utxos: Wallet.UTXO[]) {
+function demonstrateClassification(utxos: Unspent.List[]) {
   console.log('=== UTXO Classification Demo ===')
 
   const classified = classifier.classifyUTXOs(utxos)

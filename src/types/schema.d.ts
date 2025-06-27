@@ -26,7 +26,6 @@ declare namespace Wallet {
     accountId: Account['id']
     label: string
     address: string
-    path: string
     type: 'receive' | 'change'
     index: number
     isUsed: boolean

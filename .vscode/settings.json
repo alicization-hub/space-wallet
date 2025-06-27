@@ -1,0 +1,18 @@
+{
+  "editor.formatOnSave": true,
+  "editor.snippetSuggestions": "top",
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/.next": true
+  },
+  "typescript.tsdk": "node_modules\\typescript\\lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "prettier.configPath": "prettier.config.js"
+}

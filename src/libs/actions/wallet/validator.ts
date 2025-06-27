@@ -1,13 +1,19 @@
 import { z } from 'zod'
 
-import { mnemonic } from '../bitcoin/mnemonic'
-import { passphraseSchema } from '../validator.zod'
+import { mnemonic } from '@/libs/bitcoin/mnemonic'
+import { passphraseSchema } from '@/libs/validator.zod'
 
 export const walletValidator = z.object({
   slug: z.string(),
   name: z.string(),
   mnemonic: z.string().refine((value) => mnemonic.validate(value), 'Invalid mnemonic'),
-  passphrase: passphraseSchema
+  passphrase: passphraseSchema,
+  account: z
+    .object({
+      index: z.number().optional().default(0),
+      startedAt: z.string().datetime().optional()
+    })
+    .optional()
 })
 
 export const createWalletValidator = walletValidator.omit({ slug: true })

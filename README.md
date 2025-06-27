@@ -1,6 +1,10 @@
-# Project Artifact - Bitcoin Wallet.
+# Project Space - Bitcoin Wallet.
 
-#### This is a private, web-based Bitcoin wallet application built primarily with Next.js 15. It prioritizes user control and privacy, designed to run with own Bitcoin Core full node.
+#### This is a private, web-based Bitcoin wallet application built primarily with Next.js 15. It prioritizes user control and privacy, designed to run with own **Bitcoin Core full node**.
+
+_This project was developed through collaboration between developers and generative AI tools, including
+`Grok AI`, `Gemini Pro`, `GitHub Copilot`, `ChatGPT`, `Claude AI`, `DeepSeek AI`, and `Windsurf`. I then
+refined and optimized the code for enhanced performance._
 
 ### ✨ Features
 
@@ -20,24 +24,20 @@ Here are the initial features implemented, with more planned for future updates:
 ### ⚙️ Tech Stack
 
 - **Framework:**
-
   - [Next.js 15](https://nextjs.org/docs)
     - Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
 - **User Interface:**
-
   - [HeroUI](https://www.heroui.com)
   - [Tailwind CSS](https://tailwindcss.com)
   - [Framer Motion](https://www.framer.com/motion)
 
 - **Cryptographic Libraries:**
-
   - `@noble/*` (e.g., `@noble/secp256k1`, `@noble/hashes`) for cryptographic operations.
   - `@scure/*` (e.g., `@scure/bip39`) for BIP-39 mnemonic generation.
   - `Argon2` for secure keys.
 
 - **Database:**
-
   - [DrizzleORM](https://orm.drizzle.team)
   - `pg` (PostgreSQL) - running on WSL2 Ubuntu for locally.
 

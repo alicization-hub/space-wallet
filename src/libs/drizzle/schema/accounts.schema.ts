@@ -17,6 +17,7 @@ export const accounts = pgTable(
     index: integer('index').notNull(),
     balance: json('balance').notNull().$type<Wallet.Balance>(),
     lastSyncHeight: integer('last_sync_height').notNull(),
+    lastDescriptorRange: integer('last_descriptor_range').notNull().default(0),
     startedAt: timestamp('started_at', { precision: 6, withTimezone: true }).notNull().defaultNow(),
     ...sharedTimestampConumns
   },

@@ -11,9 +11,8 @@ export const addresses = pgTable(
     accountId: uuid('account_id')
       .references(() => accounts.id)
       .notNull(),
-    label: text('label').notNull(),
+    label: text('label'),
     address: text('address').unique().notNull(),
-    path: text('path').unique().notNull(),
     type: text('type').notNull().$type<'receive' | 'change'>(),
     index: integer('index').notNull(),
     isUsed: boolean('is_used').notNull().default(false),

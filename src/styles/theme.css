@@ -1,15 +1,9 @@
 @theme {
-  --font-display: var(--font-inter), var(--font-thai), 'sans-serif';
+  --font-display: var(--font-inter), 'sans-serif';
+  --font-number: var(--font-number), 'monospace';
 
   --color-background: #0a0a0a;
   --color-foreground: #fafafa;
-
-  --color-avocado-100: oklch(0.99 0 0);
-  --color-avocado-200: oklch(0.98 0.04 113.22);
-  --color-avocado-300: oklch(0.94 0.11 115.03);
-  --color-avocado-400: oklch(0.92 0.19 114.08);
-  --color-avocado-500: oklch(0.84 0.18 117.33);
-  --color-avocado-600: oklch(0.53 0.12 118.34);
 
   --color-rainbow: linear-gradient(
     to right,
@@ -24,29 +18,37 @@
     #ff5722
   );
 
+  --container-space: 992px;
+
+  --word-spacing-tighter: -0.75rem;
+  --word-spacing-tight: -0.25rem;
+  --word-spacing-normal: 0rem;
+  --word-spacing-wide: 0.025rem;
+  --word-spacing-wider: 0.05rem;
+
   --cubic-bezier: cubic-bezier(0.19, 1, 0.22, 1);
   --duration: 720ms;
 
   --animate-loader: loader 1s cubic-bezier(0.86, 0.01, 0.08, 1);
   --animate-rainbow: rainbow 3s linear infinite;
+}
 
-  @keyframes loader {
-    from {
-      width: '0%';
-    }
-
-    to {
-      width: '100%';
-    }
+@keyframes loader {
+  from {
+    width: '0%';
   }
 
-  @keyframes rainbow {
-    from {
-      background-position: '0 0';
-    }
+  to {
+    width: '100%';
+  }
+}
 
-    to {
-      background-position: '-200% 0';
-    }
+@keyframes rainbow {
+  from {
+    background-position: '0 0';
+  }
+
+  to {
+    background-position: '-200% 0';
   }
 }

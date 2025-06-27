@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # --- Load environment variables from .env file
-if [ -f ".env.local" ]; then
-    source .env.local
+if [ -f ".env.lock" ]; then
+    source .env.lock
     echo "Loaded environment variables from .env"
 else
     echo "Error: .env file not found. Please ensure it's in the same directory as backup.sh and docker-compose.yml."

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Alicization | Private cinematic project.',
+  title: 'Space Wallet | Private alicization project.',
   description:
     'Quickly and easily generate Lorem Ipsum placeholder text. Select the number of characters, words, sentences or paragraphs, and hit generate!',
   robots: { index: false, follow: false },
