@@ -42,7 +42,7 @@ COPY --from=builder /app/package.json ./package.json
 RUN bun install --production --frozen-lockfile --prefer-offline
 
 # Expose the port Next.js will listen on
-EXPOSE 8338
+EXPOSE 3000
 
 # Command to run the Next.js application in production mode
 # Bun will execute 'next start' or equivalent based on package.json

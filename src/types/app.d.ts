@@ -14,16 +14,6 @@ declare type JwtPayload = {
   exp: number
 }
 
-declare type UseDisclosureReturn = {
-  isOpen: boolean
-  onOpen: () => void
-  onClose: () => void
-  onOpenChange: () => void
-  isControlled: boolean
-  getButtonProps: (props?: any) => any
-  getDisclosureProps: (props?: any) => any
-}
-
 /**
  * Reset = "\x1b[0m"
  * Bright = "\x1b[1m"

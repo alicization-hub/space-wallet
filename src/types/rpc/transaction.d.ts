@@ -19,7 +19,7 @@ declare namespace ITransaction {
      * The amount in BTC.
      * This is negative for the 'send' category, and is positive for all other categories
      */
-    amount: string
+    amount: number
     /** A comment for the address/transaction, if any */
     label: string
     /** the vout value */

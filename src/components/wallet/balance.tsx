@@ -16,7 +16,7 @@ export function BalanceComponent({
 
   const total = useMemo(() => {
     const value = account.balance.total || balance.total
-    const [coin, decimal] = satsToBitcoin(value).toString().split('.')
+    const [coin, decimal] = satsToBitcoin(value).toFixed(8).split('.')
     return `${coin}.${numberToSpace(decimal, 4).padStart(6, '0')}`
   }, [account, balance])
 
@@ -53,7 +53,7 @@ export function BalanceComponent({
             </div>
 
             <div className='font-number ml-2'>
-              <span className='font-semibold'>{satsToBitcoin(record.value)}</span>
+              <span className='font-semibold'>{satsToBitcoin(record.value).toFixed(8)}</span>
               <small className='text-foreground/70 pl-1 uppercase'>btc</small>
             </div>
           </div>

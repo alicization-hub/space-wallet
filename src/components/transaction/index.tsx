@@ -1,18 +1,20 @@
 import { findTransactions } from '@/libs/actions/transaction'
 
+import { ListComponent } from './list'
+
 export async function TransactionComponent() {
   // __STATE's
-  const txs = await findTransactions({ page: 1, take: 25 })
-  console.log(txs)
+  const { data: txs } = await findTransactions({ page: 1, take: 25 })
 
   // __RENDER
   return (
     <section className='px-8' aria-label='Transactions'>
       <div className='grid gap-4'>
-        <div className='bg-foreground/5 ring-foreground/10 h-12 animate-pulse rounded-xs ring-1' />
-        <div className='bg-foreground/5 ring-foreground/10 h-12 animate-pulse rounded-xs ring-1' />
-        <div className='bg-foreground/5 ring-foreground/10 h-12 animate-pulse rounded-xs ring-1' />
-        <div className='bg-foreground/5 ring-foreground/10 h-12 animate-pulse rounded-xs ring-1' />
+        {txs.map((tx) => (
+          <ListComponent tx={tx} key={tx.id} />
+        ))}
+
+        {/* <div className='bg-foreground/5 ring-foreground/10 h-12 animate-pulse rounded-xs ring-1' /> */}
       </div>
     </section>
   )

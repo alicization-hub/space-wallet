@@ -1,6 +1,8 @@
 'use server'
 
-import { and, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
+import { setTimeout } from 'timers/promises'
+
+import { and, asc, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
 import { omit } from 'ramda'
 
 import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
@@ -12,6 +14,31 @@ import { password } from '@/libs/password'
 import { createPagination, isNotEqual } from '@/libs/utils'
 
 import type { CreateValidator, QueryValidator } from './validator'
+
+export async function findAddress() {
+  try {
+    const auth = await useAuthGuard()
+    await setTimeout(2e3)
+
+    const addressColumns = getTableColumns(schema.addresses)
+    const [address] = await db
+      .select(omit(['accountId'], addressColumns))
+      .from(schema.addresses)
+      .where(
+        and(
+          eq(schema.addresses.accountId, auth.uid),
+          eq(schema.addresses.type, 'receive'),
+          eq(schema.addresses.isUsed, false)
+        )
+      )
+      .orderBy(asc(schema.addresses.index))
+      .limit(1)
+
+    return address
+  } catch (error: any) {
+    throw new Error(error.message)
+  }
+}
 
 export async function findAddresses(query: QueryValidator) {
   try {

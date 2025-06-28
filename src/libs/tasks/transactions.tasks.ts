@@ -43,6 +43,7 @@ async function txFormatter(rpcClient: RPCClient, tx: ITransaction.List) {
     txid: raw.txid,
     size: raw.size,
     weight: raw.weight,
+    amount: bitcoinToSats(tx.amount),
     fee,
     inputs,
     outputs,
@@ -96,7 +97,7 @@ export async function syncTransactions(account: Account, rpcClient: RPCClient) {
         await db
           .update(schema.transactions)
           .set({
-            fee: tx.fee,
+            amount: tx.amount,
             confirmations: tx.confirmations
           })
           .where(eq(schema.transactions.txid, tx.txid))

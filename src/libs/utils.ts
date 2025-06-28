@@ -3,8 +3,6 @@ import { differenceInMilliseconds, format } from 'date-fns'
 import { customAlphabet } from 'nanoid'
 import { twMerge } from 'tailwind-merge'
 
-import { blockExplorerUrl } from '@/constants'
-
 export const nanoId = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
 
 export function cls(...inputs: ClassValue[]) {
@@ -64,8 +62,13 @@ export function toExplorer(type: 'addr' | 'tx', value: string) {
   }
 
   if (pathTo) {
-    window.open(`https://www.blockchain.com/explorer/${pathTo}`, '_blank', 'noopener,noreferrer')
+    return `https://www.blockchain.com/explorer/${pathTo}`
+    // window.open(`https://www.blockchain.com/explorer/${pathTo}`, '_blank', 'noopener,noreferrer')
   }
+}
+
+export function toShort(value: string): string {
+  return `${value.slice(0, 4)}...${value.slice(-4)}`
 }
 
 /**

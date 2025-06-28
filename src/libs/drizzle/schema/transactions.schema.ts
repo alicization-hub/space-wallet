@@ -14,6 +14,7 @@ export const transactions = pgTable(
     txid: text('txid').notNull(),
     size: integer('size').notNull(),
     weight: integer('weight').notNull(),
+    amount: integer('amount').notNull().default(0),
     fee: integer('fee').notNull(),
     inputs: json('inputs').notNull().$type<Transaction.Input[]>(),
     outputs: json('outputs').notNull().$type<Transaction.Output[]>(),
