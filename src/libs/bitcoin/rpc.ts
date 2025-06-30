@@ -94,22 +94,8 @@ export class RPCClient {
     return this.call('unloadwallet', [this.walletName])
   }
 
-  public async createWallet(
-    name: string,
-    disablePrivateKeys: boolean = true,
-    blank: boolean = true,
-    avoidReuse: boolean = true,
-    passphrase: string = '',
-    loadOnStartup: boolean | null = null
-  ) {
-    return this.call<IWallet.Created>('createwallet', [
-      name,
-      disablePrivateKeys,
-      blank,
-      passphrase,
-      avoidReuse,
-      loadOnStartup
-    ])
+  public async createWallet(walletName: string) {
+    return this.call<IWallet.Created>('createwallet', [walletName, true, true, '', true, true, false])
   }
 
   /**

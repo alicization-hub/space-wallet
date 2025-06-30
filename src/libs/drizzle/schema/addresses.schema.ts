@@ -1,6 +1,5 @@
 import { relations } from 'drizzle-orm'
 import { boolean, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
-import { v7 as uuidV7 } from 'uuid'
 
 import { sharedTimestampConumns } from '../utils'
 import { accounts } from './accounts.schema'
@@ -8,7 +7,7 @@ import { accounts } from './accounts.schema'
 export const addresses = pgTable(
   'addresses',
   {
-    id: uuid('id').primaryKey().default(uuidV7()),
+    id: uuid('id').primaryKey().defaultRandom(),
     accountId: uuid('account_id')
       .references(() => accounts.id)
       .notNull(),

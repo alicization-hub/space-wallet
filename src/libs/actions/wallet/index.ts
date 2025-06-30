@@ -1,5 +1,7 @@
 'use server'
 
+import 'server-only'
+
 import { and, eq, getTableColumns } from 'drizzle-orm'
 import { omit, pick } from 'ramda'
 

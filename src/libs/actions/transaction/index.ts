@@ -1,5 +1,7 @@
 'use server'
 
+import 'server-only'
+
 import { and, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
 import { omit } from 'ramda'
 

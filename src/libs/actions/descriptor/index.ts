@@ -1,5 +1,7 @@
 'use server'
 
+import 'server-only'
+
 import { getUnixTime } from 'date-fns'
 import { and, eq, getTableColumns } from 'drizzle-orm'
 import { omit } from 'ramda'
@@ -43,7 +45,7 @@ export async function importDescriptors({ passphrase }: ImportValidator) {
 
     // Create a new RPC client
     const rpcClient = new RPCClient()
-    await rpcClient.setWallet(wallet.slug)
+    await rpcClient.setWallet(wallet.account.id)
 
     // Decrypt the mnemonic and create the root key
     const mnemonic = await ciphers.decrypt(wallet.bio, passphrase)
@@ -65,7 +67,7 @@ export async function importDescriptors({ passphrase }: ImportValidator) {
         desc: receive.descriptor,
         active: false,
         range: [nextIndex, nextRangeEnd],
-        timestamp: isFirst ? getUnixTime(new Date(wallet.account.startedAt)) : 'now',
+        timestamp: getUnixTime(wallet.account.startedAt),
         internal: false,
         next_index: nextIndex
       },
@@ -73,7 +75,7 @@ export async function importDescriptors({ passphrase }: ImportValidator) {
         desc: change.descriptor,
         active: false,
         range: [nextIndex, nextRangeEnd],
-        timestamp: isFirst ? getUnixTime(new Date(wallet.account.startedAt)) : 'now',
+        timestamp: getUnixTime(wallet.account.startedAt),
         internal: true,
         next_index: nextIndex
       }

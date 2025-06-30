@@ -43,7 +43,7 @@ async function txFormatter(rpcClient: RPCClient, tx: ITransaction.List) {
     txid: raw.txid,
     size: raw.size,
     weight: raw.weight,
-    amount: bitcoinToSats(tx.amount),
+    amount: bitcoinToSats(Math.abs(tx.amount)),
     fee,
     inputs,
     outputs,

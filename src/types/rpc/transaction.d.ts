@@ -28,7 +28,7 @@ declare namespace ITransaction {
      * The amount of the fee in BTC.
      * This is negative and only available for the 'send' category of transactions.
      */
-    fee: string
+    fee: number
     /**
      * The number of confirmations for the transaction. Negative confirmations means the
      * transaction conflicted that many blocks ago.

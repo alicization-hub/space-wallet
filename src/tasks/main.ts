@@ -27,25 +27,23 @@ async function runScheduledTask() {
   const startTime = Date.now()
 
   try {
-    const walletColumns = getTableColumns(schema.wallets)
     const accounts = await db
       .select({
-        id: schema.accounts.id,
-        wallet: pick(['slug'], walletColumns)
+        id: schema.accounts.id
       })
       .from(schema.accounts)
       .innerJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
       .where(gt(schema.accounts.lastDescriptorRange, 0))
 
     const rpcClient = new RPCClient()
-    for await (const { id, wallet } of accounts) {
-      await rpcClient.setWallet(wallet.slug)
+    for await (const account of accounts) {
+      await rpcClient.setWallet(account.id)
 
-      await syncAccount(id, rpcClient)
-      await syncTransactions(id, rpcClient)
+      await syncAccount(account.id, rpcClient)
+      await syncTransactions(account.id, rpcClient)
 
       await setTimeout(2e2)
-      await syncAddresses(id)
+      await syncAddresses(account.id)
     }
 
     logger('✅ The tasks have been successfully synced.', startTime)
