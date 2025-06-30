@@ -77,10 +77,6 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
 
       logger(`📦 Fetch transactions with batch (${BATCH_SIZE})`)
 
-      // Continue if got full batch size
-      isContinue = result.length >= BATCH_SIZE
-      skip += BATCH_SIZE
-
       const calls = result.slice(0, BATCH_SIZE).map((tx) => txFormatter(rpcClient, tx))
       const txs = await Promise.all(calls)
       const txids = txs.map((tx) => tx.txid)
@@ -115,6 +111,10 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
       }
 
       logger(`✅ Fetch transactions with batch success: (${skip + 1}~${skip + BATCH_SIZE})`)
+
+      // Continue if got full batch size
+      isContinue = result.length >= BATCH_SIZE
+      skip += BATCH_SIZE
     } catch (error) {
       console.error('⚠️', ' An error occurred:')
       console.log(error)
@@ -122,4 +122,5 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
   }
 
   logger(`📝 [${accountId}] Transaction's has been successfully synced.`, startTime)
+  logger('')
 }
