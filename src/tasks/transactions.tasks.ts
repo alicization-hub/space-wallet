@@ -66,22 +66,24 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
   logger(`🔄 [${accountId}] Initiating transaction sync...`)
   const startTime = Date.now()
 
-  let BATCH_SIZE = 10
+  const BATCH_SIZE = 20
   let skip = 0
   let isContinue = true
 
   while (isContinue) {
     try {
-      logger(`📦 Fetch transactions with batch (${BATCH_SIZE})`)
-
       const result = await rpcClient.listTransactions('*', BATCH_SIZE + 1, skip, true)
-      const calls = result.slice(0, BATCH_SIZE).map((tx) => txFormatter(rpcClient, tx))
-      const txs = await Promise.all(calls)
-      const txids = txs.map((tx) => tx.txid)
+      if (result.length < 1) break
+
+      logger(`📦 Fetch transactions with batch (${BATCH_SIZE})`)
 
       // Continue if got full batch size
       isContinue = result.length >= BATCH_SIZE
       skip += BATCH_SIZE
+
+      const calls = result.slice(0, BATCH_SIZE).map((tx) => txFormatter(rpcClient, tx))
+      const txs = await Promise.all(calls)
+      const txids = txs.map((tx) => tx.txid)
 
       const existing = await db
         .select({ txid: schema.transactions.txid })
@@ -107,9 +109,7 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
         for (const tx of updates) {
           await db
             .update(schema.transactions)
-            .set({
-              confirmations: tx.confirmations
-            })
+            .set({ confirmations: tx.confirmations })
             .where(and(eq(schema.transactions.accountId, accountId), eq(schema.transactions.txid, tx.txid)))
         }
       }

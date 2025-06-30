@@ -23,7 +23,13 @@ export async function syncAddresses(accountId: string) {
     await db
       .update(schema.addresses)
       .set({ isUsed: true })
-      .where(and(eq(schema.addresses.accountId, accountId), inArray(schema.addresses.address, addrSet)))
+      .where(
+        and(
+          eq(schema.addresses.accountId, accountId),
+          eq(schema.addresses.isUsed, false),
+          inArray(schema.addresses.address, addrSet)
+        )
+      )
 
     logger(`📝 [${accountId}] Address has been successfully synced.`, startTime)
   } catch (error) {

@@ -15,7 +15,7 @@ export const transactions = pgTable(
     txid: text('txid').notNull(),
     size: integer('size').notNull(),
     weight: integer('weight').notNull(),
-    amount: integer('amount').notNull().default(0),
+    amount: integer('amount').notNull(),
     fee: integer('fee').notNull(),
     type: text('type').notNull().$type<Transaction.Type>(),
     status: text('status').notNull().$type<Transaction.Status>(),
