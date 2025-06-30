@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { boolean, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 
 import { sharedTimestampConumns } from '../utils'
 import { accounts } from './accounts.schema'
@@ -12,6 +12,7 @@ export const wallets = pgTable(
     name: text('name').unique().notNull(),
     bio: text('bio').unique().notNull(),
     passkey: text('passkey').notNull(),
+    isActive: boolean('is_active').notNull().default(true),
     ...sharedTimestampConumns
   },
   (self) => [uniqueIndex().on(self.slug)]

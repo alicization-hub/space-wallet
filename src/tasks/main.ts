@@ -1,6 +1,6 @@
 import { setTimeout } from 'timers/promises'
 
-import { eq, getTableColumns, gt } from 'drizzle-orm'
+import { and, eq, getTableColumns, gt } from 'drizzle-orm'
 import { schedule } from 'node-cron'
 import { pick } from 'ramda'
 
@@ -33,7 +33,13 @@ async function runScheduledTask() {
       })
       .from(schema.accounts)
       .innerJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
-      .where(gt(schema.accounts.lastDescriptorRange, 0))
+      .where(
+        and(
+          eq(schema.wallets.isActive, true),
+          eq(schema.accounts.isActive, true),
+          gt(schema.accounts.lastDescriptorRange, 0)
+        )
+      )
 
     const rpcClient = new RPCClient()
     for await (const account of accounts) {
@@ -44,10 +50,12 @@ async function runScheduledTask() {
 
       await setTimeout(2e2)
       await syncAddresses(account.id)
+
+      logger(`✅ [${account.id}] The account data have been successfully synced.\n`)
     }
 
     logger('✅ The tasks have been successfully synced.', startTime)
-    logger('')
+    console.log('\n')
   } catch (error) {
     console.error('⚠️', ' An error occurred:')
     console.log(error)

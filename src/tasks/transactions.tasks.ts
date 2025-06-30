@@ -122,5 +122,4 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
   }
 
   logger(`📝 [${accountId}] Transaction's has been successfully synced.`, startTime)
-  logger('')
 }

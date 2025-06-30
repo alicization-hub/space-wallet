@@ -32,7 +32,6 @@ export async function syncAddresses(accountId: string) {
       )
 
     logger(`📝 [${accountId}] Address has been successfully synced.`, startTime)
-    logger('')
   } catch (error) {
     console.error('⚠️', ' An error occurred:')
     console.log(error)

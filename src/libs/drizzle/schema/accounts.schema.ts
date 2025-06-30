@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { index, integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { boolean, index, integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
 import { sharedTimestampConumns } from '../utils'
 import { addresses } from './addresses.schema'
@@ -19,6 +19,7 @@ export const accounts = pgTable(
     balance: json('balance').notNull().$type<Wallet.Balance>(),
     lastSyncHeight: integer('last_sync_height').notNull(),
     lastDescriptorRange: integer('last_descriptor_range').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(true),
     startedAt: timestamp('started_at', { precision: 6, withTimezone: true }).notNull().defaultNow(),
     ...sharedTimestampConumns
   },
