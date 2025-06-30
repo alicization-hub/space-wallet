@@ -29,11 +29,6 @@ export async function generateMnemonic(length: 12 | 24 = 24) {
 export async function getWallet() {
   const auth = await useAuthGuard()
 
-  const [wallet] = await db
-    .select({ slug: schema.wallets.slug })
-    .from(schema.wallets)
-    .where(eq(schema.wallets.id, auth.sub))
-
   const walletColumns = getTableColumns(schema.wallets)
   const accountColumns = getTableColumns(schema.accounts)
   return db
