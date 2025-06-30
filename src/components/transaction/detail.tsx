@@ -1,7 +1,7 @@
 'use client'
 
 import { DocumentIcon } from '@/components/icons'
-import { type WebState } from '@/libs/drizzle/types'
+import { type Schema } from '@/libs/drizzle/types'
 
 export function DetailComponent({
   tx,

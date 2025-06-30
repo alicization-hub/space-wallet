@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import { type WebState } from '../drizzle/types'
+import { type Schema } from '../drizzle/types'
 
 type States = {
   wallet: Schema.iWallet

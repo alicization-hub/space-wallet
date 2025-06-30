@@ -2,7 +2,7 @@
 
 import { Snippet } from '@heroui/react'
 
-import { type TransactionSchema as Transaction } from '@/libs/drizzle/types'
+import { type Schema } from '@/libs/drizzle/types'
 import { toExplorer, toShort } from '@/libs/utils'
 
 export function AddrComponent({
@@ -12,7 +12,7 @@ export function AddrComponent({
 }: Readonly<{
   label: string
   type: 'input' | 'output'
-  values: Transaction['outputs'] | Transaction['inputs']
+  values: Schema.iTransaction['outputs'] | Schema.iTransaction['inputs']
 }>) {
   // __STATE's
   const [{ address }] = values
