@@ -100,7 +100,7 @@ export class RPCClient {
     blank: boolean = true,
     avoidReuse: boolean = true,
     passphrase: string = '',
-    loadOnStartup: boolean | null = true
+    loadOnStartup: boolean | null = null
   ) {
     return this.call<IWallet.Created>('createwallet', [
       name,

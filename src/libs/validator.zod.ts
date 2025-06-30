@@ -11,19 +11,19 @@ export const queryValidator = z.object({
 
 export const passphraseSchema = z
   .string()
-  .min(8, { message: 'Passphrase must be at least 8 characters long.' })
-  .max(32, { message: 'Passphrase must be at most 32 characters long.' })
-  .regex(/[A-Z]/, { message: 'Passphrase must contain at least one uppercase letter.' })
-  .regex(/[a-z]/, { message: 'Passphrase must contain at least one lowercase letter.' })
-  .regex(/[0-9]/, { message: 'Passphrase must contain at least one number.' })
-  .regex(/[^A-Za-z0-9]/, { message: 'Passphrase must contain at least one special character.' })
-  .refine(
-    (value) => {
-      // Check for no more than 2 identical characters in a row
-      return !/(.)\1\1/.test(value)
-    },
-    { message: 'Passphrase cannot have 3 or more identical characters in sequence.' }
+  .min(10, { message: 'Passphrase must be at least 10 characters long' })
+  .max(32, { message: 'Passphrase must not exceed 64 characters' })
+  .regex(/[0-9]/, { message: 'Passphrase must contain at least one number' })
+  .regex(/[a-z]/, { message: 'Passphrase must contain at least one lowercase letter' })
+  .regex(/[A-Z]/, { message: 'Passphrase must contain at least one uppercase letter' })
+  .regex(/[!@#$%&\-_]/, 'Passphrase must contain at least one special character (!@#$%&-_)')
+  .regex(
+    /^[a-zA-Z0-9!@#$%&\-_]+$/,
+    'Passphrase can only contain letters, numbers, and these special characters: !@#$%&-_'
   )
+  .refine((value) => !/(.)\1\1/.test(value), {
+    message: 'Passphrase cannot have 3 or more identical characters in sequence.'
+  })
   .refine(
     (value) => {
       // Check for common patterns (e.g., "123", "abc")

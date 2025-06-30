@@ -44,6 +44,5 @@ RUN bun install --production --frozen-lockfile --prefer-offline
 # Expose the port Next.js will listen on
 EXPOSE 3000
 
-# Command to run the Next.js application in production mode
-# Bun will execute 'next start' or equivalent based on package.json
+# Command to run Supervisor
 CMD ["bun", "run", "start:prod"]

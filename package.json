@@ -6,6 +6,7 @@
   "scripts": {
     "start:dev": "next dev --turbopack --experimental-https",
     "start:prod": "bun run next-prod.ts",
+    "start:tasks": "bun run src/tasks/main.ts",
     "build": "next build",
     "drizzle:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "drizzle:push": "drizzle-kit push --config=drizzle.config.ts"
@@ -27,12 +28,14 @@
     "framer-motion": "^12.19.1",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.3.4",
+    "node-cron": "^4.1.1",
     "pg": "^8.16.2",
     "qrcode": "^1.5.4",
     "ramda": "^0.31.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.1",
+    "uuid": "^11.1.0",
     "zod": "^3.25.67",
     "zustand": "^5.0.5"
   },

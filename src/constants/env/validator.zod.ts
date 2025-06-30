@@ -37,5 +37,6 @@ export const ciphersSchema = z.object({
 
 export const jwtSchema = z.object({
   secret: z.string().default('your-secret-key'),
+  issuer: z.string().default('your-issuer'),
   ttl: z.string().default('1h')
 })

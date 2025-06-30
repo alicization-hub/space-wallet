@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
-import { integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { index, integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { v7 as uuidV7 } from 'uuid'
 
 import { sharedTimestampConumns } from '../utils'
 import { addresses } from './addresses.schema'
@@ -9,7 +10,7 @@ import { wallets } from './wallets.schema'
 export const accounts = pgTable(
   'accounts',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').primaryKey().default(uuidV7()),
     walletId: uuid('wallet_id')
       .references(() => wallets.id)
       .notNull(),
@@ -22,7 +23,7 @@ export const accounts = pgTable(
     startedAt: timestamp('started_at', { precision: 6, withTimezone: true }).notNull().defaultNow(),
     ...sharedTimestampConumns
   },
-  (self) => []
+  (self) => [index().on(self.label)]
 ).enableRLS()
 
 // ********************** Relations ********************** \\

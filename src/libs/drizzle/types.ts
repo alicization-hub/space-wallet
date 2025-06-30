@@ -3,14 +3,14 @@ import { addresses } from './schema/addresses.schema'
 import { transactions } from './schema/transactions.schema'
 import { wallets } from './schema/wallets.schema'
 
-export type WalletSchema = typeof wallets.$inferSelect
-export type AccountSchema = typeof accounts.$inferSelect
-export type AddressSchema = typeof addresses.$inferSelect
-export type TransactionSchema = typeof transactions.$inferSelect
+export type Wallet = typeof wallets.$inferSelect
+export type Account = typeof accounts.$inferSelect
+export type Address = typeof addresses.$inferSelect
+export type Transaction = typeof transactions.$inferSelect
 
-export namespace WebState {
-  export type Wallet = Omit<WalletSchema, 'bio' | 'passkey'>
-  export type Account = Omit<AccountSchema, 'walletId' | 'index' | 'lastDescriptorRange'>
-  export type Address = Omit<AddressSchema, 'accountId'>
-  export type Transaction = Omit<TransactionSchema, 'accountId'>
+export namespace Schema {
+  export type iWallet = Omit<Wallet, 'bio' | 'passkey'>
+  export type iAccount = Omit<Account, 'walletId' | 'index' | 'lastDescriptorRange'>
+  export type iAddress = Omit<Address, 'accountId'>
+  export type iTransaction = Omit<Transaction, 'accountId'>
 }

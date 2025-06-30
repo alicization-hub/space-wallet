@@ -63,7 +63,7 @@ export async function importDescriptors({ passphrase }: ImportValidator) {
     rpcClient.importDescriptors([
       {
         desc: receive.descriptor,
-        active: true,
+        active: false,
         range: [nextIndex, nextRangeEnd],
         timestamp: isFirst ? getUnixTime(new Date(wallet.account.startedAt)) : 'now',
         internal: false,
@@ -71,7 +71,7 @@ export async function importDescriptors({ passphrase }: ImportValidator) {
       },
       {
         desc: change.descriptor,
-        active: true,
+        active: false,
         range: [nextIndex, nextRangeEnd],
         timestamp: isFirst ? getUnixTime(new Date(wallet.account.startedAt)) : 'now',
         internal: true,

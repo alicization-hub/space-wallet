@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm'
-import { boolean, integer, json, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { integer, json, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { v7 as uuidV7 } from 'uuid'
 
 import { sharedTimestampConumns } from '../utils'
 import { accounts } from './accounts.schema'
@@ -7,7 +8,7 @@ import { accounts } from './accounts.schema'
 export const transactions = pgTable(
   'transactions',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: uuid('id').primaryKey().default(uuidV7()),
     accountId: uuid('account_id')
       .references(() => accounts.id)
       .notNull(),
@@ -16,10 +17,10 @@ export const transactions = pgTable(
     weight: integer('weight').notNull(),
     amount: integer('amount').notNull().default(0),
     fee: integer('fee').notNull(),
-    inputs: json('inputs').notNull().$type<Transaction.Input[]>(),
-    outputs: json('outputs').notNull().$type<Transaction.Output[]>(),
     type: text('type').notNull().$type<Transaction.Type>(),
     status: text('status').notNull().$type<Transaction.Status>(),
+    inputs: json('inputs').notNull().$type<Transaction.Input[]>(),
+    outputs: json('outputs').notNull().$type<Transaction.Output[]>(),
     timestamp: timestamp('timestamp', { precision: 6, withTimezone: true }).notNull(),
     confirmations: integer('confirmations').notNull().default(0),
     blockHash: text('block_hash'),

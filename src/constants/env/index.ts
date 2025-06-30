@@ -39,5 +39,6 @@ export const CIPHERS = ciphersSchema.parse({
 
 export const JWT = jwtSchema.parse({
   secret: process.env.JWT_SECRET,
+  issuer: process.env.JWT_ISS,
   ttl: process.env.JWT_TTL
 })

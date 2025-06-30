@@ -16,12 +16,12 @@ declare namespace Descriptor {
     /**
      * Descriptor to import.
      * ```
-     * P2WPKH = `wpkh([fp/84'/0'/0']xpub/0/*)`
-     * Taproot = `tr([fp/84'/0'/0']xpub/0/*)`
+     * P2WPKH = `wpkh([fingerprint/84'/0'/0']xpub...)#checksum`
+     * Taproot = `tr([fingerprint/86'/0'/0']xpub...)#checksum`
      * ```
      **/
     desc: string
-    /** Set this descriptor to be the active descriptor for the corresponding output type/externality */
+    /** Set this descriptor to be the active descriptor for the corresponding output type/externality. (Set `false` for watch-only) */
     active?: boolean
     /** If a ranged descriptor is used, this specifies the end or the range (in the form [begin,end]) to import */
     range: number[]
@@ -32,7 +32,7 @@ declare namespace Descriptor {
      * "now" can be specified to bypass scanning, for outputs which are known to never have been used, and 0 can be specified to scan the entire blockchain.
      * Blocks up to 2 hours before the earliest timestamp of all descriptors being imported will be scanned.
      **/
-    timestamp: number | 'now'
+    timestamp: number
     /** Whether matching outputs should be treated as not incoming payments (e.g. change) */
     internal?: boolean
     /** Label to assign to the address, only allowed with internal=false */

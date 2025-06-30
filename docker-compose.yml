@@ -22,21 +22,11 @@ services:
     restart: always
     build:
       context: ./
-      dockerfile: Dockerfile.next
+      dockerfile: Dockerfile
     ports:
       - '8338:3000'
     environment:
       NODE_ENV: production
-    networks:
-      - space_network
-
-  schedulers:
-    container_name: space-scheduler
-    image: space-scheduler:latest
-    restart: always
-    build:
-      context: ./
-      dockerfile: Dockerfile.task
     networks:
       - space_network
 

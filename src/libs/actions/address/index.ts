@@ -1,7 +1,5 @@
 'use server'
 
-import { setTimeout } from 'timers/promises'
-
 import { and, asc, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
 import { omit } from 'ramda'
 
@@ -18,7 +16,6 @@ import type { CreateValidator, QueryValidator } from './validator'
 export async function findAddress() {
   try {
     const auth = await useAuthGuard()
-    await setTimeout(2e3)
 
     const addressColumns = getTableColumns(schema.addresses)
     const [address] = await db
@@ -127,21 +124,17 @@ export async function createAddresses({ passphrase }: CreateValidator) {
       const receiveAddress = addr.create(wallet.account.purpose, wallet.account.index, index)
       addresses.push({
         accountId: wallet.account.id,
-        label: 'default',
         address: receiveAddress,
         type: 'receive',
-        index,
-        isUsed: false
+        index
       })
 
       const changeAddress = addr.create(wallet.account.purpose, wallet.account.index, index, true)
       addresses.push({
         accountId: wallet.account.id,
-        label: 'default',
         address: changeAddress,
         type: 'change',
-        index,
-        isUsed: false
+        index
       })
     }
 

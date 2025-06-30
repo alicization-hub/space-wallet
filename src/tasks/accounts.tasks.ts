@@ -1,12 +1,13 @@
 import { eq } from 'drizzle-orm'
 
-import { RPCClient } from '../bitcoin/rpc'
-import { bitcoinToSats } from '../bitcoin/unit'
-import { db, schema } from '../drizzle'
-import type { AccountSchema as Account } from '../drizzle/types'
-import { logger } from '../utils'
+import { RPCClient } from '@/libs/bitcoin/rpc'
+import { bitcoinToSats } from '@/libs/bitcoin/unit'
+import { db, schema } from '@/libs/drizzle'
 
-export async function syncAccount(account: Account, rpcClient: RPCClient) {
+import { logger } from './logger'
+
+export async function syncAccount(accountId: string, rpcClient: RPCClient) {
+  logger(`🔄 [${accountId}] Initiating account balance sync...`)
   const startTime = Date.now()
 
   try {
@@ -27,11 +28,9 @@ export async function syncAccount(account: Account, rpcClient: RPCClient) {
         balance,
         lastSyncHeight: walletInfo.lastprocessedblock.height
       })
-      .where(eq(schema.accounts.id, account.id))
+      .where(eq(schema.accounts.id, accountId))
 
-    logger(`✅ [${account.id}] The account has been successfully synced.`, startTime)
-
-    return true
+    logger(`📝 [${accountId}] Account has been successfully synced.`, startTime)
   } catch (error) {
     console.error('⚠️', ' An error occurred:')
     console.log(error)

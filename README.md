@@ -62,8 +62,8 @@ src               # App entry point.
 └─ constants      # Constant variable.
 └─ hooks          # Customs hooks.
 └─ libs           # Libraries, utilities.
-└─ services       # Services and scheduler.
 └─ styles         # Stylesheet.
+└─ tasks          # Tasks scheduler.
 └─ types          # TypeScript decorators.
 ```
 

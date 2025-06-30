@@ -3,8 +3,8 @@ import { create } from 'zustand'
 import { type WebState } from '../drizzle/types'
 
 type States = {
-  wallet: WebState.Wallet
-  account: WebState.Account
+  wallet: Schema.iWallet
+  account: Schema.iAccount
 }
 
 type Actions = {

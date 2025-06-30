@@ -40,13 +40,13 @@ export function ReceiveComponent({ onClose }: Readonly<{ onClose?: () => void }>
       }
     }
 
-    const timeoutId = setTimeout(() => func())
+    const timeoutId = setTimeout(() => func(), 1000)
     return () => clearTimeout(timeoutId)
   }, [])
 
   // __RENDER
   return (
-    <div className='flex h-full flex-col gap-4'>
+    <div className='flex flex-col gap-4'>
       <div className='flex gap-4 select-none'>
         <ScanIcon className='size-7' />
         <div className='font-number text-2xl capitalize'>receive address</div>

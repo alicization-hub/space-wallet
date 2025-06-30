@@ -10,7 +10,7 @@ export class jwt {
         JWT.secret,
         {
           algorithm: 'HS512',
-          issuer: ENV.APP_NAME,
+          issuer: JWT.issuer,
           expiresIn: JWT.ttl as any,
           ...options
         },
@@ -28,7 +28,7 @@ export class jwt {
         JWT.secret,
         {
           algorithms: ['HS512'],
-          issuer: ENV.APP_NAME
+          issuer: JWT.issuer
         },
         (error, payload) => {
           resolve({ payload, error } as any)
