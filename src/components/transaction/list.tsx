@@ -2,6 +2,7 @@
 
 import { Button, Snippet, Spinner } from '@heroui/react'
 import { format } from 'date-fns'
+import { motion } from 'framer-motion'
 import { useMemo } from 'react'
 
 import { ChatIcon, DocumentIcon, LoginIcon, LogoutIcon } from '@/components/icons'
@@ -12,9 +13,11 @@ import { numberToSpace, toExplorer, toShort } from '@/libs/utils'
 import { AddrComponent } from './addr'
 
 export function ListComponent({
+  idx,
   tx,
   onClick
 }: Readonly<{
+  idx: number
   tx: Schema.iTransaction
   onClick?: () => void
 }>) {
@@ -39,7 +42,12 @@ export function ListComponent({
 
   // __RENDER
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{
+        opacity: 1,
+        transition: { delay: idx / 6.4, duration: 0.4 }
+      }}
       className='mirror grid items-center gap-8 rounded-xs p-4'
       style={{ gridTemplateColumns: '1.75rem repeat(2, 2fr) 1fr auto' }}>
       <div className='flex items-center'>
@@ -97,10 +105,14 @@ export function ListComponent({
       </div>
 
       <div className='flex'>
-        <Button className='size-12 rounded-sm' variant='light' radius='none' isIconOnly onPress={onClick}>
+        <Button
+          className='hover:bg-foreground/5 hover:ring-foreground/10 size-12 rounded-xs bg-transparent hover:ring-1'
+          radius='none'
+          isIconOnly
+          onPress={onClick}>
           <DocumentIcon className='size-6 opacity-80' />
         </Button>
       </div>
-    </div>
+    </motion.div>
   )
 }

@@ -1,39 +1,32 @@
-import { decode, sign, verify, type SignOptions } from 'jsonwebtoken'
+import { sign, verify, type SignOptions } from 'jsonwebtoken'
 
-import { ENV, JWT } from '@/constants/env'
+import { JWT } from '@/constants/env'
 
 export class jwt {
-  static async sign(payload: any, options?: SignOptions) {
-    return new Promise<{ token: string; error: Error | null }>((resolve) => {
-      sign(
-        payload,
-        JWT.secret,
-        {
-          algorithm: 'HS512',
-          issuer: JWT.issuer,
-          expiresIn: JWT.ttl as any,
-          ...options
-        },
-        (error, token) => {
-          resolve({ token, error } as any)
-        }
-      )
-    })
+  static sign(payload: any, options?: SignOptions) {
+    try {
+      return sign(payload, JWT.secret, {
+        algorithm: 'HS512',
+        issuer: JWT.issuer,
+        expiresIn: JWT.ttl as any,
+        ...options
+      })
+    } catch (error) {
+      throw error
+    }
   }
 
-  static verify<T = JwtPayload>(token: string) {
-    return new Promise<{ payload: T; error: Error | null }>((resolve) => {
-      verify(
-        token,
-        JWT.secret,
-        {
-          algorithms: ['HS512'],
-          issuer: JWT.issuer
-        },
-        (error, payload) => {
-          resolve({ payload, error } as any)
-        }
-      )
-    })
+  static verify<T = JwtPayload>(token: string): T {
+    try {
+      const result = verify(token, JWT.secret, {
+        complete: true,
+        algorithms: ['HS512'],
+        issuer: JWT.issuer
+      })
+
+      return result.payload as T
+    } catch (error) {
+      throw error
+    }
   }
 }

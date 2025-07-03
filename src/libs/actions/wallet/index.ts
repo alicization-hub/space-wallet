@@ -2,13 +2,13 @@
 
 import 'server-only'
 
-import { and, eq, getTableColumns } from 'drizzle-orm'
+import { and, asc, eq, getTableColumns } from 'drizzle-orm'
 import { omit, pick } from 'ramda'
 
 import { mnemonic } from '@/libs/bitcoin/mnemonic'
 import { ciphers } from '@/libs/ciphers'
 import { db, schema } from '@/libs/drizzle'
-import { useAuthGuard } from '@/libs/jwt/guard'
+import { useAuthorized } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
 
 import type { CreateWalletValidator, UpdateWalletValidator } from './validator'
@@ -23,22 +23,50 @@ export async function generateMnemonic(length: 12 | 24 = 24) {
   return mnemonic.generate(length)
 }
 
-/**
- * Returns the wallet data for the authenticated user.
- */
-export async function getWallet() {
-  const auth = await useAuthGuard()
+export async function findWallets() {
+  try {
+    await useAuthorized()
 
-  const walletColumns = getTableColumns(schema.wallets)
-  const accountColumns = getTableColumns(schema.accounts)
-  return db
-    .select({
-      ...omit(['bio', 'passkey'], walletColumns),
-      account: omit(['walletId', 'index', 'lastDescriptorRange'], accountColumns)
+    return db.query.wallets.findMany({
+      columns: {
+        bio: false,
+        passkey: false
+      },
+      orderBy: [asc(schema.wallets.createdAt)],
+      with: {
+        accounts: {
+          columns: {
+            walletId: false,
+            index: false,
+            lastDescriptorRange: false
+          }
+        }
+      }
     })
-    .from(schema.wallets)
-    .innerJoin(schema.accounts, eq(schema.accounts.walletId, schema.wallets.id))
-    .where(and(eq(schema.wallets.id, auth.sub), eq(schema.accounts.id, auth.uid)))
+  } catch (error) {
+    throw error
+  }
+}
+
+export async function currentAccount() {
+  try {
+    const auth = await useAuthorized()
+
+    const walletColumns = getTableColumns(schema.wallets)
+    const accountColumns = getTableColumns(schema.accounts)
+    const [result] = await db
+      .select({
+        ...omit(['bio', 'passkey'], walletColumns),
+        account: omit(['walletId', 'index', 'lastDescriptorRange'], accountColumns)
+      })
+      .from(schema.wallets)
+      .innerJoin(schema.accounts, eq(schema.accounts.walletId, schema.wallets.id))
+      .where(and(eq(schema.wallets.id, auth.sub), eq(schema.accounts.id, auth.uid)))
+
+    return result
+  } catch (error) {
+    throw error
+  }
 }
 
 /**
@@ -102,7 +130,7 @@ export async function createWallet(values: CreateWalletValidator) {
  */
 export async function updateWallet(values: UpdateWalletValidator) {
   try {
-    const auth = await useAuthGuard()
+    const auth = await useAuthorized()
     await db.update(schema.wallets).set(values).where(eq(schema.wallets.id, auth.sub))
 
     return {
@@ -123,7 +151,7 @@ export async function updateWallet(values: UpdateWalletValidator) {
  */
 export async function deleteWallet() {
   try {
-    const auth = await useAuthGuard()
+    const auth = await useAuthorized()
     await db.delete(schema.wallets).where(eq(schema.wallets.id, auth.sub))
 
     return {

@@ -14,7 +14,7 @@ export function InfoComponent({}: Readonly<{}>) {
         {node.blocks ? (
           <span className='text-number text-sm font-medium'>{node.blocks}</span>
         ) : (
-          <div className='bg-foreground/15 h-5 w-12 animate-pulse' />
+          <div className='bg-foreground/5 h-5 w-12 animate-pulse' />
         )}
       </div>
 
@@ -23,7 +23,7 @@ export function InfoComponent({}: Readonly<{}>) {
         {node.network ? (
           <span className='text-number text-sm font-medium'>{node.network}</span>
         ) : (
-          <div className='bg-foreground/15 h-5 w-24 animate-pulse' />
+          <div className='bg-foreground/5 h-5 w-24 animate-pulse' />
         )}
       </div>
     </div>

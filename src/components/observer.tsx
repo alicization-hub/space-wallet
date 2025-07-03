@@ -1,6 +1,6 @@
 'use client'
 
-import { formatISO } from 'date-fns'
+import { formatISO, secondsToMilliseconds } from 'date-fns'
 import { useParams } from 'next/navigation'
 import { omit } from 'ramda'
 import { useEffect } from 'react'
@@ -28,27 +28,29 @@ export default function DataObserver({}: Readonly<{}>) {
         }, 5e2)
       }
 
-      setTimeout(() => func(), 3e4)
+      setTimeout(() => func(), secondsToMilliseconds(30))
     }
 
     if (params.uuid) {
-      const timeoutId = setTimeout(() => func())
-      return () => clearInterval(timeoutId)
+      const timeoutId = setTimeout(() => func(), 200)
+      return () => clearTimeout(timeoutId)
     }
   }, [params])
 
   useEffect(() => {
     const func = async () => {
       const response = await fetch(`/v0/${params.uuid}?id=1&ts=${formatISO(Date.now())}`)
-      const [data] = await response.json()
+      const data = await response.json()
       if (data) {
-        setWallet(omit(['account'], data) as any)
-        setAccount(data.account)
+        setTimeout(() => {
+          setWallet(omit(['account'], data) as any)
+          setAccount(data.account)
+        }, 5e2)
       }
     }
 
     if (params.uuid) {
-      const intervalId = setInterval(() => func(), 15e3)
+      const intervalId = setInterval(() => func(), secondsToMilliseconds(15))
       return () => clearInterval(intervalId)
     }
   }, [params])

@@ -18,6 +18,7 @@ const store = create<States & Actions>((setState, getState) => ({
     id: '',
     slug: '',
     name: '',
+    isActive: false,
     createdAt: new Date(),
     updatedAt: null
   },
@@ -33,6 +34,7 @@ const store = create<States & Actions>((setState, getState) => ({
       spendable: 0
     },
     lastSyncHeight: 0,
+    isActive: false,
     startedAt: new Date(),
     createdAt: new Date(),
     updatedAt: null

@@ -1,46 +1,60 @@
 'use client'
 
-import { useMemo } from 'react'
+import { omit } from 'ramda'
+import { useEffect, useMemo } from 'react'
 
 import { useWallet } from '@/hooks'
 import { satsToBitcoin } from '@/libs/bitcoin/unit'
+import { type Schema } from '@/libs/drizzle/types'
 import { numberToSpace } from '@/libs/utils'
 
-export function BalanceComponent({
-  balance
-}: Readonly<{
-  balance: Wallet.Balance
-}>) {
+type Data = Schema.iWallet & {
+  account: Schema.iAccount
+}
+
+export function BalanceComponent({ data }: Readonly<{ data: Data }>) {
   // __STATE's
+  const setWallet = useWallet((state) => state.setWallet)
+  const setAccount = useWallet((state) => state.setAccount)
   const account = useWallet((state) => state.account)
 
   const total = useMemo(() => {
-    const value = account.balance.total || balance.total
+    const value = account.balance.total || data.account.balance.total
     const [coin, decimal] = satsToBitcoin(value).toFixed(8).split('.')
     return `${coin}.${numberToSpace(decimal, 4).padStart(6, '0')}`
-  }, [account, balance])
+  }, [account, data])
 
   const values = useMemo(
     () => [
       {
         label: 'confirmed',
-        value: account.balance.confirmed || balance.confirmed
+        value: account.balance.confirmed || data.account.balance.confirmed
       },
       {
         label: 'unconfirmed',
-        value: account.balance.unconfirmed || balance.unconfirmed
+        value: account.balance.unconfirmed || data.account.balance.unconfirmed
       },
       {
         label: 'immature',
-        value: account.balance.immature || balance.immature
+        value: account.balance.immature || data.account.balance.immature
       },
       {
         label: 'spendable',
-        value: account.balance.spendable || balance.spendable
+        value: account.balance.spendable || data.account.balance.spendable
       }
     ],
-    [account, balance]
+    [account, data]
   )
+
+  // __EFFECT's
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setWallet(omit(['account'], data) as any)
+      setAccount(data.account)
+    }, 2e2)
+
+    return () => clearTimeout(timeoutId)
+  }, [data])
 
   // __RENDER
   return (

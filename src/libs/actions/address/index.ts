@@ -9,7 +9,7 @@ import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
 import { ciphers } from '@/libs/ciphers'
 import { db, schema } from '@/libs/drizzle'
 import { withPagination } from '@/libs/drizzle/utils'
-import { useAuthGuard } from '@/libs/jwt/guard'
+import { useAuthorized } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
 import { createPagination, isNotEqual } from '@/libs/utils'
 
@@ -17,7 +17,7 @@ import type { CreateValidator, QueryValidator } from './validator'
 
 export async function findAddress() {
   try {
-    const auth = await useAuthGuard()
+    const auth = await useAuthorized()
 
     const addressColumns = getTableColumns(schema.addresses)
     const [address] = await db
@@ -41,7 +41,7 @@ export async function findAddress() {
 
 export async function findAddresses(query: QueryValidator) {
   try {
-    const auth = await useAuthGuard()
+    const auth = await useAuthorized()
 
     const addressTableColumns = getTableColumns(schema.addresses)
     const filters: SQL[] = [eq(schema.addresses.accountId, auth.uid)]
@@ -87,7 +87,7 @@ export async function findAddresses(query: QueryValidator) {
 
 export async function createAddresses({ passphrase }: CreateValidator) {
   try {
-    const auth = await useAuthGuard()
+    const auth = await useAuthorized()
 
     const walletColumns = getTableColumns(schema.wallets)
     const accountColumns = getTableColumns(schema.accounts)

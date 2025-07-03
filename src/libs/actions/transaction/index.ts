@@ -7,14 +7,14 @@ import { omit } from 'ramda'
 
 import { db, schema } from '@/libs/drizzle'
 import { withPagination } from '@/libs/drizzle/utils'
-import { useAuthGuard } from '@/libs/jwt/guard'
+import { useAuthorized } from '@/libs/jwt/guard'
 import { createPagination } from '@/libs/utils'
 
 import type { QueryValidator } from './validator'
 
 export async function findTransactions(query: QueryValidator) {
   try {
-    const auth = await useAuthGuard()
+    const auth = await useAuthorized()
 
     const transactionColumns = getTableColumns(schema.transactions)
     const filters: SQL[] = [eq(schema.transactions.accountId, auth.uid)]

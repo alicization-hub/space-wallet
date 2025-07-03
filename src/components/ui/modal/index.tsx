@@ -20,10 +20,12 @@ export function ModalComponent({
       motionProps={{
         variants: {
           enter: {
+            y: 0,
             opacity: 1,
             transition: { duration: 0.1, ease: 'easeOut' }
           },
           exit: {
+            y: -4,
             opacity: 0,
             transition: { duration: 0.1, ease: 'easeOut' }
           }
@@ -38,7 +40,7 @@ export function ModalComponent({
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <ModalContent className='bg-background/80 ring-background/50 rounded-xs p-8 shadow-none ring-2 backdrop-blur-2xl'>
+      <ModalContent className='bg-background/90 ring-background/50 rounded-xs p-8 shadow-none ring-2 backdrop-blur-2xl'>
         {children}
       </ModalContent>
     </Modal>

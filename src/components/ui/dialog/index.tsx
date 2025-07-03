@@ -23,7 +23,7 @@ export function DialogComponent({
             transition: { duration: 0.1, ease: 'easeOut' }
           },
           exit: {
-            y: -2,
+            y: -4,
             opacity: 0,
             transition: { duration: 0.1, ease: 'easeOut' }
           }
@@ -38,7 +38,7 @@ export function DialogComponent({
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <ModalContent className='bg-background/80 ring-background/50 gap-8 rounded-xs px-8 py-6 shadow-none ring-2 backdrop-blur-2xl'>
+      <ModalContent className='bg-background/90 ring-background/50 gap-8 rounded-xs px-8 py-6 shadow-none ring-2 backdrop-blur-2xl'>
         <div className='text-foreground text-center'>{children}</div>
 
         <Button

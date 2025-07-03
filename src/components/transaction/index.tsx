@@ -57,8 +57,8 @@ export function TransactionComponent() {
         </div>
       ) : txs.length > 0 ? (
         <div className='grid gap-4'>
-          {txs.map((tx) => (
-            <ListComponent tx={tx} key={tx.id} onClick={() => handleClick(tx)} />
+          {txs.map((tx, index) => (
+            <ListComponent idx={index} tx={tx} key={tx.id} onClick={() => handleClick(tx)} />
           ))}
         </div>
       ) : (

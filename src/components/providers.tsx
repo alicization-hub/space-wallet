@@ -8,7 +8,6 @@ import { Locales } from '@/constants/enum'
 import { SpaceComponent } from './space'
 
 const DataObserver = dynamic(() => import('./observer'), { ssr: false })
-// const LoaderObserver = dynamic(() => import('./loader'), { ssr: false })
 
 export function Providers({ children }: Readonly<{ children: React.ReactNode }>) {
   // __RENDER

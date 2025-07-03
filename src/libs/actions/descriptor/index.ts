@@ -11,7 +11,7 @@ import { RPCClient } from '@/libs/bitcoin/rpc'
 import { createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
 import { ciphers } from '@/libs/ciphers'
 import { db, schema } from '@/libs/drizzle'
-import { useAuthGuard } from '@/libs/jwt/guard'
+import { useAuthorized } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
 
 import { type ImportValidator } from './validator'
@@ -24,7 +24,7 @@ import { type ImportValidator } from './validator'
  */
 export async function importDescriptors({ passphrase }: ImportValidator) {
   try {
-    const auth = await useAuthGuard()
+    const auth = await useAuthorized()
 
     const walletColumns = getTableColumns(schema.wallets)
     const accountColumns = getTableColumns(schema.accounts)

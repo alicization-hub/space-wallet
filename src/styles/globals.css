@@ -41,7 +41,7 @@
   }
 
   .btn-light {
-    @apply hover:bg-foreground/5 hover:ring-foreground/10 hover:ring-1;
+    @apply hover:bg-foreground/5 hover:ring-foreground/10 transition-all duration-100 hover:ring-1;
   }
 }
 
