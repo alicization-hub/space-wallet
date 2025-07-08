@@ -1,6 +1,12 @@
-import { Inconsolata, Inter } from 'next/font/google'
+import { Inconsolata, Ubuntu } from 'next/font/google'
 
-export const fontInter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' })
+export const fontUbuntu = Ubuntu({
+  weight: ['300', '400', '500', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-ubuntu'
+})
+
 export const fontNumber = Inconsolata({
   subsets: ['latin'],
   display: 'swap',

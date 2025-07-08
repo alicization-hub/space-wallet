@@ -12,7 +12,7 @@
   html,
   body {
     @apply text-foreground bg-background overflow-x-hidden antialiased;
-    font-family: var(--font-inter), 'sans-serif';
+    font-family: var(--font-ubuntu);
     text-rendering: optimizeLegibility;
   }
 

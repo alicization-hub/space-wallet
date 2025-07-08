@@ -8,6 +8,7 @@ export const queryValidator = query.omit({ status: true })
 export const createValidator = z.object({})
 
 export const switchValidator = z.object({
+  walletId: z.string().uuid(),
   accountId: z.string().uuid(),
   passphrase: passphraseSchema
 })

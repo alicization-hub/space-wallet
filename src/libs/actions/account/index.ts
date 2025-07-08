@@ -8,9 +8,9 @@ import { cookies } from 'next/headers'
 import { pick } from 'ramda'
 
 import { APP_TOKEN } from '@/constants'
+import { useAuthorized } from '@/libs/actions/guard'
 import { db, schema } from '@/libs/drizzle'
 import { jwt } from '@/libs/jwt'
-import { useAuthorized } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
 
 import { switchValidator, type SwitchValidator } from './validator'
@@ -18,7 +18,7 @@ import { switchValidator, type SwitchValidator } from './validator'
 export async function switchAccount(params: SwitchValidator) {
   try {
     const auth = await useAuthorized()
-    const { accountId, passphrase } = switchValidator.parse(params)
+    const { walletId, accountId, passphrase } = switchValidator.parse(params)
 
     const walletColumns = getTableColumns(schema.wallets)
     const accountColumns = getTableColumns(schema.accounts)
@@ -31,7 +31,7 @@ export async function switchAccount(params: SwitchValidator) {
       .innerJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
       .where(
         and(
-          eq(schema.wallets.id, auth.sub),
+          eq(schema.wallets.id, walletId),
           eq(schema.wallets.isActive, true),
           eq(schema.accounts.id, accountId),
           eq(schema.accounts.isActive, true)

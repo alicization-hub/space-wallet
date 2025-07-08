@@ -5,13 +5,13 @@ import 'server-only'
 import { and, asc, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
 import { omit } from 'ramda'
 
+import { useAuthorized } from '@/libs/actions/guard'
 import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
 import { ciphers } from '@/libs/ciphers'
 import { db, schema } from '@/libs/drizzle'
 import { withPagination } from '@/libs/drizzle/utils'
-import { useAuthorized } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
-import { createPagination, isNotEqual } from '@/libs/utils'
+import { createPagination } from '@/libs/utils'
 
 import type { CreateValidator, QueryValidator } from './validator'
 
@@ -45,10 +45,6 @@ export async function findAddresses(query: QueryValidator) {
 
     const addressTableColumns = getTableColumns(schema.addresses)
     const filters: SQL[] = [eq(schema.addresses.accountId, auth.uid)]
-
-    if (isNotEqual('all', query?.status)) {
-      filters.push(eq(schema.addresses.isUsed, query.status === 'used'))
-    }
 
     const { total, results } = await db.transaction(async (tx) => {
       const queryBuilder = tx

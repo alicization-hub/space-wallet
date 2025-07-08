@@ -1,6 +1,6 @@
 import { Providers } from '@/components/providers'
 import { Locales } from '@/constants/enum'
-import { fontInter, fontNumber } from '@/constants/fonts'
+import { fontNumber, fontUbuntu } from '@/constants/fonts'
 import { cls } from '@/libs/utils'
 
 import '@/styles/globals.css'
@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang={Locales.UK} style={{ colorScheme: 'dark' }}>
-      <body className={cls(fontInter.variable, fontNumber.variable)} style={{ backgroundColor: '#0a0a0a' }}>
+      <body className={cls(fontUbuntu.variable, fontNumber.variable)} style={{ backgroundColor: '#0a0a0a' }}>
         <Providers>{children}</Providers>
       </body>
     </html>

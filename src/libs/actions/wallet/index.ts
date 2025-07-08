@@ -2,13 +2,13 @@
 
 import 'server-only'
 
-import { and, asc, eq, getTableColumns } from 'drizzle-orm'
+import { and, asc, desc, eq, getTableColumns } from 'drizzle-orm'
 import { omit, pick } from 'ramda'
 
+import { useAuthorized } from '@/libs/actions/guard'
 import { mnemonic } from '@/libs/bitcoin/mnemonic'
 import { ciphers } from '@/libs/ciphers'
 import { db, schema } from '@/libs/drizzle'
-import { useAuthorized } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
 
 import type { CreateWalletValidator, UpdateWalletValidator } from './validator'
@@ -39,7 +39,8 @@ export async function findWallets() {
             walletId: false,
             index: false,
             lastDescriptorRange: false
-          }
+          },
+          orderBy: [desc(schema.accounts.purpose)]
         }
       }
     })

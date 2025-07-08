@@ -6,7 +6,6 @@ import { DangerIcon, DownloadIcon, FilterIcon, SendIcon } from '@/components/ico
 import { DialogComponent } from '@/components/ui/dialog'
 import { ModalComponent } from '@/components/ui/modal'
 
-import { AccountComponent } from './account'
 import { ReceiveComponent } from './receive'
 
 export function ButtonSend({}: Readonly<{}>) {
@@ -53,30 +52,6 @@ export function ButtonReceive({}: Readonly<{}>) {
 
       <ModalComponent control={m} size='xl'>
         <ReceiveComponent onClose={m.onClose} />
-      </ModalComponent>
-    </>
-  )
-}
-
-export function ButtonAccount({}: Readonly<{}>) {
-  // __STATE's
-  const m = useDisclosure()
-
-  // __RENDER
-  return (
-    <>
-      <Button
-        className='hover:bg-foreground/5 hover:ring-foreground/10 h-10 gap-2 rounded-xs bg-transparent px-4 hover:ring-1'
-        radius='none'
-        type='button'
-        aria-label='Button wallet'
-        onPress={m.onOpen}>
-        <FilterIcon className='size-6' />
-        <span className='text-sm font-semibold uppercase'>account</span>
-      </Button>
-
-      <ModalComponent control={m} size='xl'>
-        <AccountComponent onClose={m.onClose} />
       </ModalComponent>
     </>
   )

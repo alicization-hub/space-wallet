@@ -57,7 +57,7 @@ async function runScheduledTask() {
     logger('✅ The tasks have been successfully synced.', startTime)
     console.log('\n')
   } catch (error) {
-    console.error('⚠️', ' An error occurred:')
+    console.error('⚠️ An error occurred:')
     console.log(error)
   }
 }

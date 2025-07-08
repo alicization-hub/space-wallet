@@ -1,6 +1,6 @@
 import { currentAccount } from '@/libs/actions/wallet'
 
-import { ButtonAccount, ButtonReceive, ButtonSend } from './actions'
+import { ButtonReceive, ButtonSend } from './actions'
 import { BalanceComponent } from './balance'
 
 export async function WalletComponent() {
@@ -14,7 +14,6 @@ export async function WalletComponent() {
       <div className='flex items-center justify-center gap-4'>
         <ButtonSend />
         <ButtonReceive />
-        <ButtonAccount />
       </div>
     </section>
   )

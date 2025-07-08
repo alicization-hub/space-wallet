@@ -1,4 +1,4 @@
 export default async function WelcomePage() {
   // __RENDER
-  return <div className=''>Welcome Page</div>
+  return <div className='py-8 text-center'>Welcome Page</div>
 }

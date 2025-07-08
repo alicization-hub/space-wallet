@@ -5,9 +5,9 @@ import 'server-only'
 import { and, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
 import { omit } from 'ramda'
 
+import { useAuthorized } from '@/libs/actions/guard'
 import { db, schema } from '@/libs/drizzle'
 import { withPagination } from '@/libs/drizzle/utils'
-import { useAuthorized } from '@/libs/jwt/guard'
 import { createPagination } from '@/libs/utils'
 
 import type { QueryValidator } from './validator'

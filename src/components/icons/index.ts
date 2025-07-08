@@ -1,4 +1,7 @@
+export { ActivityIcon } from './activity'
+export { BitcoinIcon } from './bitcoin'
 export { ChatIcon } from './chat'
+export { ChartIcon } from './chart'
 export { DangerIcon } from './danger'
 export { DocumentIcon } from './document'
 export { DownloadIcon } from './download'

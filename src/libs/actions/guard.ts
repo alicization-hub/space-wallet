@@ -5,8 +5,7 @@ import 'server-only'
 import { cookies } from 'next/headers'
 
 import { APP_TOKEN } from '@/constants'
-
-import { jwt } from './index'
+import { jwt } from '@/libs/jwt'
 
 export async function useAuthorized() {
   try {

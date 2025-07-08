@@ -105,7 +105,14 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
         for (const tx of updates) {
           await db
             .update(schema.transactions)
-            .set({ confirmations: tx.confirmations })
+            .set({
+              status: tx.status,
+              confirmations: tx.confirmations,
+              blockHash: tx.blockHash,
+              blockHeight: tx.blockHeight,
+              blockIndex: tx.blockIndex,
+              blockTime: tx.blockTime
+            })
             .where(and(eq(schema.transactions.accountId, accountId), eq(schema.transactions.txid, tx.txid)))
         }
       }

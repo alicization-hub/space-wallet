@@ -6,12 +6,12 @@ import { getUnixTime } from 'date-fns'
 import { and, eq, getTableColumns } from 'drizzle-orm'
 import { omit } from 'ramda'
 
+import { useAuthorized } from '@/libs/actions/guard'
 import { createDescriptors } from '@/libs/bitcoin/descriptor'
 import { RPCClient } from '@/libs/bitcoin/rpc'
 import { createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
 import { ciphers } from '@/libs/ciphers'
 import { db, schema } from '@/libs/drizzle'
-import { useAuthorized } from '@/libs/jwt/guard'
 import { password } from '@/libs/password'
 
 import { type ImportValidator } from './validator'

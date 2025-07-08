@@ -30,7 +30,7 @@ export async function syncAccount(accountId: string, rpcClient: RPCClient) {
       })
       .where(eq(schema.accounts.id, accountId))
 
-    logger(`📝 [${accountId}] Account has been successfully synced.`, startTime)
+    logger(`📝 [${accountId}] The account has been successfully synced.`, startTime)
   } catch (error) {
     console.error('⚠️', ' An error occurred:')
     console.log(error)

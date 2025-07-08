@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation'
 
-import { useAuthorized } from '@/libs/jwt/guard'
+import { useAuthorized } from '@/libs/actions/guard'
 
 export default async function ProtectedPage() {
-  try {
-    const auth = await useAuthorized()
+  const auth = await useAuthorized()
+  if (auth.sub) {
     redirect(`/${auth.sub}`)
-  } catch (error: any) {
-    redirect(`/welcome?msg=${error.message}`)
+  } else {
+    redirect(`/welcome?msg=Unauthorized`)
   }
 }

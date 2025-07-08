@@ -8,7 +8,7 @@ import { useMemo } from 'react'
 import { ChatIcon, DocumentIcon, LoginIcon, LogoutIcon } from '@/components/icons'
 import { satsToBitcoin } from '@/libs/bitcoin/unit'
 import { type Schema } from '@/libs/drizzle/types'
-import { numberToSpace, toExplorer, toShort } from '@/libs/utils'
+import { cls, numberToSpace, toExplorer, toShort } from '@/libs/utils'
 
 import { AddrComponent } from './addr'
 
@@ -90,14 +90,20 @@ export function ListComponent({
       </div>
 
       <div className='flex flex-col'>
-        <div className='flex items-center gap-2'>
-          <span className='font-number word-tight text-base font-bold'>{amount}</span>
+        <div className='flex items-center gap-2' aria-label='Tx Amount'>
+          <span
+            className={cls('font-number word-tight text-base font-bold', {
+              'text-green-300': tx.type === 'receive',
+              'text-rose-200': tx.type === 'send'
+            })}>
+            {amount}
+          </span>
           <span className='text-foreground-500 text-sm font-light uppercase'>btc</span>
         </div>
 
-        <div className='flex items-center gap-2'>
-          <span className='pr-1 text-sm font-light text-red-400 capitalize'>fee</span>
-          <span className='font-number word-tight text-base font-bold'>
+        <div className='flex items-center gap-2' aria-label='Tx Fee'>
+          <span className='pr-1 text-sm font-light text-amber-500 capitalize'>fee</span>
+          <span className='font-number word-tight text-sm text-amber-100'>
             {numberToSpace(tx.fee.toString())}
           </span>
           <span className='text-foreground-500 text-sm capitalize'>sats</span>
@@ -107,6 +113,7 @@ export function ListComponent({
       <div className='flex'>
         <Button
           className='hover:bg-foreground/5 hover:ring-foreground/10 size-12 rounded-xs bg-transparent hover:ring-1'
+          aria-label='Tx Detail'
           radius='none'
           isIconOnly
           onPress={onClick}>
