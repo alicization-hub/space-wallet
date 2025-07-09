@@ -18,6 +18,12 @@ export const COIN = 100_000_000
 export const GAP_LIMIT = 23
 
 /**
+ * The minimum amount of satoshis that is considered a dust output.
+ * Below this threshold, the transaction will not be relayed by the network.
+ */
+export const DUST_THRESHOLD = 546
+
+/**
  * Creates a root key from a mnemonic phrase for the Bitcoin main chain.
  *
  * @param mnemonic - The BIP-39 mnemonic phrase (12 or 24 words).
@@ -37,6 +43,24 @@ export async function createRootKey(mnemonic: string, passphrase?: string) {
 }
 
 /**
+ * Creates a private key from a derivation path.
+ *
+ * @param rootKey - The root key to derive the private key from.
+ * @param derivationPath - The derivation path to derive the private key from.
+ */
+export function createPrivateKey(rootKey: HDKey, derivationPath: string) {
+  // Derive the private key using the specified derivation path
+  const { privateKey } = rootKey.derive(derivationPath)
+
+  // Ensure private key exists
+  if (!privateKey) {
+    throw new Error('Failed to derive private key.')
+  }
+
+  return privateKey
+}
+
+/**
  * Generates a Bitcoin address from a root key.
  *
  * @param rootKey - The root key to derive the address from.
@@ -46,23 +70,6 @@ export class AddressBuilder {
 
   constructor(rootKey: HDKey) {
     this.rootKey = rootKey
-  }
-
-  /**
-   * Creates a private key from a derivation path.
-   *
-   * @param derivationPath - The derivation path to derive the private key from.
-   */
-  private createPrivateKey(derivationPath: string) {
-    // Derive the private key using the specified derivation path
-    const { privateKey } = this.rootKey.derive(derivationPath)
-
-    // Ensure private key exists
-    if (!privateKey) {
-      throw new Error('Failed to derive private key.')
-    }
-
-    return privateKey
   }
 
   /**
@@ -77,7 +84,7 @@ export class AddressBuilder {
    * @param addressIndex - The address index.
    * @param isChange - The change boolean.
    */
-  public create(purpose: 44 | 84 | 86, accountNo: number, addressIndex: number, isChange?: boolean) {
+  public create(purpose: 84 | 86, accountNo: number, addressIndex: number, isChange?: boolean) {
     const derivationPath = derivationPathBuilder()
       .purpose(purpose)
       .coinType(0)
@@ -85,26 +92,10 @@ export class AddressBuilder {
       .change(isChange ? 1 : 0)
       .address(addressIndex)
       .build()
-    const privateKey = this.createPrivateKey(derivationPath)
-    const type: 'pkh' | 'wpkh' | 'tr' = {
-      44: 'pkh',
-      84: 'wpkh',
-      86: 'tr'
-    }[purpose] as any
+    const privateKey = createPrivateKey(this.rootKey, derivationPath)
+    const type = purpose === 84 ? 'wpkh' : 'tr'
 
     return getAddress(type, privateKey, NETWORK)!
-  }
-
-  /**
-   * Generate a P2PKH (Pay-to-Public-Key-Hash).
-   *
-   * @param accountNo - The account index.
-   * @param addressIndex - The address index.
-   * @param isChange - The change boolean.
-   * @returns P2PKH legacy address.
-   */
-  public legacy(accountNo: number, addressIndex: number, isChange?: boolean) {
-    return this.create(44, accountNo, addressIndex, isChange)
   }
 
   /**

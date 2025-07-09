@@ -23,3 +23,12 @@ declare namespace Transaction {
     value: number
   }
 }
+
+declare namespace UTXO {
+  export type Type = 'p2wpkh' | 'p2tr'
+
+  export type Selected = Pick<Unspent.List, 'txid' | 'vout' | 'amount' | 'address' | 'scriptPubKey'> & {
+    type: Type
+    derivationPath: string
+  }
+}

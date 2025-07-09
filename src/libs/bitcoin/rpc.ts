@@ -172,7 +172,16 @@ export class RPCClient {
    * @param txid The transaction id
    * @param blockhash The block hash
    */
-  public async getTransaction(txid: string, blockhash?: string): Promise<ITransaction.Raw> {
+  public async getTransaction(txid: string, blockhash?: string) {
     return this.call<ITransaction.Raw>('getrawtransaction', [txid, true, blockhash])
+  }
+
+  /**
+   * Tests if the transaction would be accepted by mempool if it were to be broadcast. Specifically checks for -maxtxsize violations, and whether the transaction is already in the mempool.
+   *
+   * @param rawTx An array of hex strings of raw transactions.
+   */
+  public async mempoolAccept(rawTx: string[]) {
+    return this.call('testmempoolaccept', [rawTx])
   }
 }
