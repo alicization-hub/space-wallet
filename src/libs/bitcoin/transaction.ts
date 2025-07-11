@@ -31,6 +31,8 @@ export async function createSignedTransaction(
   const amount = outputs.reduce((acc, r) => (r.isRecipient ? acc + bitcoinToSats(r.amount) : acc), 0)
   const { changeAmount } = calcEstimator(amount, feeRate, inputs, outputs)
 
+  if (changeAmount < 0) throw new Error('Insufficient total input value.')
+
   // Initialize transaction
   const tx = new Transaction()
 

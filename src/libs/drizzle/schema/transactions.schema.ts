@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { integer, json, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { index, integer, json, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
 
 import { sharedTimestampConumns } from '../utils'
 import { accounts } from './accounts.schema'
@@ -28,7 +28,7 @@ export const transactions = pgTable(
     blockTime: integer('block_time'),
     ...sharedTimestampConumns
   },
-  (self) => [uniqueIndex().on(self.txid)]
+  (self) => [index().on(self.txid)]
 ).enableRLS()
 
 // ********************** Relations ********************** \\

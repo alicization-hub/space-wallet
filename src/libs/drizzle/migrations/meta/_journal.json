@@ -15,6 +15,13 @@
       "when": 1751279504837,
       "tag": "0001_nervous_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1752228112439,
+      "tag": "0002_amused_slipstream",
+      "breakpoints": true
     }
   ]
 }

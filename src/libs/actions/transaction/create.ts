@@ -124,7 +124,7 @@ export async function createTransaction(formData: CreateValidator) {
     // Test accepted by mempool and broadcast the transaction
     const [test] = await rpcClient.verifyTransaction(tx.hex)
     if (test.allowed) {
-      // await rpcClient.broadcastTransaction(tx.hex)
+      await rpcClient.broadcastTransaction(tx.hex)
 
       return {
         success: true,

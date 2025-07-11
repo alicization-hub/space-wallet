@@ -121,7 +121,11 @@ export function ConfirmComponent({
           <div className='flex items-center justify-between gap-4'>
             <div className='text-foreground-500 text-sm capitalize'>change amount</div>
             <div className='font-number font-medium'>
-              {satsToBitcoin(summary.changeAmount).toFixed(8)} BTC
+              {summary.changeAmount >= 0 ? (
+                `${satsToBitcoin(summary.changeAmount).toFixed(8)} BTC`
+              ) : (
+                <span className='text-red-400'>Insufficient total input</span>
+              )}
             </div>
           </div>
         </div>
@@ -166,7 +170,7 @@ export function ConfirmComponent({
           type='submit'
           aria-label='Button send'
           isLoading={isLoading}
-          isDisabled={!watch('passphrase')}>
+          isDisabled={!watch('passphrase') || summary.changeAmount < 0}>
           <span className='font-bold capitalize'>send</span>
         </Button>
       </div>

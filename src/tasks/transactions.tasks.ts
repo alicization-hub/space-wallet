@@ -84,7 +84,7 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
       const existing = await db
         .select({ txid: schema.transactions.txid })
         .from(schema.transactions)
-        .where(inArray(schema.transactions.txid, txids))
+        .where(and(eq(schema.transactions.accountId, accountId), inArray(schema.transactions.txid, txids)))
 
       const existingTxids = new Set(existing.map((e) => e.txid))
 
