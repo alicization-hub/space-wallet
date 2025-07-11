@@ -14,6 +14,12 @@ declare type JwtPayload = {
   exp: number
 }
 
+declare type Fee = {
+  label: string
+  duration: string
+  value: number
+}
+
 /**
  * Reset = "\x1b[0m"
  * Bright = "\x1b[1m"

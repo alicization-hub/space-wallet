@@ -1,3 +1,4 @@
+import { bech32, bech32m } from '@scure/base'
 import { z } from 'zod'
 
 export const paramValidator = z.object({ uuid: z.string().uuid() })
@@ -11,61 +12,82 @@ export const queryValidator = z.object({
 
 export const passphraseSchema = z
   .string()
-  .min(10, { message: 'Passphrase must be at least 10 characters long' })
-  .max(32, { message: 'Passphrase must not exceed 64 characters' })
-  .regex(/[0-9]/, { message: 'Passphrase must contain at least one number' })
-  .regex(/[a-z]/, { message: 'Passphrase must contain at least one lowercase letter' })
-  .regex(/[A-Z]/, { message: 'Passphrase must contain at least one uppercase letter' })
+  .min(10, 'Passphrase must be at least 10 characters long')
+  .max(32, 'Passphrase must not exceed 64 characters')
+  .regex(/[0-9]/, 'Passphrase must contain at least one number')
+  .regex(/[a-z]/, 'Passphrase must contain at least one lowercase letter')
+  .regex(/[A-Z]/, 'Passphrase must contain at least one uppercase letter')
   .regex(/[!@#$%&\-_]/, 'Passphrase must contain at least one special character (!@#$%&-_)')
   .regex(
     /^[a-zA-Z0-9!@#$%&\-_]+$/,
     'Passphrase can only contain letters, numbers, and these special characters: !@#$%&-_'
   )
-  .refine((value) => !/(.)\1\1/.test(value), {
-    message: 'Passphrase cannot have 3 or more identical characters in sequence.'
-  })
   .refine(
-    (value) => {
-      // Check for common patterns (e.g., "123", "abc")
-      const commonPatterns = [
-        '123',
-        '234',
-        '345',
-        '456',
-        '567',
-        '678',
-        '789',
-        '890',
-        'abc',
-        'bcd',
-        'cde',
-        'def',
-        'efg',
-        'fgh',
-        'ghi',
-        'hij',
-        'ijk',
-        'jkl',
-        'klm',
-        'lmn',
-        'mno',
-        'nop',
-        'opq',
-        'pqr',
-        'qrs',
-        'rst',
-        'stu',
-        'tuv',
-        'uvw',
-        'vwx',
-        'wxy',
-        'xyz',
-        'qwerty',
-        'asdfgh',
-        'zxcvbn'
-      ]
-
-      return !commonPatterns.some((pattern) => value.toLowerCase().includes(pattern))
-    },
-    { message: 'Passphrase contains a common pattern or sequence.' }
+    (value) => !/(.)\1\1/.test(value),
+    'Passphrase cannot have 3 or more identical characters in sequence.'
   )
+  .refine((value) => {
+    // Check for common patterns (e.g., "123", "abc")
+    const commonPatterns = [
+      '123',
+      '234',
+      '345',
+      '456',
+      '567',
+      '678',
+      '789',
+      '890',
+      'abc',
+      'bcd',
+      'cde',
+      'def',
+      'efg',
+      'fgh',
+      'ghi',
+      'hij',
+      'ijk',
+      'jkl',
+      'klm',
+      'lmn',
+      'mno',
+      'nop',
+      'opq',
+      'pqr',
+      'qrs',
+      'rst',
+      'stu',
+      'tuv',
+      'uvw',
+      'vwx',
+      'wxy',
+      'xyz',
+      'qwerty',
+      'asdfgh',
+      'zxcvbn'
+    ]
+
+    return !commonPatterns.some((pattern) => value.toLowerCase().includes(pattern))
+  }, 'Passphrase contains a common pattern or sequence.')
+
+export const addressSchema = z.string().refine((address: any) => {
+  try {
+    if (address.startsWith('bc1q') || address.startsWith('tb1q')) {
+      const decoded = bech32.decode(address)
+      return decoded.prefix === 'bc' || decoded.prefix === 'tb'
+    }
+
+    if (address.startsWith('bc1p') || address.startsWith('tb1p')) {
+      const decoded = bech32m.decode(address)
+      return decoded.prefix === 'bc' || decoded.prefix === 'tb'
+    }
+
+    return false
+  } catch {
+    return false
+  }
+}, 'Invalid Bitcoin address (only SegWit and Taproot supported).')
+
+export const txidSchema = z
+  .string()
+  .length(64)
+  .regex(/^[0-9a-fA-F]{64}$/, 'Invalid TXID: must be 64-character hex string.')

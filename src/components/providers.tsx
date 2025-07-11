@@ -29,7 +29,6 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             base: 'max-w-[320px] p-4 rounded-xs'
           }
         }}
-        cla
       />
     </HeroUIProvider>
   )

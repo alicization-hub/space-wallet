@@ -96,7 +96,6 @@ export function ConfirmComponent({
         <Button
           className='bg-foreground/5 text-foreground-400 rounded-xs'
           type='button'
-          size='sm'
           aria-label='Button close'
           isDisabled={isLoading}
           onPress={onClose}>
@@ -104,9 +103,8 @@ export function ConfirmComponent({
         </Button>
 
         <Button
-          className='bg-foreground text-background rounded-xs px-4'
+          className='bg-foreground text-background rounded-xs px-8'
           type='submit'
-          size='sm'
           aria-label='Button submit'
           isLoading={isLoading}>
           <span className='font-bold capitalize'>confirm</span>

@@ -5,10 +5,12 @@ import { Button, Modal, ModalContent, useDisclosure } from '@heroui/react'
 export function DialogComponent({
   control,
   children,
+  placement = 'top',
   ...rest
 }: Readonly<{
   control: ReturnType<typeof useDisclosure>
   children: React.ReactNode
+  placement?: 'auto' | 'top' | 'center'
   onClose?: () => void
 }>) {
   // __RENDER
@@ -29,7 +31,7 @@ export function DialogComponent({
           }
         }
       }}
-      placement='top'
+      placement={placement}
       size='sm'
       radius='none'
       scrollBehavior='normal'

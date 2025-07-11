@@ -22,13 +22,19 @@ declare namespace Transaction {
     address: string
     value: number
   }
-}
 
-declare namespace UTXO {
-  export type Type = 'p2wpkh' | 'p2tr'
+  export type PrepareInput<T extends string> = T extends 'client'
+    ? Pick<Unspent.List, 'txid' | 'vout' | 'address' | 'amount' | 'confirmations' | 'spendable'>
+    : Pick<Unspent.List, 'txid' | 'vout' | 'address' | 'amount' | 'scriptPubKey'> & {
+        type: 'wpkh' | 'tr'
+        derivationPath: string
+      }
 
-  export type Selected = Pick<Unspent.List, 'txid' | 'vout' | 'amount' | 'address' | 'scriptPubKey'> & {
-    type: Type
-    derivationPath: string
+  export type PrepareOutput = {
+    address: string
+    /** Amount in BTC */
+    amount: number
+    isRecipient: boolean
+    isChange: boolean
   }
 }

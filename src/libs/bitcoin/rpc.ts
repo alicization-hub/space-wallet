@@ -177,11 +177,21 @@ export class RPCClient {
   }
 
   /**
-   * Tests if the transaction would be accepted by mempool if it were to be broadcast. Specifically checks for -maxtxsize violations, and whether the transaction is already in the mempool.
+   * Tests if the transaction would be accepted by mempool if it were to be broadcast.
+   * Specifically checks for -maxtxsize violations, and whether the transaction is already in the mempool.
    *
-   * @param rawTx An array of hex strings of raw transactions.
+   * @param txHex The raw transaction data as a hex string.
    */
-  public async mempoolAccept(rawTx: string[]) {
-    return this.call('testmempoolaccept', [rawTx])
+  public async verifyTransaction(txHex: string) {
+    return this.call<ITransaction.Accept[]>('testmempoolaccept', [[txHex]])
+  }
+
+  /**
+   * Broadcasts a signed transaction to the network.
+   *
+   * @param txHex The raw transaction data as a hex string.
+   */
+  public async broadcastTransaction(txHex: string) {
+    return this.call('sendrawtransaction', [txHex])
   }
 }

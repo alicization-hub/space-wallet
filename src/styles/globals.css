@@ -40,6 +40,11 @@
     @apply bg-foreground/5 ring-foreground/10 ring-1;
   }
 
+  .is-required::after {
+    @apply pl-1 text-sm text-red-500;
+    content: '*';
+  }
+
   .btn-light {
     @apply hover:bg-foreground/5 hover:ring-foreground/10 transition-all duration-100 hover:ring-1;
   }

@@ -1,50 +1,48 @@
 'use client'
 
-import { Button, Modal, ModalContent, useDisclosure } from '@heroui/react'
+import { Drawer, DrawerContent, useDisclosure } from '@heroui/react'
 
-export function ModalComponent({
+export function DrawerComponent({
   control,
   children,
-  placement = 'top',
   size = 'lg'
 }: Readonly<{
   control: ReturnType<typeof useDisclosure>
   children: React.ReactNode
-  placement?: 'auto' | 'top' | 'center'
   size?: 'md' | 'lg' | 'xl' | '2xl' | '3xl'
 }>) {
   // __RENDER
   return (
-    <Modal
+    <Drawer
       classNames={{
-        backdrop: 'backdrop-blur-sm bg-overlay/60'
+        backdrop: 'backdrop-blur-sm bg-overlay/60',
+        base: 'inset-y-4 right-4'
       }}
       motionProps={{
         variants: {
           enter: {
-            y: 0,
+            x: 0,
             opacity: 1,
-            transition: { duration: 0.1, ease: 'easeOut' }
+            transition: { duration: 0.2, ease: 'easeOut' }
           },
           exit: {
-            y: -4,
+            x: 4,
             opacity: 0,
             transition: { duration: 0.1, ease: 'easeOut' }
           }
         }
       }}
-      placement={placement}
       size={size}
       radius='none'
-      scrollBehavior='normal'
       hideCloseButton
+      shouldBlockScroll
       isDismissable={false}
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <ModalContent className='bg-background/90 ring-background/50 rounded-xs p-8 shadow-none ring-2 backdrop-blur-2xl'>
+      <DrawerContent className='bg-background/90 ring-background/50 rounded-xs p-8 shadow-none ring-2 backdrop-blur-2xl'>
         {children}
-      </ModalContent>
-    </Modal>
+      </DrawerContent>
+    </Drawer>
   )
 }

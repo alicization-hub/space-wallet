@@ -1,3 +1,5 @@
+import { extend } from 'node_modules/zod/v4/core/util.cjs'
+
 import { COIN } from './scure'
 
 /**
@@ -33,18 +35,16 @@ export function satsToBitcoin(satoshis: number): number {
 }
 
 /**
- * Infers the type of UTXO given an address.
+ * Infers the type of an address.
  *
- * @param address - Address of the UTXO
- * @returns The type of the UTXO
+ * @param address - Address
  */
-export function inferUTXOType(address: string): UTXO.Type {
-  // Legacy P2PKH addresses start with "1"
-  // P2SH-P2WPKH addresses start with "3"
+export function inferType(address: string): Transaction.PrepareInput<'server'>['type'] {
   // Bech32 P2WPKH addresses start with "bc1q"
+  if (address.startsWith('bc1q')) return 'wpkh'
+
   // Bech32 P2TR addresses start with "bc1p"
-  if (address.startsWith('bc1q')) return 'p2wpkh'
-  if (address.startsWith('bc1p')) return 'p2tr'
+  if (address.startsWith('bc1p')) return 'tr'
 
   throw new Error(`Unsupported address type: ${address}`)
 }
@@ -60,23 +60,26 @@ export function inferUTXOType(address: string): UTXO.Type {
  * ```
  *
  * @param inputs - Array of UTXO inputs
- * @param outputs - Array of output addresses
+ * @param outputs - Array of outputs
  * @returns Estimated total virtual bytes
  */
-export function estimateVirtualBytes(inputs: UTXO.Selected[], outputs: string[]): number {
+export function estimateVBytes<T extends string>(
+  inputs: Transaction.PrepareInput<T>[],
+  outputs: Transaction.PrepareOutput[]
+) {
   // Calculate the total virtual bytes for the inputs
   const inputVBytes = inputs.reduce((acc, { address }) => {
     // P2WPKH inputs have a virtual byte size of 68
-    // P2TR inputs have a virtual byte size of 57
-    const vBytes = inferUTXOType(address) === 'p2wpkh' ? 68 : 57
+    // P2TR inputs have a virtual byte size of 57.5
+    const vBytes = inferType(address) === 'wpkh' ? 68 : 57.5
     return acc + vBytes
   }, 0)
 
   // Calculate the total virtual bytes for the outputs
-  const outputVBytes = outputs.reduce((acc, address) => {
+  const outputVBytes = outputs.reduce((acc, { address }) => {
     // P2WPKH outputs have a virtual byte size of 31
     // P2TR outputs have a virtual byte size of 43
-    const vBytes = inferUTXOType(address) === 'p2wpkh' ? 31 : 43
+    const vBytes = inferType(address) === 'wpkh' ? 31 : 43
     return acc + vBytes
   }, 0)
 
@@ -85,5 +88,46 @@ export function estimateVirtualBytes(inputs: UTXO.Selected[], outputs: string[])
   // 1 byte = varint input count (if < 252)
   // 1 byte = varint output count (if < 252)
   // 4 bytes = locktime
-  return 10 + inputVBytes + outputVBytes
+  return Math.ceil(10 + inputVBytes + outputVBytes)
+}
+
+/**
+ * Calculates the estimated total virtual bytes of a transaction,
+ * total amount of all inputs, total fee, and change amount.
+ *
+ * @param amount - The amount of the transaction in satoshis
+ * @param feeRate - The fee rate in satoshis per virtual byte
+ * @param inputs - Array of UTXO inputs
+ * @param outputs - Array of outputs
+ * @returns An object with the following properties:
+ *   - `total`: The total amount of all inputs in satoshis
+ *   - `vBytes`: The estimated total virtual bytes of the transaction
+ *   - `fee`: The estimated total fee in satoshis
+ *   - `changeAmount`: The amount of change in satoshis
+ */
+export function calcEstimator<T extends string>(
+  amount: number,
+  feeRate: number,
+  inputs: Transaction.PrepareInput<T>[],
+  outputs: Transaction.PrepareOutput[]
+) {
+  // Calculate the total amount of all inputs
+  const total = inputs.reduce((acc, utxo) => acc + bitcoinToSats(utxo.amount), 0)
+
+  // Calculate the estimated total virtual bytes of the transaction
+  const vBytes = estimateVBytes(inputs, outputs)
+
+  // Calculate the estimated total fee in satoshis
+  const fee = Math.ceil(vBytes * feeRate)
+
+  // Calculate the change amount in satoshis
+  const changeAmount = total - amount - fee
+
+  // Return the results
+  return {
+    total,
+    vBytes,
+    fee,
+    changeAmount
+  }
 }

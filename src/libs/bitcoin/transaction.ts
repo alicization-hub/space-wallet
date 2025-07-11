@@ -3,80 +3,62 @@ import { HDKey } from '@scure/bip32'
 import { Transaction } from '@scure/btc-signer'
 
 import { createPrivateKey, DUST_THRESHOLD } from './scure'
-import { bitcoinToSats, estimateVirtualBytes } from './unit'
+import { bitcoinToSats, calcEstimator } from './unit'
 
 /**
- * Creates an unsigned transaction from a list of UTXOs, an amount to send, a fee rate, and the recipient and change addresses.
+ * Creates an signed transaction from a list of UTXOs, an amount to send, a fee rate, and the recipient and change addresses.
  *
- * @returns An unsigned transaction
+ * @param rootKey - Root key to use for signing
+ * @param utxos - List of UTXOs to use as inputs
+ * @param amount - Amount to send in satoshis
+ * @param feeRate - Fee rate in satoshis per byte
+ * @param recipientAddress - Recipient address
+ * @param changeAddress - Change address
  */
-export function createUnsignedTransaction(params: {
-  /** List of UTXOs to use as inputs */
-  utxos: UTXO.Selected[]
-  /** Amount to send in satoshis */
-  amount: number
-  /** Fee rate in satoshis per byte */
-  feeRate: number
-  /** Address to send the amount to */
-  recipientAddress: string
-  /** Address to send change to */
-  changeAddress?: string
-}) {
-  const { utxos, amount, feeRate, recipientAddress, changeAddress } = params
-
+export async function createSignedTransaction(
+  rootKey: HDKey,
+  feeRate: number,
+  inputs: Transaction.PrepareInput<'server'>[],
+  outputs: Transaction.PrepareOutput[]
+): Promise<Transaction> {
   // Validate inputs
-  if (!utxos.length) throw new Error('No UTXOs provided')
-  if (amount <= 0) throw new Error('Invalid amount')
+  if (!inputs.length) throw new Error('No inouts provided')
+  if (!outputs.length) throw new Error('No outputs provided')
   if (feeRate <= 0) throw new Error('Invalid fee rate')
+  if (outputs.filter((o) => o.isChange).length > 1) throw new Error('Change address is not unique')
 
-  const totalInput = utxos.reduce((acc, utxo) => acc + bitcoinToSats(utxo.amount), 0)
-
-  const outputs: string[] = [recipientAddress]
-  if (changeAddress) outputs.push(changeAddress)
-
-  const vBytes = estimateVirtualBytes(utxos, outputs)
-  const fee = Math.ceil(vBytes * feeRate)
-  const changeAmount = totalInput - amount - fee
+  // Calculate the total amount being sent
+  const amount = outputs.reduce((acc, r) => (r.isRecipient ? acc + bitcoinToSats(r.amount) : acc), 0)
+  const { changeAmount } = calcEstimator(amount, feeRate, inputs, outputs)
 
   // Initialize transaction
   const tx = new Transaction()
 
-  // Add inputs from selected UTXOs
-  for (const utxo of utxos) {
+  // Add outputs to the transaction
+  for (const output of outputs) {
+    if (output.isRecipient) {
+      tx.addOutputAddress(output.address, BigInt(bitcoinToSats(output.amount)))
+    } else if (output.isChange) {
+      // If changeAmount is too small, treat as additional fee (dust threshold ~546)
+      if (changeAmount >= DUST_THRESHOLD) tx.addOutputAddress(output.address, BigInt(changeAmount))
+    }
+  }
+
+  // Add inputs to the transaction and sign it with the corresponding private key
+  for (let index = 0; index < inputs.length; index++) {
+    const utxo = inputs[index]
     const amount = BigInt(bitcoinToSats(utxo.amount))
     const script = hexToBytes(utxo.scriptPubKey)
 
+    // Add the UTXO as an input to the transaction
     tx.addInput({
       txid: utxo.txid,
       index: utxo.vout,
       witnessUtxo: { amount, script },
-      tapInternalKey: utxo.type === 'p2tr' ? script.slice(2) : undefined
+      tapInternalKey: utxo.type === 'tr' ? script.slice(2) : undefined
     })
-  }
 
-  // Add recipient output
-  tx.addOutputAddress(recipientAddress, BigInt(amount))
-
-  // If changeAmount is too small, treat as additional fee (dust threshold ~546)
-  if (changeAddress && changeAmount >= DUST_THRESHOLD) {
-    tx.addOutputAddress(changeAddress, BigInt(changeAmount))
-  }
-
-  return tx
-}
-
-/**
- * Signs a transaction with the given root key and list of UTXOs.
- *
- * @param rootKey The root key to use for signing
- * @param tx The transaction to sign
- * @param utxos The UTXOs to use as inputs
- * @returns The signed transaction
- */
-export function signTransaction(rootKey: HDKey, tx: Transaction, utxos: UTXO.Selected[]) {
-  // Iterate over each UTXO and sign the corresponding input
-  for (const utxo of utxos) {
-    const index = utxos.findIndex(({ txid, vout }) => txid === utxo.txid && vout === utxo.vout)
+    // Sign the input with the corresponding private key
     const privateKey = createPrivateKey(rootKey, utxo.derivationPath)
     tx.signIdx(privateKey, index)
   }

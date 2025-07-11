@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { ScanIcon } from '@/components/icons'
 import { findAddress } from '@/libs/actions/address'
 
-export function ReceiveComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
+export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
   // __STATE's
   const [isLoading, setLoading] = useState<boolean>(true)
   const [address, setAddress] = useState<string>('')

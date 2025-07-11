@@ -143,4 +143,26 @@ declare namespace ITransaction {
     /** bitcoin address (only if a well-defined address exists) */
     address?: string
   }
+
+  export type Accept = {
+    /** The transaction hash in hex */
+    txid: string
+    /** The transaction witness hash in hex */
+    wtxid: string
+    /** If the mempool allows this tx to be inserted */
+    allowed: boolean
+    /**
+     * Virtual transaction size as defined in BIP 141. This is different from actual serialized size
+     * for witness transactions as witness data is discounted (only present when 'allowed' is true)
+     */
+    vsize: number
+    /** Transaction fees (only present if 'allowed' is true) */
+    fees: {
+      /** transaction fee in BTC */
+      base: string
+    }
+  } & {
+    /** Rejection string (only present when 'allowed' is false) */
+    'reject-reason': string
+  }
 }

@@ -3,14 +3,15 @@
 import 'server-only'
 
 import { and, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
-import { omit } from 'ramda'
+import { omit, pick } from 'ramda'
 
 import { useAuthorized } from '@/libs/actions/guard'
+import { RPCClient } from '@/libs/bitcoin/rpc'
 import { db, schema } from '@/libs/drizzle'
 import { withPagination } from '@/libs/drizzle/utils'
 import { createPagination } from '@/libs/utils'
 
-import type { QueryValidator } from './validator'
+import { type QueryValidator } from './validator'
 
 export async function findTransactions(query: QueryValidator) {
   try {
@@ -48,5 +49,21 @@ export async function findTransactions(query: QueryValidator) {
   } catch (error: any) {
     console.error(error)
     throw new Error(`An error occurred: ${error.message}`)
+  }
+}
+
+export async function findUTXOs() {
+  try {
+    const auth = await useAuthorized()
+
+    const rpcClient = new RPCClient()
+    await rpcClient.setWallet(auth.uid)
+
+    const utxos = await rpcClient.listUnspent()
+    return utxos.map((utxo) =>
+      pick(['txid', 'vout', 'address', 'amount', 'confirmations', 'spendable'], utxo)
+    )
+  } catch (error) {
+    throw error
   }
 }
