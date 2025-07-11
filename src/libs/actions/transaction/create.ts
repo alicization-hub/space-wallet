@@ -128,7 +128,11 @@ export async function createTransaction(formData: CreateValidator) {
 
       return {
         success: true,
-        message: 'The transaction has been successfully boradcasted.'
+        message: 'The transaction has been successfully boradcasted.',
+        data: {
+          txid: tx.id,
+          hex: tx.hex
+        }
       }
     } else {
       throw new Error(test['reject-reason'])

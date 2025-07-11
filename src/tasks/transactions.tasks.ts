@@ -1,5 +1,6 @@
 import { fromUnixTime } from 'date-fns'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, ne } from 'drizzle-orm'
+import { omit } from 'ramda'
 
 import { RPCClient } from '@/libs/bitcoin/rpc'
 import { bitcoinToSats } from '@/libs/bitcoin/unit'
@@ -24,16 +25,10 @@ async function txFormatter(rpcClient: RPCClient, tx: ITransaction.List) {
     })
   )
 
-  const outputs: Transaction.Output[] = raw.vout
-    .filter(
-      ({ scriptPubKey }) =>
-        scriptPubKey?.address === tx.address ||
-        inputs.some(({ address }) => address === scriptPubKey?.address)
-    )
-    .map(({ value, scriptPubKey }) => ({
-      address: scriptPubKey?.address || '',
-      value: bitcoinToSats(value)
-    }))
+  const outputs: Transaction.Output[] = raw.vout.map(({ value, scriptPubKey }) => ({
+    address: scriptPubKey?.address || '',
+    value: bitcoinToSats(value)
+  }))
 
   const vin = inputs.reduce((sum, { value }) => sum + value, 0)
   const vout = raw.vout.reduce((sum, { value }) => sum + value, 0)
@@ -91,30 +86,31 @@ export async function syncTransactions(accountId: string, rpcClient: RPCClient) 
       // Insert new transactions.
       const inserts = txs.filter((tx) => !existingTxids.has(tx.txid))
       if (inserts.length > 0) {
-        await db.insert(schema.transactions).values(
-          inserts.map((tx) => ({
-            accountId: accountId,
-            ...tx
-          }))
-        )
+        const values = inserts.map((tx) => ({
+          ...omit(['confirmations', 'blockHash', 'blockHeight', 'blockIndex', 'blockTime'], tx),
+          accountId: accountId
+        }))
+
+        await db.insert(schema.transactions).values(values)
       }
 
       // Update existing transactions.
       const updates = txs.filter((tx) => existingTxids.has(tx.txid))
       if (updates.length > 0) {
-        for (const tx of updates) {
-          await db
-            .update(schema.transactions)
-            .set({
-              status: tx.status,
-              confirmations: tx.confirmations,
-              blockHash: tx.blockHash,
-              blockHeight: tx.blockHeight,
-              blockIndex: tx.blockIndex,
-              blockTime: tx.blockTime
-            })
-            .where(and(eq(schema.transactions.accountId, accountId), eq(schema.transactions.txid, tx.txid)))
-        }
+        await db.transaction(async (tx) => {
+          for (const trans of updates) {
+            await tx
+              .update(schema.transactions)
+              .set({ status: trans.status })
+              .where(
+                and(
+                  eq(schema.transactions.accountId, accountId),
+                  eq(schema.transactions.txid, trans.txid),
+                  ne(schema.transactions.status, trans.status)
+                )
+              )
+          }
+        })
       }
 
       logger(`✅ Fetch transactions with batch success: (${skip + 1}~${skip + BATCH_SIZE})`)

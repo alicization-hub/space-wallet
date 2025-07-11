@@ -21,11 +21,6 @@ export const transactions = pgTable(
     inputs: json('inputs').notNull().$type<Transaction.Input[]>(),
     outputs: json('outputs').notNull().$type<Transaction.Output[]>(),
     timestamp: timestamp('timestamp', { precision: 6, withTimezone: true }).notNull(),
-    confirmations: integer('confirmations').notNull().default(0),
-    blockHash: text('block_hash'),
-    blockHeight: integer('block_height'),
-    blockIndex: integer('block_index'),
-    blockTime: integer('block_time'),
     ...sharedTimestampConumns
   },
   (self) => [index().on(self.txid)]
