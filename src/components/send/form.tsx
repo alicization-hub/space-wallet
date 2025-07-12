@@ -25,7 +25,6 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
     handleSubmit,
     getValues,
     setValue,
-    watch,
     formState: { errors: error }
   } = useForm<FormValidator>({
     resolver: zodResolver(formValidator)
@@ -71,13 +70,7 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
         </div>
 
         <AmountComponent onChange={(value) => setValue('amount', value)} />
-
-        <UtxoComponent
-          amount={watch('amount')}
-          onError={setIsDisabled}
-          onChange={(utxos) => setValue('utxos', utxos)}
-        />
-
+        <UtxoComponent onChange={(utxos) => setValue('utxos', utxos)} />
         <FeeComponent onChange={(value) => setValue('fee', value)} />
 
         {/* <div className='flex flex-col gap-2'>

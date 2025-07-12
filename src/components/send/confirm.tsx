@@ -8,7 +8,7 @@ import { useForm } from 'react-hook-form'
 import { useWallet } from '@/hooks'
 import { createTransaction } from '@/libs/actions/transaction/create'
 import { createValidator, type CreateValidator } from '@/libs/actions/transaction/validator'
-import { bitcoinToSats, calcEstimator, satsToBitcoin } from '@/libs/bitcoin/unit'
+import { calcEstimator, satsToBitcoin } from '@/libs/bitcoin/unit'
 import { toast } from '@/libs/utils'
 
 import { DangerIcon, DocumentIcon } from '../icons'
@@ -54,7 +54,7 @@ export function ConfirmComponent({
       }
     ]
 
-    return calcEstimator(bitcoinToSats(formData.amount), formData.fee, inputs, outputs)
+    return calcEstimator(formData.fee, inputs, outputs)
   }, [account, formData])
 
   // __FUNCTION's
@@ -105,12 +105,12 @@ export function ConfirmComponent({
         <div className='border-y-foreground/5 flex flex-col gap-2 border-y-2 py-4'>
           <div className='flex items-center justify-between gap-4'>
             <div className='text-foreground-500 text-sm capitalize'>total amount to send</div>
-            <div className='font-number font-medium'>{formData.amount.toFixed(8)} BTC</div>
+            <div className='font-number font-medium'>{satsToBitcoin(summary.totalAmount).toFixed(8)} BTC</div>
           </div>
 
           <div className='flex items-center justify-between gap-4'>
             <div className='text-foreground-500 text-sm capitalize'>total input</div>
-            <div className='font-number font-medium'>{satsToBitcoin(summary.total).toFixed(8)} BTC</div>
+            <div className='font-number font-medium'>{satsToBitcoin(summary.totalInput).toFixed(8)} BTC</div>
           </div>
 
           <div className='flex items-center justify-between gap-4'>
@@ -121,13 +121,20 @@ export function ConfirmComponent({
           <div className='flex items-center justify-between gap-4'>
             <div className='text-foreground-500 text-sm capitalize'>change amount</div>
             <div className='font-number font-medium'>
-              {summary.changeAmount >= 0 ? (
-                `${satsToBitcoin(summary.changeAmount).toFixed(8)} BTC`
+              {summary.isDust ? (
+                <>
+                  {summary.changeAmount > 0 && <span className='text-sm text-red-400'>(Dust Threshold)</span>}
+                  <span className='pl-2'>{`${Math.max(summary.changeAmount, 0)} Satoshis`}</span>
+                </>
               ) : (
-                <span className='text-red-400'>Insufficient total input</span>
+                `${satsToBitcoin(summary.changeAmount).toFixed(8)} BTC`
               )}
             </div>
           </div>
+
+          {summary.isInsufficientFee && (
+            <div className='text-right text-sm text-red-400'>Insufficient Fees</div>
+          )}
         </div>
 
         <div className='flex flex-col gap-2'>
@@ -170,7 +177,7 @@ export function ConfirmComponent({
           type='submit'
           aria-label='Button send'
           isLoading={isLoading}
-          isDisabled={!watch('passphrase') || summary.changeAmount < 0}>
+          isDisabled={!watch('passphrase') || summary.isInsufficientFee}>
           <span className='font-bold capitalize'>send</span>
         </Button>
       </div>

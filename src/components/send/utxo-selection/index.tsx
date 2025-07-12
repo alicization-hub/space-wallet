@@ -11,19 +11,14 @@ import { ListComponent } from './list'
 type UTXO = Transaction.PrepareInput<'client'>
 
 export function UtxoComponent({
-  amount,
   error,
-  onChange,
-  onError
+  onChange
 }: Readonly<{
-  amount: number
   error?: string
   onChange?: (utxos: UTXO[]) => void
-  onError?: (err: boolean) => void
 }>) {
   // __STATE's
   const [state, setState] = useState<UTXO[]>([])
-  const [errorMsg, setErrorMsg] = useState<string | null>(error || null)
 
   const totalValue = useMemo(() => state.reduce((acc, { amount }) => acc + amount, 0), [state])
   const m = useDisclosure()
@@ -33,17 +28,6 @@ export function UtxoComponent({
     setState(utxos)
     if (onChange) onChange(utxos)
   }, [])
-
-  // __EFFECT's
-  useEffect(() => {
-    if (state.length > 0 && totalValue < amount) {
-      setErrorMsg('The total value must be greater than or equal to the amount to send!')
-      onError?.(true)
-    } else {
-      setErrorMsg(null)
-      onError?.(false)
-    }
-  }, [amount, state, totalValue])
 
   // __RENDER
   return (
@@ -87,7 +71,7 @@ export function UtxoComponent({
         </Button>
       </div>
 
-      {errorMsg && <div className='-mt-1 text-xs text-red-500'>{errorMsg}</div>}
+      {error && <div className='-mt-1 text-xs text-red-500'>{error}</div>}
 
       <DrawerComponent control={m} size='md'>
         <ListComponent selected={state} onApply={handleSelected} onClose={m.onClose} />

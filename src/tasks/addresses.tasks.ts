@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 
 import { db, schema } from '@/libs/drizzle'
 
@@ -16,7 +16,7 @@ export async function syncAddresses(accountId: string) {
         outputs: schema.transactions.outputs
       })
       .from(schema.transactions)
-      .where(and(eq(schema.transactions.accountId, accountId), gt(schema.transactions.status, 'confirmed')))
+      .where(and(eq(schema.transactions.accountId, accountId), eq(schema.transactions.status, 'confirmed')))
 
     const addrSet = transactions.flatMap((tx) => [...tx.inputs, ...tx.outputs].map(({ address }) => address))
 

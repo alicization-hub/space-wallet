@@ -1,6 +1,6 @@
-import { extend } from 'node_modules/zod/v4/core/util.cjs'
+import { filter, reduce, remove } from 'ramda'
 
-import { COIN } from './scure'
+import { COIN, DUST_THRESHOLD } from './scure'
 
 /**
  * Converts Bitcoin to Satoshis
@@ -92,27 +92,27 @@ export function estimateVBytes<T extends string>(
 }
 
 /**
- * Calculates the estimated total virtual bytes of a transaction,
- * total amount of all inputs, total fee, and change amount.
+ * Estimates transaction details including fee, change amount, and checks for dust and insufficient fee.
  *
- * @param amount - The amount of the transaction in satoshis
- * @param feeRate - The fee rate in satoshis per virtual byte
+ * @param feeRate - Fee rate in satoshis per virtual byte
  * @param inputs - Array of UTXO inputs
- * @param outputs - Array of outputs
- * @returns An object with the following properties:
- *   - `total`: The total amount of all inputs in satoshis
- *   - `vBytes`: The estimated total virtual bytes of the transaction
- *   - `fee`: The estimated total fee in satoshis
- *   - `changeAmount`: The amount of change in satoshis
+ * @param outputs - Array of transaction outputs
  */
 export function calcEstimator<T extends string>(
-  amount: number,
   feeRate: number,
   inputs: Transaction.PrepareInput<T>[],
   outputs: Transaction.PrepareOutput[]
 ) {
-  // Calculate the total amount of all inputs
-  const total = inputs.reduce((acc, utxo) => acc + bitcoinToSats(utxo.amount), 0)
+  // Calculate the total amount to be sent to recipients
+  const totalAmount = reduce((acc, o) => (o.isRecipient ? acc + bitcoinToSats(o.amount) : acc), 0, outputs)
+
+  // Calculate the total input amount available from UTXOs
+  const totalInput = reduce((acc, u) => acc + bitcoinToSats(u.amount), 0, inputs)
+
+  // If the remaining balance is less than or equal to the dust threshold, remove change outputs
+  if (totalInput - totalAmount <= DUST_THRESHOLD) {
+    outputs = filter((o) => !o.isChange, outputs)
+  }
 
   // Calculate the estimated total virtual bytes of the transaction
   const vBytes = estimateVBytes(inputs, outputs)
@@ -121,13 +121,16 @@ export function calcEstimator<T extends string>(
   const fee = Math.ceil(vBytes * feeRate)
 
   // Calculate the change amount in satoshis
-  const changeAmount = total - amount - fee
+  const changeAmount = totalInput - totalAmount - fee
 
-  // Return the results
+  // Return the results including checks for dust and insufficient fee
   return {
-    total,
+    totalAmount,
+    totalInput,
     vBytes,
     fee,
-    changeAmount
+    changeAmount,
+    isDust: changeAmount < DUST_THRESHOLD,
+    isInsufficientFee: totalInput - totalAmount < fee
   }
 }

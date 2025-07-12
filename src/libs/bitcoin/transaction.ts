@@ -2,7 +2,7 @@ import { hexToBytes } from '@noble/hashes/utils'
 import { HDKey } from '@scure/bip32'
 import { Transaction } from '@scure/btc-signer'
 
-import { createPrivateKey, DUST_THRESHOLD } from './scure'
+import { createPrivateKey } from './scure'
 import { bitcoinToSats, calcEstimator } from './unit'
 
 /**
@@ -27,26 +27,20 @@ export async function createSignedTransaction(
   if (feeRate <= 0) throw new Error('Invalid fee rate')
   if (outputs.filter((o) => o.isChange).length > 1) throw new Error('Change address is not unique')
 
-  // Calculate the total amount being sent
-  const amount = outputs.reduce((acc, r) => (r.isRecipient ? acc + bitcoinToSats(r.amount) : acc), 0)
-  const { changeAmount } = calcEstimator(amount, feeRate, inputs, outputs)
+  // Calculate the estimated transaction details
+  const { changeAmount, isDust, isInsufficientFee } = calcEstimator(feeRate, inputs, outputs)
 
-  if (changeAmount < 0) throw new Error('Insufficient total input value.')
+  // Validate the transaction
+  if (isInsufficientFee) {
+    throw new Error(
+      'Insufficient fee. The total amount of the transaction is less than the fee required to relay it on the network.'
+    )
+  }
 
   // Initialize transaction
   const tx = new Transaction()
 
-  // Add outputs to the transaction
-  for (const output of outputs) {
-    if (output.isRecipient) {
-      tx.addOutputAddress(output.address, BigInt(bitcoinToSats(output.amount)))
-    } else if (output.isChange) {
-      // If changeAmount is too small, treat as additional fee (dust threshold ~546)
-      if (changeAmount >= DUST_THRESHOLD) tx.addOutputAddress(output.address, BigInt(changeAmount))
-    }
-  }
-
-  // Add inputs to the transaction and sign it with the corresponding private key
+  // Add inputs to the transaction
   for (let index = 0; index < inputs.length; index++) {
     const utxo = inputs[index]
     const amount = BigInt(bitcoinToSats(utxo.amount))
@@ -59,9 +53,23 @@ export async function createSignedTransaction(
       witnessUtxo: { amount, script },
       tapInternalKey: utxo.type === 'tr' ? script.slice(2) : undefined
     })
+  }
 
-    // Sign the input with the corresponding private key
+  // Add outputs to the transaction
+  for (const output of outputs) {
+    if (output.isRecipient) {
+      tx.addOutputAddress(output.address, BigInt(bitcoinToSats(output.amount)))
+    } else if (output.isChange) {
+      // If changeAmount is too small, treat as additional fee (dust threshold ~546)
+      if (!isDust) tx.addOutputAddress(output.address, BigInt(changeAmount))
+    }
+  }
+
+  // Sign the input with the corresponding private key
+  for (let index = 0; index < inputs.length; index++) {
+    const utxo = inputs[index]
     const privateKey = createPrivateKey(rootKey, utxo.derivationPath)
+
     tx.signIdx(privateKey, index)
   }
 
