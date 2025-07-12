@@ -37,7 +37,7 @@ export function TransactionComponent() {
         const result = await findTransactions({ page: 1, take: 10 })
         setTxs(result.data)
         setLoading(false)
-        // setTimeout(() => func(), 1e4)
+        setTimeout(() => func(), 1e4)
       } catch (error) {
         console.error(error)
       }
