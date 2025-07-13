@@ -77,7 +77,7 @@ export function ListComponent({
             href={toExplorer('tx', tx.txid)}
             target='_blank'
             rel='noopener noreferrer'>
-            {toShort(tx.txid)}
+            {toShort(tx.txid, 6, -8)}
           </a>
         </Snippet>
 

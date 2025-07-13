@@ -42,7 +42,7 @@ export function ModalComponent({
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <ModalContent className='bg-background/90 ring-background/50 rounded-xs p-8 shadow-none ring-2 backdrop-blur-2xl'>
+      <ModalContent className='bg-background ring-foreground-300/10 rounded-xs p-8 shadow-none ring-4'>
         {children}
       </ModalContent>
     </Modal>

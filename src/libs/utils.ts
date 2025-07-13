@@ -42,8 +42,8 @@ export function toExplorer(type: 'addr' | 'tx', value: string) {
   }
 }
 
-export function toShort(value: string): string {
-  return `${value.slice(0, 4)}...${value.slice(-6)}`
+export function toShort(value: string, start: number = 4, end: number = -6) {
+  return `${value.slice(0, start)}...${value.slice(end)}`
 }
 
 export function abbreviateNumber(input: number, fractionDigits: number = 1) {

@@ -40,7 +40,7 @@ export function DrawerComponent({
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <DrawerContent className='bg-background/90 ring-background/50 rounded-xs p-8 shadow-none ring-2 backdrop-blur-2xl'>
+      <DrawerContent className='bg-background ring-foreground-300/10 rounded-xs shadow-none ring-4'>
         {children}
       </DrawerContent>
     </Drawer>

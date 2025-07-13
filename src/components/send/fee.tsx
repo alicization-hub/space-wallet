@@ -1,8 +1,9 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { ClockIcon, TrendingUpIcon, ZapIcon } from '@/components/icons'
+import { useEffectSync } from '@/hooks'
 import { getFee } from '@/libs/actions/fee'
 import { cls } from '@/libs/utils'
 
@@ -43,22 +44,17 @@ export function FeeComponent({
   }, [])
 
   // __EFFECT's
-  useEffect(() => {
-    async function func() {
-      try {
-        const result = await getFee()
-        setState(result)
+  useEffectSync(async () => {
+    try {
+      const result = await getFee()
+      setState(result)
 
-        const { value } = result[2]
-        handleChoose(2, value)
-      } catch (error) {
-        console.error(error)
-      }
+      const { value } = result[2]
+      handleChoose(2, value)
+    } catch (error) {
+      console.error(error)
     }
-
-    const timeoutId = setTimeout(() => func(), 200)
-    return () => clearTimeout(timeoutId)
-  }, [])
+  }, 128)
 
   // __RENDER
   return (

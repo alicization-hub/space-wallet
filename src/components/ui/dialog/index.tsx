@@ -40,7 +40,7 @@ export function DialogComponent({
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <ModalContent className='bg-background/90 ring-background/50 gap-8 rounded-xs px-8 py-6 shadow-none ring-2 backdrop-blur-2xl'>
+      <ModalContent className='bg-background ring-foreground-300/10 rounded-xs p-8 shadow-none ring-4'>
         <div className='text-foreground text-center'>{children}</div>
 
         <Button

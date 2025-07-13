@@ -1,11 +1,15 @@
 'use client'
 
-import { Button, Image, Snippet } from '@heroui/react'
+import { Button, Image, Snippet, useDisclosure } from '@heroui/react'
 import qr from 'qrcode'
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
-import { ScanIcon } from '@/components/icons'
+import { FilterIcon, ScanIcon } from '@/components/icons'
+import { DrawerComponent } from '@/components/ui/drawer'
+import { useEffectSync } from '@/hooks'
 import { findAddress } from '@/libs/actions/address'
+
+import { AddrComponent } from './addr-selection'
 
 export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
   // __STATE's
@@ -13,43 +17,45 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
   const [address, setAddress] = useState<string>('')
   const [qrcode, setQrcode] = useState<string>()
 
-  // __EFFECT's
-  useEffect(() => {
-    async function func() {
-      try {
-        const result = await findAddress()
-        const dataUrl = await qr.toDataURL(result.address, {
-          type: 'image/webp',
-          width: 250,
-          margin: 2,
-          scale: 1,
-          color: {
-            dark: '#0a0a0a',
-            light: '#fafafa'
-          },
-          rendererOpts: {
-            quality: 1
-          }
-        })
+  const m = useDisclosure()
 
-        setAddress(result.address)
-        setQrcode(dataUrl)
-        setLoading(false)
-      } catch (error) {
-        console.error(error)
+  // __FUNCTION's
+  const handleChange = useCallback(async (addr: string) => {
+    const dataUrl = await qr.toDataURL(addr, {
+      type: 'image/webp',
+      width: 250,
+      margin: 2,
+      scale: 1,
+      color: {
+        dark: '#0a0a0a',
+        light: '#fafafa'
+      },
+      rendererOpts: {
+        quality: 1
       }
-    }
+    })
 
-    const timeoutId = setTimeout(() => func(), 1000)
-    return () => clearTimeout(timeoutId)
+    setAddress(addr)
+    setQrcode(dataUrl)
   }, [])
+
+  // __EFFECT's
+  useEffectSync(async () => {
+    try {
+      const result = await findAddress()
+      await handleChange(result.address)
+      setLoading(false)
+    } catch (error) {
+      console.error(error)
+    }
+  }, 256)
 
   // __RENDER
   return (
     <div className='flex flex-col gap-4'>
-      <div className='flex gap-4 select-none'>
+      <div className='flex items-center gap-4 select-none'>
         <ScanIcon className='size-7' />
-        <div className='font-number text-2xl capitalize'>receive address</div>
+        <div className='font-number text-xl font-medium capitalize'>receive address</div>
       </div>
 
       <div className='border-y-foreground/5 flex flex-col justify-center gap-4 border-y-2 py-8'>
@@ -67,29 +73,43 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
               base: 'mirror w-full pl-6 rounded-xs bg-foreground/5 justify-center',
               pre: 'font-number select-none'
             }}
-            radius='none'
-            symbol={false}>
+            symbol={false}
+            codeString={address}>
             {address}
           </Snippet>
         ) : (
           <div className='bg-foreground/5 h-10 animate-pulse rounded-xs' />
         )}
 
-        <div className='rounded-xs bg-amber-900/10 p-4 text-center text-xs text-amber-600 ring-1 ring-amber-900/30'>
+        <div className='bg-foreground-100/25 text-foreground-500 rounded-xs p-4 text-center text-sm'>
           Upon at least one transaction confirmation, this address will be set to <b>used</b>
         </div>
       </div>
 
       <div className='flex justify-center gap-4'>
         <Button
-          className='bg-foreground text-background h-8 rounded-xs'
-          radius='none'
+          className='bg-foreground/5 text-foreground-400 rounded-xs'
           type='button'
-          isLoading={isLoading}
+          aria-label='Button close'
+          isDisabled={isLoading}
           onPress={onClose}>
-          {!isLoading && <span className='font-bold uppercase'>ok</span>}
+          {!isLoading && <span className='text-sm capitalize'>close</span>}
+        </Button>
+
+        <Button
+          className='bg-foreground text-background rounded-xs'
+          type='button'
+          aria-label='Select address'
+          isDisabled={isLoading}
+          onPress={m.onOpen}>
+          <FilterIcon className='stroke-background size-5' />
+          <span className='font-bold capitalize'>addresses</span>
         </Button>
       </div>
+
+      <DrawerComponent control={m} size='md'>
+        <AddrComponent onChange={handleChange} onClose={m.onClose} />
+      </DrawerComponent>
     </div>
   )
 }

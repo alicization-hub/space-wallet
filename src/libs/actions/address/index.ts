@@ -46,14 +46,22 @@ export async function findAddresses(query: QueryValidator) {
     const addressTableColumns = getTableColumns(schema.addresses)
     const filters: SQL[] = [eq(schema.addresses.accountId, auth.uid)]
 
+    if (query?.status && query?.status !== 'all') {
+      filters.push(eq(schema.addresses.isUsed, query.status === 'used'))
+    }
+
+    if (query?.type && query?.type !== 'all') {
+      filters.push(eq(schema.addresses.type, query.type))
+    }
+
     const { total, results } = await db.transaction(async (tx) => {
       const queryBuilder = tx
         .select({
-          ...omit(['accountId', 'index'], addressTableColumns)
+          ...omit(['accountId'], addressTableColumns)
         })
         .from(schema.addresses)
         .where(and(...filters))
-        .orderBy(desc(schema.addresses.createdAt))
+        .orderBy(asc(schema.addresses.isUsed), asc(schema.addresses.index))
         .$dynamic()
 
       const queryCountBuilder = tx
@@ -72,12 +80,8 @@ export async function findAddresses(query: QueryValidator) {
     })
 
     return createPagination(results, total, query.page, query.take)
-  } catch (error: any) {
-    return {
-      error,
-      success: false,
-      message: error?.message || 'An error occurred while query addresses.'
-    }
+  } catch (error) {
+    throw error
   }
 }
 

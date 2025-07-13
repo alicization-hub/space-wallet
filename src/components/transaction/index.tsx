@@ -1,9 +1,10 @@
 'use client'
 
 import { useDisclosure } from '@heroui/react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { ModalComponent } from '@/components/ui/modal'
+import { useEffectSync } from '@/hooks'
 import { findTransactions } from '@/libs/actions/transaction'
 import { type Schema } from '@/libs/drizzle/types'
 
@@ -31,21 +32,19 @@ export function TransactionComponent() {
   }, [])
 
   // __EFFECT's
-  useEffect(() => {
-    async function func() {
+  useEffectSync(
+    async () => {
       try {
         const result = await findTransactions({ page: 1, take: 10 })
         setTxs(result.data)
         setLoading(false)
-        setTimeout(() => func(), 1e4)
       } catch (error) {
         console.error(error)
       }
-    }
-
-    const timeoutId = setTimeout(() => func(), 1e3)
-    return () => clearTimeout(timeoutId)
-  }, [])
+    },
+    512,
+    { interval: 10240 }
+  )
 
   // __RENDER
   return (

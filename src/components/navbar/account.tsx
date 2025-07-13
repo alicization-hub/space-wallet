@@ -2,11 +2,11 @@
 
 import { Button, Popover, PopoverContent, PopoverTrigger, Spinner, useDisclosure } from '@heroui/react'
 import { omit } from 'ramda'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { WalletIcon } from '@/components/icons'
 import { ModalComponent } from '@/components/ui/modal'
-import { useWallet } from '@/hooks'
+import { useEffectSync, useWallet } from '@/hooks'
 import { findWallets } from '@/libs/actions/wallet'
 import { satsToBitcoin } from '@/libs/bitcoin/unit'
 import { type Schema } from '@/libs/drizzle/types'
@@ -41,17 +41,17 @@ export function AccountComponent({}: Readonly<{}>) {
   )
 
   // __EFFECT's
-  useEffect(() => {
-    const func = async () => {
+  useEffectSync(
+    async () => {
       const result = await findWallets()
       setWallets(result)
+    },
+    256,
+    {
+      deps: [isOpen],
+      bool: isOpen
     }
-
-    if (isOpen) {
-      const timeoutId = setTimeout(() => func(), 1000)
-      return () => clearTimeout(timeoutId)
-    }
-  }, [isOpen])
+  )
 
   // __RENDER
   return (

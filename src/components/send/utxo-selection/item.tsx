@@ -16,7 +16,7 @@ export function ItemComponent({
 }>) {
   // __RENDER
   return (
-    <div className='ring-foreground-50 hover:ring-foreground-100 flex items-center gap-6 rounded-xs p-2 ring-1'>
+    <div className='ring-foreground-50 hover:ring-foreground-100 flex items-center gap-4 rounded-xs p-2 ring-1'>
       <button
         className={cls('cursor-pointer p-2', isActive ? 'opacity-100' : 'opacity-20 hover:opacity-40')}
         type='button'
@@ -29,18 +29,18 @@ export function ItemComponent({
           <div className='flex items-center gap-1'>
             <span className='text-foreground-500 font-number text-lg font-light'>#</span>
             <a
-              className='font-number cursor-pointer text-base font-bold tracking-wide hover:underline'
+              className='font-number text-foreground-600 cursor-pointer text-base font-bold tracking-wide hover:underline'
               href={toExplorer('tx', utxo.txid)}
               target='_blank'
               rel='noopener noreferrer'>
-              {toShort(utxo.txid)}:{utxo.vout}
+              {toShort(utxo.txid, 4, -6)}
             </a>
           </div>
 
           <div className='flex items-center gap-1'>
             <span className='text-foreground-500 font-number text-lg font-light'>@</span>
             <a
-              className='font-number cursor-pointer text-base font-bold tracking-wide hover:underline'
+              className='font-number text-foreground-600 cursor-pointer text-base font-bold tracking-wide hover:underline'
               href={toExplorer('addr', utxo.address)}
               target='_blank'
               rel='noopener noreferrer'>
