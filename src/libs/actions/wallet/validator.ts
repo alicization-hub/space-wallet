@@ -6,12 +6,12 @@ import { passphraseSchema } from '@/libs/validator.zod'
 export const walletValidator = z.object({
   slug: z.string(),
   name: z.string(),
-  mnemonic: z.string().refine((value) => mnemonic.validate(value), 'Invalid mnemonic'),
+  mnemonic: z.string().refine(mnemonic.validate, { error: 'Invalid mnemonic' }),
   passphrase: passphraseSchema,
   account: z
     .object({
       index: z.number().optional().default(0),
-      startedAt: z.string().datetime().optional()
+      startedAt: z.iso.datetime().optional()
     })
     .optional()
 })

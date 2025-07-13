@@ -5,7 +5,7 @@ export const envSchema = z.object({
   APP_NAME: z.string().default('project_name'),
   APP_BASE_URL: z.string().default('http://www.example.com'),
   API_GATEWAY: z.string().default('https://api.example.com'),
-  TZ: z.string().default('Asia/Bangkok')
+  TZ: z.string().default('Asia/Singapore')
 })
 
 export const dbSchema = z.object({
