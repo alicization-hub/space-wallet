@@ -18,6 +18,7 @@
 
   button {
     @apply flex cursor-pointer items-center justify-center;
+    scale: 1 !important;
   }
 }
 

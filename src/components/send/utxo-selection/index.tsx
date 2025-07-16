@@ -4,8 +4,8 @@ import { Button, useDisclosure } from '@heroui/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { DrawerComponent } from '@/components/ui/drawer'
+import { LabelComponent } from '@/components/ui/input-label'
 
-import { LabelComponent } from '../input-label'
 import { ListComponent } from './list'
 
 type UTXO = Transaction.PrepareInput<'client'>

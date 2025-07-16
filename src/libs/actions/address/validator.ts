@@ -9,7 +9,7 @@ export const queryValidator = z.object({
 })
 
 export const createValidator = z.object({
-  passphrase: passphraseSchema
+  passphrase: passphraseSchema.nonempty({ error: 'This field "passphrase" is required' })
 })
 
 export type QueryValidator = z.infer<typeof queryValidator>

@@ -33,11 +33,11 @@ export function ConfirmComponent({
     }
   })
 
-  const [isLoading, setLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   // __FUNCTION's
   const handleClick = useCallback(async (formData: FormValidator) => {
-    setLoading(true)
+    setIsLoading(true)
 
     try {
       const result = await switchAccount(formData)
@@ -51,7 +51,7 @@ export function ConfirmComponent({
       }
     } catch (error: any) {
       console.error('⚠️ An error occurred:', error)
-      setLoading(false)
+      setIsLoading(false)
       toast({
         title: '⚠️ Wraning',
         description: error?.message || 'An error occurred.'

@@ -47,13 +47,11 @@ export function AccountComponent({}: Readonly<{}>) {
       setWallets(result)
     },
     256,
-    {
-      deps: [isOpen],
-      bool: isOpen
-    }
+    { deps: [isOpen], bool: isOpen }
   )
 
   // __RENDER
+  if (!currentAccount.id) return null
   return (
     <>
       <Popover

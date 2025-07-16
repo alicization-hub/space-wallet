@@ -3,10 +3,9 @@
 import { Button, NumberInput } from '@heroui/react'
 import { useCallback, useState } from 'react'
 
+import { LabelComponent } from '@/components/ui/input-label'
 import { useWallet } from '@/hooks'
 import { satsToBitcoin } from '@/libs/bitcoin/unit'
-
-import { LabelComponent } from './input-label'
 
 export function AmountComponent({
   error,

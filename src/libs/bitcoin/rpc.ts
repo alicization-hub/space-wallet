@@ -6,8 +6,8 @@ import { RPC } from '@/constants/env'
  * Bitcoin Core RPC.
  * Creates an instance of rpcClient.
  *
- * @link https://developer.bitcoin.org/reference/rpc
- * @link https://gist.github.com/kallewoof/cff9aa73c6e73bc2a180cfae1e0ab640
+ * @see https://developer.bitcoin.org/reference/rpc
+ * @see https://gist.github.com/kallewoof/cff9aa73c6e73bc2a180cfae1e0ab640
  */
 export class RPCClient {
   protected walletName: string | undefined

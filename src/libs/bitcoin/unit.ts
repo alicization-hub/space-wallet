@@ -1,4 +1,4 @@
-import { filter, reduce, remove } from 'ramda'
+import { filter, reduce } from 'ramda'
 
 import { COIN, DUST_THRESHOLD } from './scure'
 
@@ -51,13 +51,10 @@ export function inferType(address: string): Transaction.PrepareInput<'server'>['
 
 /**
  * Estimates the total virtual bytes of a transaction.
- *
- * ```bash
- * P2WPKH input ~68 vBytes (signature + pubkey)
- * P2TR input ~57 vBytes (Schnorr signature only)
- * P2WPKH output ~31 vBytes (OP_0 + 20-byte hash)
- * P2TR output ~43 vBytes (OP_1 + 32-byte x-only pubkey)
- * ```
+ * - P2WPKH input ~68 vBytes (signature + pubkey)
+ * - P2TR input ~57.5 vBytes (Schnorr signature only)
+ * - P2WPKH output ~31 vBytes (OP_0 + 20-byte hash)
+ * - P2TR output ~43 vBytes (OP_1 + 32-byte x-only pubkey)
  *
  * @param inputs - Array of UTXO inputs
  * @param outputs - Array of outputs

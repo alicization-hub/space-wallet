@@ -1,5 +1,6 @@
 'use client'
 
+import { motion } from 'framer-motion'
 import dynamic from 'next/dynamic'
 
 const TwinklingStars = dynamic(() => import('./stars'), { ssr: false })
@@ -8,20 +9,30 @@ export function SpaceComponent() {
   // __RENDER
   return (
     <div className='pointer-events-none fixed inset-0 overflow-hidden select-none'>
-      <svg
-        className='size-full opacity-60 blur-xl'
+      <motion.svg
+        className='size-full blur-xl'
         viewBox='0 0 2040 1820'
         fill='none'
+        initial={{
+          y: -128,
+          opacity: 0,
+          transition: { duration: 4, ease: 'easeOut' }
+        }}
+        animate={{
+          y: 0,
+          opacity: 0.5,
+          transition: { duration: 4, ease: 'easeOut' }
+        }}
         preserveAspectRatio='xMidYMid slice'>
-        <g className='translate-y-[calc(100dvw/20)]' filter='url(#filter-A)'>
+        <g filter='url(#filter-A)' style={{ transform: 'translateY(calc(100dvw/20))' }}>
           <circle cx={920} cy={0} r={500} fillOpacity={0.75} fill='#FF6308' />
         </g>
 
-        <g className='translate-y-[calc(100dvw/20)]' filter='url(#filter-B)'>
+        <g filter='url(#filter-B)' style={{ transform: 'translateY(calc(100dvw/20))' }}>
           <circle cx={1000} cy={0} r={500} fillOpacity={0.75} fill='#BDC9E6' />
         </g>
 
-        <g className='translate-y-[calc(100dvw/20)]' filter='url(#filter-C)'>
+        <g filter='url(#filter-C)' style={{ transform: 'translateY(calc(100dvw/20))' }}>
           <circle cx={1080} cy={0} r={500} fillOpacity={0.91} fill='#97C4FF' />
         </g>
 
@@ -65,7 +76,7 @@ export function SpaceComponent() {
             <feGaussianBlur stdDeviation={198.777} />
           </filter>
         </defs>
-      </svg>
+      </motion.svg>
 
       <TwinklingStars />
     </div>

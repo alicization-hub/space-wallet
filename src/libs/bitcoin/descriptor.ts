@@ -11,7 +11,7 @@ import { HDKey } from '@scure/bip32'
  * @param account - The account number to derive the descriptors for. Defaults to `0`.
  * @returns An object with 'receive' and 'change' properties containing the descriptors.
  */
-export function createDescriptors(rootKey: HDKey, purpose: 84 | 86 = 84, account: number = 0) {
+export function createDescriptors(rootKey: HDKey, purpose: Purpose = 84, account: number = 0) {
   const path = `${purpose}'/0'/${account}'`
   const derived = rootKey.derive(`m/${path}`)
   if (!derived.publicKey) {

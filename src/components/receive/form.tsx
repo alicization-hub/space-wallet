@@ -13,7 +13,7 @@ import { AddrComponent } from './addr-selection'
 
 export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
   // __STATE's
-  const [isLoading, setLoading] = useState<boolean>(true)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
   const [address, setAddress] = useState<string>('')
   const [qrcode, setQrcode] = useState<string>()
 
@@ -44,7 +44,7 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
     try {
       const result = await findAddress()
       await handleChange(result.address)
-      setLoading(false)
+      setIsLoading(false)
     } catch (error) {
       console.error(error)
     }

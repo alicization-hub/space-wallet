@@ -4,7 +4,7 @@ type DerivationPathBuilder = {
    *
    * @param value - The value to set. Default to 84.
    */
-  purpose: (value: number) => Omit<DerivationPathBuilder, 'purpose'>
+  purpose: (value: Purpose) => Omit<DerivationPathBuilder, 'purpose'>
 
   /**
    * Set the coin type of the derivation path.
@@ -49,7 +49,7 @@ type DerivationPathBuilder = {
 export function derivationPathBuilder(): DerivationPathBuilder {
   const parts: number[] = [84, 0, 0, 0, 0]
   const builder: DerivationPathBuilder = {
-    purpose(value: number) {
+    purpose(value: Purpose) {
       parts[0] = value
       return this
     },

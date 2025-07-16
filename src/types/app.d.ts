@@ -14,6 +14,10 @@ declare type JwtPayload = {
   exp: number
 }
 
+declare type Purpose = 84 | 86
+// declare type MnemonicLength = 12 | 15 | 18 | 21 | 24
+declare type MnemonicLength = 12 | 24
+
 declare type Fee = {
   label: string
   duration: string

@@ -1,6 +1,6 @@
 'use client'
 
-import { ActivityIcon, ChartIcon } from '@/components/icons'
+import { GlobeIcon, PackageIcon } from '@/components/icons'
 import { useStore } from '@/hooks'
 
 import { AccountComponent } from './account'
@@ -15,7 +15,7 @@ export function InfoComponent({}: Readonly<{}>) {
       <AccountComponent />
 
       <div className='flex items-center gap-2 px-2' title='Current blocks'>
-        <ActivityIcon className='size-5' />
+        <PackageIcon className='size-5' />
         {node.blocks ? (
           <span className='text-number text-sm font-medium'>{node.blocks}</span>
         ) : (
@@ -24,7 +24,7 @@ export function InfoComponent({}: Readonly<{}>) {
       </div>
 
       <div className='flex items-center gap-2 px-2' title='Connection'>
-        <ChartIcon className='size-5' />
+        <GlobeIcon className='size-5' />
         {node.network ? (
           <span className='text-number text-sm font-medium'>{node.network}</span>
         ) : (

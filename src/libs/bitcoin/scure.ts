@@ -84,7 +84,7 @@ export class AddressBuilder {
    * @param addressIndex - The address index.
    * @param isChange - The change boolean.
    */
-  public create(purpose: 84 | 86, accountNo: number, addressIndex: number, isChange?: boolean) {
+  public create(purpose: Purpose, accountNo: number, addressIndex: number, isChange?: boolean) {
     const derivationPath = derivationPathBuilder()
       .purpose(purpose)
       .coinType(0)

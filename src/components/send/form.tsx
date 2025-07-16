@@ -6,13 +6,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { DangerIcon, SendIcon } from '@/components/icons'
+import { LabelComponent } from '@/components/ui/input-label'
 import { ModalComponent } from '@/components/ui/modal'
 import { createValidator, type CreateValidator } from '@/libs/actions/transaction/validator'
 
 import { AmountComponent } from './amount'
 import { ConfirmComponent } from './confirm'
 import { FeeComponent } from './fee'
-import { LabelComponent } from './input-label'
 import { UtxoComponent } from './utxo-selection'
 
 const formValidator = createValidator.omit({ passphrase: true })

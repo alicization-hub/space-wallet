@@ -5,14 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useCallback, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
+import { DangerIcon, DocumentIcon } from '@/components/icons'
+import { LabelComponent } from '@/components/ui/input-label'
 import { useWallet } from '@/hooks'
 import { createTransaction } from '@/libs/actions/transaction/create'
 import { createValidator, type CreateValidator } from '@/libs/actions/transaction/validator'
 import { calcEstimator, satsToBitcoin } from '@/libs/bitcoin/unit'
 import { toast } from '@/libs/utils'
-
-import { DangerIcon, DocumentIcon } from '../icons'
-import { LabelComponent } from './input-label'
 
 export function ConfirmComponent({
   formData,
@@ -66,7 +65,8 @@ export function ConfirmComponent({
           resolve(true)
           toast({
             title: '✅ Success',
-            description: result.message
+            description: result.message,
+            timeout: 0
           })
 
           if (onSuccess) onSuccess()

@@ -1,8 +1,7 @@
 import { setTimeout } from 'timers/promises'
 
-import { and, eq, getTableColumns, gt } from 'drizzle-orm'
+import { and, eq, gt } from 'drizzle-orm'
 import { schedule } from 'node-cron'
-import { pick } from 'ramda'
 
 import { ENV } from '@/constants/env'
 import { RPCClient } from '@/libs/bitcoin/rpc'
@@ -62,7 +61,7 @@ async function runScheduledTask() {
   }
 }
 
-// Schedule to run every 15 seconds
+// Schedule to run every 5 seconds
 schedule(
   '*/15 * * * * *',
   () => {

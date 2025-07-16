@@ -3,11 +3,10 @@
 import { useCallback, useState } from 'react'
 
 import { ClockIcon, TrendingUpIcon, ZapIcon } from '@/components/icons'
+import { LabelComponent } from '@/components/ui/input-label'
 import { useEffectSync } from '@/hooks'
 import { getFee } from '@/libs/actions/fee'
 import { cls } from '@/libs/utils'
-
-import { LabelComponent } from './input-label'
 
 export function FeeComponent({
   onChange

@@ -44,8 +44,10 @@ export class ApiResponse {
     } else {
       console.error(error)
 
-      if (error instanceof ZodError && !error.isEmpty) {
-        message = error.errors.map((err) => `This field "${err.path[0]}": ${err.message.toLowerCase()}`)
+      if (error instanceof ZodError && error.issues.length > 0) {
+        message = error.issues.map(
+          (iss) => `This field "${(iss.path as any[])[0]}": ${iss.message.toLowerCase()}`
+        )
       }
 
       if (error?.status) {

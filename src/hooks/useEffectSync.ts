@@ -30,12 +30,12 @@ export function useEffectSync(
     async function reCall() {
       await func()
       if (opts?.interval) {
-        setTimeout(() => reCall(), opts.interval)
+        timeoutRef.current = setTimeout(() => reCall(), opts.interval)
       }
     }
 
-    if (opts?.deps !== undefined && opts?.bool) {
-      timeoutRef.current = setTimeout(reCall, delay)
+    if (opts?.deps !== undefined) {
+      if (opts?.bool) timeoutRef.current = setTimeout(reCall, delay)
     } else {
       timeoutRef.current = setTimeout(reCall, delay)
     }

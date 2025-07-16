@@ -7,6 +7,7 @@ import { omit, pick } from 'ramda'
 
 import { useAuthorized } from '@/libs/actions/guard'
 import { mnemonic } from '@/libs/bitcoin/mnemonic'
+import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
 import { ciphers } from '@/libs/ciphers'
 import { db, schema } from '@/libs/drizzle'
 import { password } from '@/libs/password'
@@ -19,7 +20,7 @@ import type { CreateWalletValidator, UpdateWalletValidator } from './validator'
  * @param length - The length of the mnemonic seed phrase. It can be either 12 or 24. Default to `24`.
  * @returns A new BIP39 mnemonic seed phrase.
  */
-export async function generateMnemonic(length: 12 | 24 = 24) {
+export async function generateMnemonic(length: MnemonicLength = 24) {
   return mnemonic.generate(length)
 }
 
@@ -28,6 +29,7 @@ export async function findWallets() {
     await useAuthorized()
 
     return db.query.wallets.findMany({
+      where: eq(schema.wallets.isActive, true),
       columns: {
         bio: false,
         passkey: false
@@ -88,26 +90,49 @@ export async function createWallet(values: CreateWalletValidator) {
       })
       .returning()
 
-    const accountsCreated = await db
-      .insert(schema.accounts)
-      .values(
-        [84, 86].map((purpose: any) => ({
-          walletId: walletCreated.id,
-          label: `BIP-${purpose}`,
-          purpose,
-          index: values?.account?.index || 0,
-          balance: {
-            confirmed: 0,
-            unconfirmed: 0,
-            immature: 0,
-            total: 0,
-            spendable: 0
-          },
-          lastSyncHeight: 0,
-          startedAt: values?.account?.startedAt ? new Date(values.account.startedAt) : new Date()
-        }))
-      )
-      .returning()
+    const accountValues = [84, 86].map((purpose: any) => ({
+      walletId: walletCreated.id,
+      label: `Account <${purpose}>`,
+      purpose,
+      index: values?.account?.index || 0,
+      balance: {
+        confirmed: 0,
+        unconfirmed: 0,
+        immature: 0,
+        total: 0,
+        spendable: 0
+      },
+      lastSyncHeight: 0,
+      startedAt: values?.account?.startedAt ? new Date(values.account.startedAt) : new Date()
+    }))
+
+    const accountsCreated = await db.insert(schema.accounts).values(accountValues).returning()
+
+    const rootKey = await createRootKey(values.mnemonic, values.passphrase)
+    const addr = new AddressBuilder(rootKey)
+
+    const addresses: (typeof schema.addresses.$inferInsert)[] = []
+    for (const account of accountsCreated) {
+      for (let index = 0; index <= GAP_LIMIT; index++) {
+        const receiveAddress = addr.create(account.purpose, account.index, index)
+        addresses.push({
+          accountId: account.id,
+          address: receiveAddress,
+          type: 'receive',
+          index
+        })
+
+        const changeAddress = addr.create(account.purpose, account.index, index, true)
+        addresses.push({
+          accountId: account.id,
+          address: changeAddress,
+          type: 'change',
+          index
+        })
+      }
+    }
+
+    await db.insert(schema.addresses).values(addresses)
 
     return {
       success: true,

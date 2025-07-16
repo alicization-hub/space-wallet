@@ -24,7 +24,7 @@ export function SendComponent({}: Readonly<{}>) {
         <span className='text-sm font-semibold uppercase'>send</span>
       </Button>
 
-      <ModalComponent control={m} size='xl' key='.send-modal'>
+      <ModalComponent control={m} size='xl'>
         <FormComponent onClose={m.onClose} />
       </ModalComponent>
     </>

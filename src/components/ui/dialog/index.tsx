@@ -40,13 +40,12 @@ export function DialogComponent({
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <ModalContent className='bg-background ring-foreground-300/10 rounded-xs p-8 shadow-none ring-4'>
+      <ModalContent className='bg-background ring-foreground-300/10 gap-6 rounded-xs p-8 shadow-none ring-4'>
         <div className='text-foreground text-center'>{children}</div>
 
         <Button
-          className='bg-foreground text-background mx-auto h-8 rounded-sm'
-          radius='none'
-          variant='solid'
+          className='bg-foreground text-background mx-auto max-w-28 rounded-xs'
+          type='button'
           onPress={rest?.onClose}>
           <span className='text-sm font-bold uppercase'>ok</span>
         </Button>

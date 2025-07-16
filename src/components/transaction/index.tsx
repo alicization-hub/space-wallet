@@ -15,7 +15,7 @@ import { ListComponent } from './list'
 export function TransactionComponent() {
   // __STATE's
   const [txs, setTxs] = useState<Schema.iTransaction[]>([])
-  const [isLoading, setLoading] = useState<boolean>(true)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const [currentTx, setCurrentTx] = useState<Schema.iTransaction>()
   const m = useDisclosure()
@@ -37,7 +37,7 @@ export function TransactionComponent() {
       try {
         const result = await findTransactions({ page: 1, take: 10 })
         setTxs(result.data)
-        setLoading(false)
+        setIsLoading(false)
       } catch (error) {
         console.error(error)
       }

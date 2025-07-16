@@ -70,28 +70,32 @@ export const passphraseSchema = z
     { error: 'Passphrase contains a common pattern or sequence.' }
   )
 
-export const addressSchema = z.string().refine(
-  (address: any) => {
-    try {
-      if (address.startsWith('bc1q') || address.startsWith('tb1q')) {
-        const decoded = bech32.decode(address)
-        return decoded.prefix === 'bc' || decoded.prefix === 'tb'
-      }
+export const addressSchema = z
+  .string()
+  .nonempty({ error: 'This field "address" is required' })
+  .refine(
+    (address: any) => {
+      try {
+        if (address.startsWith('bc1q') || address.startsWith('tb1q')) {
+          const decoded = bech32.decode(address)
+          return decoded.prefix === 'bc' || decoded.prefix === 'tb'
+        }
 
-      if (address.startsWith('bc1p') || address.startsWith('tb1p')) {
-        const decoded = bech32m.decode(address)
-        return decoded.prefix === 'bc' || decoded.prefix === 'tb'
-      }
+        if (address.startsWith('bc1p') || address.startsWith('tb1p')) {
+          const decoded = bech32m.decode(address)
+          return decoded.prefix === 'bc' || decoded.prefix === 'tb'
+        }
 
-      return false
-    } catch {
-      return false
-    }
-  },
-  { error: 'Invalid Bitcoin address (only SegWit and Taproot supported).' }
-)
+        return false
+      } catch {
+        return false
+      }
+    },
+    { error: 'Invalid Bitcoin address (only SegWit and Taproot supported).' }
+  )
 
 export const txidSchema = z
   .string()
+  .nonempty({ error: 'This field "txid" is required' })
   .length(64)
   .regex(/^[0-9a-fA-F]{64}$/, { error: 'Invalid TXID: must be 64-character hex string.' })

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { addressSchema, passphraseSchema, queryValidator, txidSchema } from '@/libs/validator.zod'
 
 export const createValidator = z.object({
-  passphrase: passphraseSchema,
+  passphrase: passphraseSchema.nonempty({ error: 'This field "passphrase" is required' }),
   recipientAddress: addressSchema,
   amount: z
     .number()
