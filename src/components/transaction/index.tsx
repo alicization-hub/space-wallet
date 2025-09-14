@@ -51,8 +51,8 @@ export function TransactionComponent() {
     <section className='px-8' aria-label='Transactions'>
       {isLoading ? (
         <div className='grid gap-4'>
-          <div className='bg-foreground/5 ring-foreground/10 h-20 animate-pulse rounded-xs ring-1' />
-          <div className='bg-foreground/5 ring-foreground/10 h-20 animate-pulse rounded-xs ring-1' />
+          <div className='bg-space-50/5 ring-space-50/10 h-20 animate-pulse rounded-xs ring-1' />
+          <div className='bg-space-50/5 ring-space-50/10 h-20 animate-pulse rounded-xs ring-1' />
         </div>
       ) : txs.length > 0 ? (
         <div className='grid gap-4'>

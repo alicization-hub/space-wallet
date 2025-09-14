@@ -116,7 +116,7 @@ export function VerifyComponent({
           />
 
           <Button
-            className='ring-foreground-50 bg-foreground-50/25 size-9 min-w-auto rounded-xs ring-2'
+            className='bg-space-700/5 ring-space-100/5 size-9 min-w-auto rounded-xs ring-2'
             type='button'
             aria-label='Button undo'
             title='Reset'
@@ -127,32 +127,30 @@ export function VerifyComponent({
           </Button>
         </div>
 
-        <div className='ring-foreground-50 flex flex-col gap-4 rounded-xs p-4 ring-1'>
+        <div className='ring-space-100/5 flex flex-col gap-4 rounded-xs p-4 ring-1'>
           <div className='flex flex-wrap justify-center gap-2 px-6'>
             {shuffled.map((word, index) => {
               const isDisabled = selected.includes(word)
               return (
                 <Button
-                  className='ring-foreground-50 bg-foreground-50/50 hover:ring-foreground-100 size-auto rounded-xs px-2 ring-1'
+                  className='ring-space-500/10 bg-space-500/5 hover:ring-space-400/20 size-auto rounded-xs px-2 ring-1'
                   type='button'
                   key={index}
                   isDisabled={isDisabled}
                   onPress={() => handleClick(word)}>
-                  <span className='font-number text-foreground-400'>{word}</span>
+                  <span className='font-number text-space-200'>{word}</span>
                 </Button>
               )
             })}
           </div>
 
-          <hr className='border-t-foreground-50/75 border-t-1' />
+          <hr className='border-t-space-50/5 border-t-1' />
 
           <div className='grid w-full grid-cols-4 justify-between gap-x-2 gap-y-4'>
             {Array.from({ length: mnemonic.length }, (_, index) => (
-              <div className='font-number flex h-6 items-center gap-1 select-none' key={index}>
-                <span className='text-foreground-400 w-5.5 text-center text-sm font-medium'>
-                  {index + 1}.
-                </span>
-                <span className='font-medium'>{selected[index]}</span>
+              <div className='font-number flex h-6 items-center gap-1 font-medium select-none' key={index}>
+                <span className='text-space-600 w-5.5 text-center text-sm'>{index + 1}.</span>
+                <span className=''>{selected[index]}</span>
               </div>
             ))}
           </div>
@@ -172,7 +170,7 @@ export function VerifyComponent({
             />
 
             <input
-              className='ring-foreground-50 focus:ring-foreground-100 h-12 rounded-xs px-4 tracking-widest ring-1 outline-none focus:ring-2'
+              className='form-input h-12 px-4 tracking-widest'
               type='password'
               {...register('passphrase')}
             />
@@ -188,7 +186,7 @@ export function VerifyComponent({
             />
 
             <input
-              className='ring-foreground-50 focus:ring-foreground-100 h-12 rounded-xs px-4 tracking-widest ring-1 outline-none focus:ring-2'
+              className='form-input h-12 px-4 tracking-widest'
               type='password'
               {...register('confirmPassphrase')}
             />
@@ -202,7 +200,7 @@ export function VerifyComponent({
 
       <div className='flex gap-4'>
         <Button
-          className='bg-foreground/5 text-foreground-400 rounded-xs'
+          className='bg-space-50/5 text-space-400 rounded-xs'
           type='button'
           aria-label='Button cancel'
           isDisabled={isLoading}
@@ -211,7 +209,7 @@ export function VerifyComponent({
         </Button>
 
         <Button
-          className='bg-foreground text-background grow rounded-xs'
+          className='bg-space-50 text-background grow rounded-xs'
           type='submit'
           aria-label='Button create'
           isLoading={isLoading}

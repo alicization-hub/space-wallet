@@ -2,7 +2,7 @@
 
 import { Button, useDisclosure } from '@heroui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { DangerIcon, SendIcon } from '@/components/icons'

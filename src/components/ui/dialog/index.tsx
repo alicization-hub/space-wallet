@@ -20,12 +20,12 @@ export function DialogComponent({
       motionProps={{
         variants: {
           enter: {
-            y: 0,
+            y: 1,
             opacity: 1,
             transition: { duration: 0.1, ease: 'easeOut' }
           },
           exit: {
-            y: -4,
+            y: -5,
             opacity: 0,
             transition: { duration: 0.1, ease: 'easeOut' }
           }
@@ -40,12 +40,13 @@ export function DialogComponent({
       isKeyboardDismissDisabled={true}
       isOpen={control.isOpen}
       onOpenChange={control.onOpenChange}>
-      <ModalContent className='bg-background ring-foreground-300/10 gap-6 rounded-xs p-8 shadow-none ring-4'>
-        <div className='text-foreground text-center'>{children}</div>
+      <ModalContent className='bg-background ring-space-600/10 gap-6 rounded-xs p-8 shadow-none ring-4'>
+        <div className='text-space-50 text-center'>{children}</div>
 
         <Button
-          className='bg-foreground text-background mx-auto max-w-28 rounded-xs'
+          className='bg-space-50 text-background mx-auto max-w-28 rounded-xs'
           type='button'
+          size='sm'
           onPress={rest?.onClose}>
           <span className='text-sm font-bold uppercase'>ok</span>
         </Button>

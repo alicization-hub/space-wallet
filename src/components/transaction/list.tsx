@@ -66,7 +66,7 @@ export function ListComponent({
         <Snippet
           classNames={{
             base: 'w-fit gap-2 bg-transparent p-0',
-            symbol: 'text-foreground-500 font-number text-lg font-light',
+            symbol: 'text-space-400 font-number text-lg font-light',
             copyButton: 'size-5 min-w-fit text-sm opacity-75'
           }}
           codeString={tx.txid}
@@ -81,7 +81,7 @@ export function ListComponent({
           </a>
         </Snippet>
 
-        <div className='text-foreground-500 text-xs'>{format(new Date(tx.timestamp), 'PPpp')}</div>
+        <div className='text-space-400 text-xs'>{format(new Date(tx.timestamp), 'PPpp')}</div>
       </div>
 
       <div className='flex flex-col'>
@@ -98,7 +98,7 @@ export function ListComponent({
             })}>
             {amount}
           </span>
-          <span className='text-foreground-500 text-sm font-light uppercase'>btc</span>
+          <span className='text-space-400 text-sm font-light uppercase'>btc</span>
         </div>
 
         <div className='flex items-center gap-2' aria-label='Tx Fee'>
@@ -106,13 +106,13 @@ export function ListComponent({
           <span className='font-number word-tight text-sm text-amber-100'>
             {numberToSpace(tx.fee.toString())}
           </span>
-          <span className='text-foreground-500 text-sm capitalize'>sats</span>
+          <span className='text-space-400 text-sm capitalize'>sats</span>
         </div>
       </div>
 
       <div className='flex'>
         <Button
-          className='hover:bg-foreground/5 hover:ring-foreground/10 size-12 rounded-xs bg-transparent hover:ring-1'
+          className='hover:bg-space-50/5 hover:ring-space-50/10 size-12 rounded-xs bg-transparent hover:ring-1'
           aria-label='Tx Detail'
           radius='none'
           isIconOnly

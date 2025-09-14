@@ -38,7 +38,7 @@
   }
 
   .mirror {
-    @apply bg-foreground/5 ring-foreground/10 ring-1;
+    @apply bg-space-50/5 ring-space-50/10 ring-1;
   }
 
   .is-required::after {
@@ -46,8 +46,8 @@
     content: '*';
   }
 
-  .btn-light {
-    @apply hover:bg-foreground/5 hover:ring-foreground/10 transition-all duration-100 hover:ring-1;
+  .form-input {
+    @apply ring-space-100/5 focus:ring-space-100/10 rounded-xs ring-1 outline-none focus:ring-2;
   }
 }
 

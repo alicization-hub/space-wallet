@@ -73,7 +73,7 @@ export function FormComponent({
   // __RENDER
   return (
     <form className='flex flex-col gap-6' onSubmit={handleSubmit(handleClick)}>
-      <div className='border-b-foreground-50 flex items-center gap-2 border-b-2 pb-4 select-none'>
+      <div className='border-b-space-50/5 flex items-center gap-2 border-b-2 pb-4 select-none'>
         <UndoIcon className='size-6 rotate-180' />
         <div className='text-xl font-medium capitalize'>recovery wallet</div>
       </div>
@@ -98,6 +98,18 @@ export function FormComponent({
         {error.mnemonic && <div className='text-xs text-red-500'>{error.mnemonic.message}</div>}
       </div>
 
+      <div className='flex flex-col gap-2'>
+        <LabelComponent
+          title='wallet name'
+          description='Lorem ipsum dolor sit amet consectetur adipisicing elit.'
+          required
+        />
+
+        <input className='form-input h-12 px-4' {...register('name')} />
+
+        {error.name && <div className='text-xs text-red-500'>{error.name.message}</div>}
+      </div>
+
       {isValid && (
         <motion.div
           className='flex flex-col gap-6'
@@ -106,28 +118,13 @@ export function FormComponent({
           transition={{ duration: 0.2, ease: 'easeInOut' }}>
           <div className='flex flex-col gap-2'>
             <LabelComponent
-              title='wallet name'
-              description='Lorem ipsum dolor sit amet consectetur adipisicing elit.'
-              required
-            />
-
-            <input
-              className='ring-foreground-50 focus:ring-foreground-100 h-12 rounded-xs px-4 ring-1 outline-none focus:ring-2'
-              {...register('name')}
-            />
-
-            {error.name && <div className='text-xs text-red-500'>{error.name.message}</div>}
-          </div>
-
-          <div className='flex flex-col gap-2'>
-            <LabelComponent
               title='passphrase'
               description='Lorem ipsum dolor sit amet consectetur adipisicing elit.'
               required
             />
 
             <input
-              className='ring-foreground-50 focus:ring-foreground-100 h-12 rounded-xs px-4 tracking-widest ring-1 outline-none focus:ring-2'
+              className='form-input h-12 px-4 tracking-widest'
               type='password'
               {...register('passphrase')}
             />
@@ -143,7 +140,7 @@ export function FormComponent({
             />
 
             <input
-              className='ring-foreground-50 focus:ring-foreground-100 h-12 rounded-xs px-4 tracking-widest ring-1 outline-none focus:ring-2'
+              className='form-input h-12 px-4 tracking-widest'
               type='password'
               {...register('confirmPassphrase')}
             />
@@ -157,7 +154,7 @@ export function FormComponent({
 
       <div className='flex gap-4'>
         <Button
-          className='bg-foreground/5 text-foreground-400 rounded-xs'
+          className='bg-space-50/5 text-space-400 rounded-xs'
           type='button'
           aria-label='Button cancel'
           isDisabled={isLoading}
@@ -166,7 +163,7 @@ export function FormComponent({
         </Button>
 
         <Button
-          className='bg-foreground text-background grow rounded-xs'
+          className='bg-space-50 text-background grow rounded-xs'
           type='submit'
           aria-label='Button confirm'
           isLoading={isLoading}

@@ -15,7 +15,7 @@ export function CreateWalletComponent({}: Readonly<{}>) {
   return (
     <>
       <Button
-        className='ring-foreground/20 bg-foreground/5 flex h-auto w-full flex-col gap-0 rounded-xs p-6 whitespace-normal ring-1 backdrop-blur-lg'
+        className='ring-space-50/20 bg-space-50/5 flex h-auto w-full flex-col gap-0 rounded-xs p-6 whitespace-normal ring-1 backdrop-blur-lg'
         type='button'
         aria-label='Button create new wallet'
         onPress={m.onOpen}>

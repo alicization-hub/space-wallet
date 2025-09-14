@@ -13,7 +13,7 @@ export function LabelComponent({
   return (
     <div className='flex flex-col'>
       <div className={cls('font-medium capitalize', { 'is-required': required })}>{title}</div>
-      <div className='text-foreground-400 text-xs'>{description}</div>
+      <div className='text-space-600 text-xs'>{description}</div>
     </div>
   )
 }

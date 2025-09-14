@@ -12,7 +12,7 @@ import { syncTransactions } from '@/tasks/transactions.tasks'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: NextRequest, { params }: NextParams<{ uuid: UUID }>) {
+export async function GET(req: NextRequest, { params }: NextParams<{ uuid: string }>) {
   try {
     await paramValidator.parseAsync(await params)
     const id = req.nextUrl.searchParams.get('id')
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest, { params }: NextParams<{ uuid: UUID 
   }
 }
 
-export async function POST(req: NextRequest, { params }: NextParams<{ uuid: UUID }>) {
+export async function POST(req: NextRequest, { params }: NextParams<{ uuid: string }>) {
   try {
     await paramValidator.parseAsync(await params)
     const auth = await useAuthorized()

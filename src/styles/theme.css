@@ -5,6 +5,18 @@
   --color-background: #0a0a0a;
   --color-foreground: #fafafa;
 
+  --color-space-50: #fafafa;
+  --color-space-100: #efefef;
+  --color-space-200: #dcdcdc;
+  --color-space-300: #bdbdbd;
+  --color-space-400: #989898;
+  --color-space-500: #7c7c7c;
+  --color-space-600: #656565;
+  --color-space-700: #525252;
+  --color-space-800: #464646;
+  --color-space-900: #3d3d3d;
+  --color-space-950: #292929;
+
   --color-rainbow: linear-gradient(
     to right,
     #ef5350,
@@ -25,30 +37,4 @@
   --word-spacing-normal: 0rem;
   --word-spacing-wide: 0.025rem;
   --word-spacing-wider: 0.05rem;
-
-  --cubic-bezier: cubic-bezier(0.19, 1, 0.22, 1);
-  --duration: 720ms;
-
-  --animate-loader: loader 1s cubic-bezier(0.86, 0.01, 0.08, 1);
-  --animate-rainbow: rainbow 3s linear infinite;
-}
-
-@keyframes loader {
-  from {
-    width: '0%';
-  }
-
-  to {
-    width: '100%';
-  }
-}
-
-@keyframes rainbow {
-  from {
-    background-position: '0 0';
-  }
-
-  to {
-    background-position: '-200% 0';
-  }
 }

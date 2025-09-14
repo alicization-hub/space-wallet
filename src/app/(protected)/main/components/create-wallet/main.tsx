@@ -30,7 +30,7 @@ export function MainComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
   return (
     <div className='flex flex-col gap-4'>
       {currentStep < 3 && (
-        <div className='border-b-foreground-50 flex items-center gap-2 border-b-2 pb-4 select-none'>
+        <div className='border-b-space-50/5 flex items-center gap-2 border-b-2 pb-4 select-none'>
           <ShieldIcon className='size-6 stroke-amber-400' />
           <div className='text-xl font-medium capitalize'>create new wallet</div>
         </div>

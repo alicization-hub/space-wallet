@@ -11,8 +11,8 @@ export const accounts = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     walletId: uuid('wallet_id')
-      .references(() => wallets.id)
-      .notNull(),
+      .notNull()
+      .references(() => wallets.id, { onDelete: 'cascade' }),
     label: text('label').notNull(),
     purpose: integer('purpose').notNull().$type<84 | 86>(),
     index: integer('index').notNull(),
@@ -23,7 +23,7 @@ export const accounts = pgTable(
     startedAt: timestamp('started_at', { precision: 6, withTimezone: true }).notNull().defaultNow(),
     ...sharedTimestampConumns
   },
-  (self) => [index().on(self.label)]
+  (self) => [index('account_wallet_index').on(self.walletId), index('account_label_index').on(self.label)]
 ).enableRLS()
 
 // ********************** Relations ********************** \\

@@ -38,3 +38,4 @@ networks:
 volumes:
   pg_data:
     name: pg_data
+    external: true

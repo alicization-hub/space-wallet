@@ -15,7 +15,7 @@ export const wallets = pgTable(
     isActive: boolean('is_active').notNull().default(true),
     ...sharedTimestampConumns
   },
-  (self) => [uniqueIndex().on(self.slug)]
+  (self) => [uniqueIndex('wallet_slug_unique_index').on(self.slug)]
 ).enableRLS()
 
 // ********************** Relations ********************** \\

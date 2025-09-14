@@ -24,8 +24,7 @@ export const config = {
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/middleware
  */
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl
-  if (pathname === '/') {
+  if (req.nextUrl.pathname === '/') {
     const hasJWT = req.cookies.has(APP_TOKEN)
     const uuid = uuidV7()
     if (hasJWT) {

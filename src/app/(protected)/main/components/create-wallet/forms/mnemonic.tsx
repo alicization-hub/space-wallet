@@ -77,10 +77,7 @@ export function MnemonicComponent({
           required
         />
 
-        <input
-          className='ring-foreground-50 focus:ring-foreground-100 h-12 rounded-xs px-4 ring-1 outline-none focus:ring-2'
-          {...register('name')}
-        />
+        <input className='form-input h-12 px-4' {...register('name')} />
 
         {error.name && <div className='text-xs text-red-500'>{error.name.message}</div>}
       </div>
@@ -100,15 +97,15 @@ export function MnemonicComponent({
               className={cls(
                 'h-12 flex-1 flex-col gap-0 rounded-xs py-2 outline-none',
                 length === record.value
-                  ? 'bg-foreground-50/25 ring-foreground-100 shadow-foreground-400/5 shadow-xl ring-2'
-                  : 'ring-foreground-50 hover:ring-foreground-100 bg-transparent ring-1'
+                  ? 'bg-space-500/5 ring-space-100/10 shadow-space-500/5 shadow-xl ring-2'
+                  : 'ring-space-100/5 hover:ring-space-100/10 bg-transparent ring-1'
               )}
               aria-label={`Button phrase length - ${record.value}`}
               type='button'
               key={record.value}
               onPress={() => setLength(record.value as MnemonicLength)}>
               <div className='text-sm capitalize'>{record.label}</div>
-              <div className='text-foreground-400 text-xs capitalize'>{record.description}</div>
+              <div className='text-space-600 text-xs capitalize'>{record.description}</div>
             </Button>
           ))}
         </div>
@@ -124,7 +121,7 @@ export function MnemonicComponent({
 
           {mnemonic.length >= 12 && (
             <Button
-              className='ring-foreground-50 bg-foreground-50/25 rounded-xs ring-2'
+              className='bg-space-700/5 ring-space-100/5 rounded-xs ring-2'
               type='button'
               aria-label='Button regenerate'
               isIconOnly
@@ -150,44 +147,42 @@ export function MnemonicComponent({
           </ul>
         </div>
 
-        <div className='ring-foreground-50 flex flex-col justify-center rounded-xs p-4 ring-1'>
+        <div className='ring-space-100/5 flex flex-col justify-center rounded-xs p-4 ring-1'>
           {mnemonic.length >= 12 ? (
             <>
               <div className='grid w-full grid-cols-4 justify-between gap-x-2 gap-y-4'>
                 {mnemonic.map((word, index) => (
                   <motion.div
-                    className='font-number flex items-center gap-1 select-none'
+                    className='font-number flex items-center gap-1 font-medium select-none'
                     key={`${word}-${index}`}
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: index * 0.02 }}>
-                    <span className='text-foreground-400 w-5.5 text-center text-sm font-medium'>
-                      {index + 1}.
-                    </span>
-                    <span className='font-medium'>{word}</span>
+                    <span className='text-space-600 w-5.5 text-center text-sm'>{index + 1}.</span>
+                    <span className=''>{word}</span>
                   </motion.div>
                 ))}
               </div>
 
-              <div className='text-foreground-500 bg-foreground-50/50 mt-4 rounded-xs py-2 text-center text-xs'>
+              <div className='text-space-500 bg-space-500/5 mt-4 rounded-xs py-2 text-center text-xs'>
                 You will not be able to see these words again once wallet is created.
               </div>
             </>
           ) : (
             <Button
-              className='bg-foreground/5 mx-auto w-36 rounded-xs'
+              className='bg-space-50/5 text-space-200 mx-auto w-36 rounded-xs'
               type='button'
               aria-label='Button generate'
               isLoading={isLoading}
               onPress={handleClick}>
               {!isLoading && <PencilRulerIcon className='size-5 opacity-80' />}
-              <span className='text-foreground-700 capitalize'>generate</span>
+              <span className='capitalize'>generate</span>
             </Button>
           )}
         </div>
       </div>
 
-      <div className='bg-foreground-400/5 flex items-center gap-4 rounded-xs p-4'>
+      <div className='bg-space-400/5 flex items-center gap-4 rounded-xs p-4'>
         <CircleCheckIcon className='size-7' />
         <span className='text-sm'>
           Make sure you have safely stored your recovery phrase before proceeding to verification.
@@ -196,7 +191,7 @@ export function MnemonicComponent({
 
       <div className='flex gap-4'>
         <Button
-          className='bg-foreground/5 text-foreground-400 rounded-xs'
+          className='bg-space-50/5 text-space-400 rounded-xs'
           type='button'
           aria-label='Button close'
           isDisabled={isLoading}
@@ -205,7 +200,7 @@ export function MnemonicComponent({
         </Button>
 
         <Button
-          className='bg-foreground text-background grow rounded-xs'
+          className='bg-space-50 text-background grow rounded-xs'
           type='submit'
           aria-label='Button continue'
           isDisabled={!mnemonic.length || isLoading}>

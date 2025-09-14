@@ -1,7 +1,7 @@
 import { xchacha20poly1305 } from '@noble/ciphers/chacha'
-import { bytesToHex, hexToBytes } from '@noble/ciphers/utils'
+import { bytesToHex, bytesToUtf8, hexToBytes, utf8ToBytes } from '@noble/ciphers/utils'
 import { argon2idAsync } from '@noble/hashes/argon2'
-import { bytesToUtf8, randomBytes, utf8ToBytes } from '@noble/hashes/utils'
+import { randomBytes } from '@noble/hashes/utils'
 
 import { CIPHERS } from '@/constants/env'
 

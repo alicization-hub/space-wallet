@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { boolean, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import { boolean, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 
 import { sharedTimestampConumns } from '../utils'
 import { accounts } from './accounts.schema'
@@ -9,8 +9,8 @@ export const addresses = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     accountId: uuid('account_id')
-      .references(() => accounts.id)
-      .notNull(),
+      .notNull()
+      .references(() => accounts.id, { onDelete: 'cascade' }),
     label: text('label'),
     address: text('address').unique().notNull(),
     type: text('type').notNull().$type<'receive' | 'change'>(),
@@ -18,7 +18,10 @@ export const addresses = pgTable(
     isUsed: boolean('is_used').notNull().default(false),
     ...sharedTimestampConumns
   },
-  (self) => [uniqueIndex().on(self.address)]
+  (self) => [
+    index('address_account_index').on(self.accountId),
+    uniqueIndex('address_address_unique_index').on(self.address)
+  ]
 ).enableRLS()
 
 // ********************** Relations ********************** \\

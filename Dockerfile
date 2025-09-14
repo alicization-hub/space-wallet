@@ -40,6 +40,7 @@ COPY --from=builder /app/package.json ./package.json
 # and ensures only necessary files are copied into the final image.
 # It also ensures Bun's internal cache is correct for the final image.
 RUN bun install --production --frozen-lockfile --prefer-offline
+RUN bun add typescript
 
 # Expose the port Next.js will listen on
 EXPOSE 3000

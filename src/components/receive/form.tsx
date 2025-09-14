@@ -58,9 +58,9 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
         <div className='font-number text-xl font-medium capitalize'>receive address</div>
       </div>
 
-      <div className='border-y-foreground/5 flex flex-col justify-center gap-4 border-y-2 py-8'>
+      <div className='border-y-space-50/5 flex flex-col justify-center gap-4 border-y-2 py-8'>
         <Image
-          classNames={{ wrapper: 'rounded-none mx-auto bg-foreground/5', img: 'rounded-xs' }}
+          classNames={{ wrapper: 'rounded-none mx-auto bg-space-50/5', img: 'rounded-xs' }}
           alt='QR Code address'
           src={qrcode}
           width={250}
@@ -70,7 +70,7 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
         {address ? (
           <Snippet
             classNames={{
-              base: 'mirror w-full pl-6 rounded-xs bg-foreground/5 justify-center',
+              base: 'mirror w-full pl-6 rounded-xs bg-space-50/5 justify-center',
               pre: 'font-number select-none'
             }}
             symbol={false}
@@ -78,17 +78,17 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
             {address}
           </Snippet>
         ) : (
-          <div className='bg-foreground/5 h-10 animate-pulse rounded-xs' />
+          <div className='bg-space-50/5 h-10 animate-pulse rounded-xs' />
         )}
 
-        <div className='bg-foreground-100/25 text-foreground-500 rounded-xs p-4 text-center text-sm'>
+        <div className='bg-space-400/5 text-space-300 rounded-xs p-4 text-center text-sm'>
           Upon at least one transaction confirmation, this address will be set to <b>used</b>
         </div>
       </div>
 
-      <div className='flex justify-center gap-4'>
+      <div className='flex gap-4'>
         <Button
-          className='bg-foreground/5 text-foreground-400 rounded-xs'
+          className='bg-space-50/5 text-space-400 rounded-xs'
           type='button'
           aria-label='Button close'
           isDisabled={isLoading}
@@ -97,7 +97,7 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
         </Button>
 
         <Button
-          className='bg-foreground text-background rounded-xs'
+          className='bg-space-50 text-background grow rounded-xs'
           type='button'
           aria-label='Select address'
           isDisabled={isLoading}

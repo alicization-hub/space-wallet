@@ -59,11 +59,11 @@ export function AddrComponent({
           <div className='text-lg font-medium capitalize'>address management</div>
         </div>
 
-        <div className='text-foreground-500 text-xs'>
+        <div className='text-space-400 text-xs'>
           Lorem, ipsum dolor sit amet consectetur adipisicing elit.
         </div>
 
-        <hr className='border-foreground-50 mt-4' />
+        <hr className='border-space-50/5 mt-4' />
       </DrawerHeader>
 
       <DrawerBody className='relative flex flex-col gap-4 px-8 py-1'>
@@ -92,31 +92,33 @@ export function AddrComponent({
             />
           ))
         ) : (
-          <div className='text-foreground-300 font-number text-center text-lg font-light select-none'>
+          <div className='text-space-500 font-number text-center text-lg font-light select-none'>
             No addresses found.
           </div>
         )}
 
-        <Pagination
-          classNames={{
-            base: 'p-0 pt-4',
-            wrapper: 'mx-auto',
-            item: 'bg-foreground-50/25 size-10 cursor-pointer rounded-xs border-2 border-foreground-50/50',
-            cursor: 'bg-foreground text-background rounded-xs font-bold'
-          }}
-          size='lg'
-          variant='light'
-          dotsJump={1}
-          siblings={0}
-          isDisabled={isLoading || !state?.count}
-          total={state?.lastPage || 1}
-          onChange={(page) => setQuery((prev) => ({ ...prev, page }))}
-        />
+        {state && (
+          <Pagination
+            classNames={{
+              base: 'p-0 pt-4',
+              wrapper: 'mx-auto',
+              item: 'bg-space-700/5 size-10 cursor-pointer rounded-xs border-2 border-space-100/5',
+              cursor: 'bg-space-50 text-background rounded-xs font-bold'
+            }}
+            size='lg'
+            variant='light'
+            dotsJump={1}
+            siblings={0}
+            isDisabled={isLoading || !state?.count}
+            total={state?.lastPage || 1}
+            onChange={(page) => setQuery((prev) => ({ ...prev, page }))}
+          />
+        )}
       </DrawerBody>
 
       <DrawerFooter className='flex justify-between gap-4 px-8 py-6'>
         <Button
-          className='bg-foreground/5 text-foreground-400 rounded-xs'
+          className='bg-space-50/5 text-space-400 rounded-xs'
           type='button'
           aria-label='Button close'
           onPress={onClose}>

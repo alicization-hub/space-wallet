@@ -44,7 +44,7 @@ export function ComplateComponent({ data }: Readonly<{ data: SwitchValidator }>)
       <div className='flex flex-col justify-center'>
         <CircleCheckIcon className='mx-auto size-16 stroke-green-300' />
         <h3 className='text-xl leading-10 font-bold'>Wallet Created Successfully</h3>
-        <p className='text-foreground-500 font-light'>
+        <p className='text-space-400 font-light'>
           Your wallet has been created and secured with your recovery phrase.
         </p>
       </div>
@@ -58,7 +58,7 @@ export function ComplateComponent({ data }: Readonly<{ data: SwitchValidator }>)
 
       <div className='flex justify-center gap-4'>
         <Button
-          className='bg-foreground text-background rounded-xs'
+          className='bg-space-50 text-background rounded-xs'
           type='button'
           aria-label='Button access'
           isLoading={isLoading}

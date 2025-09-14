@@ -15,7 +15,7 @@ export function ReceiveComponent({}: Readonly<{}>) {
   return (
     <>
       <Button
-        className='hover:bg-foreground/5 hover:ring-foreground/10 h-10 gap-2 rounded-xs bg-transparent px-4 hover:ring-1'
+        className='hover:bg-space-50/5 hover:ring-space-50/10 h-10 gap-2 rounded-xs bg-transparent px-4 hover:ring-1'
         radius='none'
         type='button'
         aria-label='Button receive'

@@ -20,12 +20,12 @@ export function AddrComponent({
   // __RENDER
   return (
     <div className='flex items-center gap-2'>
-      <span className='text-foreground-500 text-sm capitalize'>{label}</span>
+      <span className='text-space-400 text-sm capitalize'>{label}</span>
       {values.length === 1 ? (
         <Snippet
           classNames={{
             base: 'w-fit gap-2 bg-transparent p-0',
-            symbol: 'text-foreground-500 font-number text-lg font-light',
+            symbol: 'text-space-400 font-number text-lg font-light',
             copyButton: 'size-5 min-w-fit text-sm opacity-75'
           }}
           codeString={address}
