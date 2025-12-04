@@ -23,7 +23,7 @@ export const config = {
 /**
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/middleware
  */
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
   if (pathname === '/') {
     const hasJWT = req.cookies.has(APP_TOKEN)
