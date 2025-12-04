@@ -1,0 +1,12 @@
+# .aiexclude
+
+# misc
+/certificates
+/docs
+
+# env files (can opt-in for committing if needed)
+.env
+.env.prod
+.env.lock
+.env.local
+.env*.local
