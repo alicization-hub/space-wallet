@@ -3,13 +3,13 @@
 import { Button } from '@heroui/react'
 
 import { DocumentIcon } from '@/components/icons'
-import { type Schema } from '@/libs/drizzle/types'
+import { type Transaction } from '@/libs/actions/transaction'
 
 export function DetailComponent({
   tx,
   onClose
 }: Readonly<{
-  tx?: Schema.iTransaction
+  tx?: Transaction
   onClose?: () => void
 }>) {
   // __STATE's

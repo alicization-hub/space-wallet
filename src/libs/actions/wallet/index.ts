@@ -5,11 +5,11 @@ import 'server-only'
 import { and, asc, desc, eq, getTableColumns } from 'drizzle-orm'
 import { omit, pick } from 'ramda'
 
-import { useAuthorized } from '@/libs/actions/guard'
+import { useAuth } from '@/libs/actions/auth'
 import { mnemonic } from '@/libs/bitcoin/mnemonic'
 import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
-import { ciphers } from '@/libs/ciphers'
-import { db, schema } from '@/libs/drizzle'
+import { cipher } from '@/libs/cipher'
+import { accountColumns, db, schema, walletColumns } from '@/libs/drizzle'
 import { password } from '@/libs/password'
 
 import type { CreateWalletValidator, UpdateWalletValidator } from './validator'
@@ -26,7 +26,7 @@ export async function generateMnemonic(length: MnemonicLength = 24) {
 
 export async function findWallets() {
   try {
-    await useAuthorized()
+    await useAuth()
 
     return db.query.wallets.findMany({
       where: eq(schema.wallets.isActive, true),
@@ -39,10 +39,14 @@ export async function findWallets() {
         accounts: {
           columns: {
             walletId: false,
-            index: false,
-            lastDescriptorRange: false
+            index: false
           },
-          orderBy: [desc(schema.accounts.purpose)]
+          orderBy: [desc(schema.accounts.purpose)],
+          with: {
+            balances: {
+              columns: { accountId: false }
+            }
+          }
         }
       }
     })
@@ -53,18 +57,16 @@ export async function findWallets() {
 
 export async function currentAccount() {
   try {
-    const auth = await useAuthorized()
+    const auth = await useAuth()
 
-    const walletColumns = getTableColumns(schema.wallets)
-    const accountColumns = getTableColumns(schema.accounts)
     const [result] = await db
       .select({
         ...omit(['bio', 'passkey'], walletColumns),
-        account: omit(['walletId', 'index', 'lastDescriptorRange'], accountColumns)
+        account: omit(['walletId', 'index'], accountColumns)
       })
       .from(schema.wallets)
       .innerJoin(schema.accounts, eq(schema.accounts.walletId, schema.wallets.id))
-      .where(and(eq(schema.wallets.id, auth.sub), eq(schema.accounts.id, auth.uid)))
+      .where(eq(schema.wallets.id, auth.id))
 
     return result
   } catch (error) {
@@ -78,7 +80,7 @@ export async function currentAccount() {
 export async function createWallet(values: CreateWalletValidator) {
   try {
     const passphraseHash = await password.hash(values.passphrase)
-    const mnemonicEncrypted = await ciphers.encrypt(values.mnemonic, passphraseHash)
+    const mnemonicEncrypted = await cipher.encrypt(values.mnemonic, passphraseHash)
 
     const [walletCreated] = await db
       .insert(schema.wallets)
@@ -156,8 +158,8 @@ export async function createWallet(values: CreateWalletValidator) {
  */
 export async function updateWallet(values: UpdateWalletValidator) {
   try {
-    const auth = await useAuthorized()
-    await db.update(schema.wallets).set(values).where(eq(schema.wallets.id, auth.sub))
+    const auth = await useAuth()
+    await db.update(schema.wallets).set(values).where(eq(schema.wallets.id, auth.id))
 
     return {
       success: true,
@@ -177,8 +179,8 @@ export async function updateWallet(values: UpdateWalletValidator) {
  */
 export async function deleteWallet() {
   try {
-    const auth = await useAuthorized()
-    await db.delete(schema.wallets).where(eq(schema.wallets.id, auth.sub))
+    const auth = await useAuth()
+    await db.delete(schema.wallets).where(eq(schema.wallets.id, auth.id))
 
     return {
       success: true,

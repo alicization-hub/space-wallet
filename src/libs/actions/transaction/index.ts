@@ -2,50 +2,34 @@
 
 import 'server-only'
 
-import { and, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
-import { omit, pick } from 'ramda'
+import { pick } from 'ramda'
 
-import { useAuthorized } from '@/libs/actions/guard'
+import { useAuth } from '@/libs/actions/auth'
 import { RPCClient } from '@/libs/bitcoin/rpc'
-import { db, schema } from '@/libs/drizzle'
-import { withPagination } from '@/libs/drizzle/utils'
 import { createPagination } from '@/libs/utils'
 
+import { formatter } from './helpers'
 import { type QueryValidator } from './validator'
+
+export type Transaction = Awaited<ReturnType<typeof formatter>>
 
 export async function findTransactions(query: QueryValidator) {
   try {
-    const auth = await useAuthorized()
+    const auth = await useAuth()
 
-    const transactionColumns = getTableColumns(schema.transactions)
-    const filters: SQL[] = [eq(schema.transactions.accountId, auth.uid)]
+    const rpcClient = new RPCClient()
+    await rpcClient.setWallet(auth.account.id)
 
-    const { total, results } = await db.transaction(async (tx) => {
-      const queryBuilder = tx
-        .select({
-          ...omit(['accountId'], transactionColumns)
-        })
-        .from(schema.transactions)
-        .where(and(...filters))
-        .orderBy(desc(schema.transactions.timestamp))
-        .$dynamic()
+    const wallet = await rpcClient.getWallet()
+    const transactions = await rpcClient.listTransactions('*', query.take, (query.page - 1) * query.take)
+    const formatted = await Promise.all(transactions.map((tx) => formatter(rpcClient, tx)))
 
-      const queryCountBuilder = tx
-        .select({ count: count() })
-        .from(schema.transactions)
-        .where(and(...filters))
-        .$dynamic()
+    // Sort by timestamp descending (newest first)
+    // Since listTransactions returns a batch of "recent" transactions,
+    // we just need to sort specifically this batch or reverse it if it's already in chronological order.
+    const sorted = formatted.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
-      const results = await withPagination(queryBuilder, query.page, query.take).execute()
-      const [r] = await queryCountBuilder.execute()
-
-      return {
-        total: +r.count,
-        results
-      }
-    })
-
-    return createPagination(results, total, query.page, query.take)
+    return createPagination(sorted, wallet.txcount, query.page, query.take)
   } catch (error: any) {
     console.error(error)
     throw new Error(`An error occurred: ${error.message}`)
@@ -54,10 +38,10 @@ export async function findTransactions(query: QueryValidator) {
 
 export async function findUTXOs() {
   try {
-    const auth = await useAuthorized()
+    const auth = await useAuth()
 
     const rpcClient = new RPCClient()
-    await rpcClient.setWallet(auth.uid)
+    await rpcClient.setWallet(auth.account.id)
 
     const utxos = await rpcClient.listUnspent()
     return utxos.map((utxo) =>

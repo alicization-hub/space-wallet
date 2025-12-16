@@ -2,16 +2,16 @@
 
 import 'server-only'
 
-import { and, asc, eq, getTableColumns, inArray } from 'drizzle-orm'
+import { and, asc, eq, inArray } from 'drizzle-orm'
 import { find, pick } from 'ramda'
 
-import { useAuthorized } from '@/libs/actions/guard'
+import { useAuth } from '@/libs/actions/auth'
 import { derivationPathBuilder } from '@/libs/bitcoin/derivation'
 import { RPCClient } from '@/libs/bitcoin/rpc'
 import { createRootKey } from '@/libs/bitcoin/scure'
 import { createSignedTransaction } from '@/libs/bitcoin/transaction'
-import { ciphers } from '@/libs/ciphers'
-import { db, schema } from '@/libs/drizzle'
+import { cipher } from '@/libs/cipher'
+import { accountColumns, addressColumns, db, schema } from '@/libs/drizzle'
 import { password } from '@/libs/password'
 
 import { createValidator, type CreateValidator } from './validator'
@@ -24,11 +24,11 @@ import { createValidator, type CreateValidator } from './validator'
  */
 export async function createTransaction(formData: CreateValidator) {
   try {
-    const auth = await useAuthorized()
+    const auth = await useAuth()
     const data = createValidator.parse(formData)
 
     // Verify the passphrase
-    const [wallet] = await db.select().from(schema.wallets).where(eq(schema.wallets.id, auth.sub))
+    const [wallet] = await db.select().from(schema.wallets).where(eq(schema.wallets.id, auth.id))
     const isValid = await password.verify(wallet.passkey, data.passphrase)
     if (!isValid) {
       throw new Error('Invalid passphrase.')
@@ -36,11 +36,9 @@ export async function createTransaction(formData: CreateValidator) {
 
     // Get the RPC client instance
     const rpcClient = new RPCClient()
-    await rpcClient.setWallet(auth.uid)
+    await rpcClient.setWallet(auth.account.id)
 
     // Get the addresses and the change address
-    const accountColumns = getTableColumns(schema.accounts)
-    const addressColumns = getTableColumns(schema.addresses)
     const [addresses, changeAddress] = await db.transaction(async (tx) => {
       const addresses = await tx
         .select({
@@ -51,7 +49,7 @@ export async function createTransaction(formData: CreateValidator) {
         .innerJoin(schema.accounts, eq(schema.accounts.id, schema.addresses.accountId))
         .where(
           and(
-            eq(schema.accounts.id, auth.uid),
+            eq(schema.accounts.id, auth.account.id),
             eq(schema.addresses.isUsed, true),
             inArray(
               schema.addresses.address,
@@ -65,7 +63,7 @@ export async function createTransaction(formData: CreateValidator) {
         .from(schema.addresses)
         .where(
           and(
-            eq(schema.addresses.accountId, auth.uid),
+            eq(schema.addresses.accountId, auth.account.id),
             eq(schema.addresses.type, 'change'),
             eq(schema.addresses.isUsed, false)
           )
@@ -117,7 +115,7 @@ export async function createTransaction(formData: CreateValidator) {
     ]
 
     // Create the signed transaction
-    const mnemonic = await ciphers.decrypt(wallet.bio, data.passphrase)
+    const mnemonic = await cipher.decrypt(wallet.bio, data.passphrase)
     const rootKey = await createRootKey(mnemonic, data.passphrase)
     const tx = await createSignedTransaction(rootKey, data.fee, inputs, outputs)
 

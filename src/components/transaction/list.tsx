@@ -6,8 +6,8 @@ import { motion } from 'framer-motion'
 import { useMemo } from 'react'
 
 import { ChatIcon, DocumentIcon, LoginIcon, LogoutIcon } from '@/components/icons'
+import { type Transaction } from '@/libs/actions/transaction'
 import { satsToBitcoin } from '@/libs/bitcoin/unit'
-import { type Schema } from '@/libs/drizzle/types'
 import { cls, numberToSpace, toExplorer, toShort } from '@/libs/utils'
 
 import { AddrComponent } from './addr'
@@ -18,7 +18,7 @@ export function ListComponent({
   onClick
 }: Readonly<{
   idx: number
-  tx: Schema.iTransaction
+  tx: Transaction
   onClick?: () => void
 }>) {
   // __STATE's

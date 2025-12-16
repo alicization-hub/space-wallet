@@ -12,7 +12,7 @@ export function AddrComponent({
 }: Readonly<{
   label: string
   type: 'input' | 'output'
-  values: Schema.iTransaction['outputs'] | Schema.iTransaction['inputs']
+  values: Transaction.Schema['outputs'] | Transaction.Schema['inputs']
 }>) {
   // __STATE's
   const [{ address }] = values

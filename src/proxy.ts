@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { v7 as uuidV7 } from 'uuid'
 
 import { APP_TOKEN } from '@/constants'
+import { logger } from '@/libs/logger'
 
 /**
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/middleware#matcher
@@ -23,14 +24,10 @@ export const config = {
 /**
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/middleware
  */
-<<<<<<< HEAD:src/middleware.ts
-export async function middleware(req: NextRequest) {
-  if (req.nextUrl.pathname === '/') {
-=======
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
+  logger(`📝 Proxy ${pathname}`)
   if (pathname === '/') {
->>>>>>> main:src/proxy.ts
     const hasJWT = req.cookies.has(APP_TOKEN)
     const uuid = uuidV7()
     if (hasJWT) {

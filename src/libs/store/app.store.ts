@@ -22,7 +22,7 @@ type Actions = {
 
 const store = create<States & Actions>((setState) => ({
   // STATE's
-  appVersion: 'v0.1-beta (July, 2025)',
+  appVersion: 'v0.2-canary (July, 2025)',
   loader: true,
   theme: Theme.DARK,
   language: Locales.UK,

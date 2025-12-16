@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1751268086975,
-      "tag": "0000_young_bug",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1751279504837,
-      "tag": "0001_nervous_drax",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1752228112439,
-      "tag": "0002_amused_slipstream",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1752243494941,
-      "tag": "0003_bored_jazinda",
+      "when": 1765561928460,
+      "tag": "0000_cynical_satana",
       "breakpoints": true
     }
   ]

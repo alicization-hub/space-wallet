@@ -113,7 +113,7 @@ export default function TwinklingStars() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1, ease: 'easeInOut' }}
-      className='absolute inset-0 z-[1] size-full'
+      className='absolute inset-0 z-1 size-full'
       style={{
         maskImage: `radial-gradient(circle at top, #0a0a0a, transparent)`
       }}

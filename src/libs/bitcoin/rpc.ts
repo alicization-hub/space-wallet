@@ -52,6 +52,56 @@ export class RPCClient {
     return result
   }
 
+  /**
+   * Executes a batch of RPC calls in a single HTTP request.
+   *
+   * @param calls An array of RPC calls to execute.
+   * @returns An array of results in the same order as the calls.
+   */
+  public async batch<T = any>(calls: { method: string; params?: any[] }[]): Promise<T[]> {
+    if (calls.length === 0) return []
+
+    const url = `http://${RPC.hostname}:${RPC.port}`
+    const pathname = this.walletName ? `/wallet/${this.walletName}` : ''
+    const auth = Buffer.from(`${RPC.username}:${RPC.password}`).toString('base64')
+
+    const body = calls.map(({ method, params }, index) => ({
+      jsonrpc: '2.0',
+      id: index,
+      method,
+      params: params || []
+    }))
+
+    const res = await fetch(url + pathname, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${auth}`
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(secondsToMilliseconds(60))
+    })
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`)
+    }
+
+    const responses = (await res.json()) as { id: number; result: any; error: any }[]
+
+    // Sort responses by ID to match the order of calls
+    // JSON-RPC batch responses are not guaranteed to be in order
+    const resultMap = new Map(responses.map((response) => [response.id, response]))
+
+    return calls.map((_, index) => {
+      const response = resultMap.get(index)
+      if (!response) throw new Error(`Missing response for request ${index}`)
+      if (response.error) {
+        throw new Error(`Bitcoin Core RPC Error (Batch ${index}): ${response.error.message}`)
+      }
+      return response.result
+    })
+  }
+
   public async getChain() {
     return this.call<IBlockchain.Info>('getblockchaininfo')
   }

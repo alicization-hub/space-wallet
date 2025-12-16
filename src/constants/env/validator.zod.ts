@@ -24,7 +24,12 @@ export const rpcSchema = z.object({
   password: z.string().default('password')
 })
 
-export const ciphersSchema = z.object({
+export const cipherSchema = z.object({
+  algorithm: z
+    .union([z.literal('aes-128-gcm'), z.literal('aes-192-gcm'), z.literal('aes-256-gcm')])
+    .default('aes-128-gcm'),
+  secret: z.string().default('your-secret-key'),
+  iv: z.string().transform((value) => parseInt(value)),
   salt: z.string().transform((value) => parseInt(value)),
   key: z.string().transform((value) => parseInt(value)),
   nonce: z.string().transform((value) => parseInt(value)),

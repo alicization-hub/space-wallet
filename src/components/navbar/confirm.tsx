@@ -16,8 +16,8 @@ export function ConfirmComponent({
   account,
   onClose
 }: Readonly<{
-  wallet: Schema.iWallet
-  account: Schema.iAccount
+  wallet: Schema.IWallet
+  account: Schema.IAccount & { balance: Schema.IBalance }
   onClose?: () => void
 }>) {
   // __STATE's

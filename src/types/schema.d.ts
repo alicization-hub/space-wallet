@@ -1,26 +1,25 @@
-declare namespace Wallet {
-  export type Balance = {
-    confirmed: number
-    unconfirmed: number
-    immature: number
-    total: number
-    spendable: number
-  }
-}
-
 declare namespace Transaction {
   export type Type = 'send' | 'receive' | 'generate' | 'immature' | 'orphan'
   export type Status = 'pending' | 'confirmed' | 'abandoned'
 
-  export type Input = {
+  export type Schema = {
     txid: string
-    address: string
-    value: number
-  }
-
-  export type Output = {
-    address: string
-    value: number
+    size: number
+    weight: number
+    amount: number
+    fee: number
+    type: Type
+    status: Status
+    inputs: Array<{
+      txid: string
+      address: string
+      value: number
+    }>
+    outputs: Array<{
+      address: string
+      value: number
+    }>
+    timestamp: Date
   }
 
   export type PrepareInput<T extends string> = T extends 'client'

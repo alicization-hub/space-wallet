@@ -12,7 +12,7 @@ export function ItemComponent({
   onClick
 }: Readonly<{
   type: 'native segwit' | 'taproot'
-  address: Schema.iAddress
+  address: Schema.IAddress
   onClick?: () => void
 }>) {
   // __RENDER

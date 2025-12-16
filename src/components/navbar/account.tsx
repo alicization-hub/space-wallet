@@ -14,8 +14,12 @@ import { cls } from '@/libs/utils'
 
 import { ConfirmComponent } from './confirm'
 
-type State = Schema.iWallet & {
-  accounts: Schema.iAccount[]
+type State = Schema.IWallet & {
+  accounts: Array<
+    Schema.IAccount & {
+      balance: Schema.IBalance
+    }
+  >
 }
 
 export function AccountComponent({}: Readonly<{}>) {
@@ -30,7 +34,7 @@ export function AccountComponent({}: Readonly<{}>) {
 
   // __FUNCTION's
   const handleClick = useCallback(
-    (wallet: Schema.iWallet, account: Schema.iAccount) => {
+    (wallet: Schema.IWallet, account: State['accounts'][number]) => {
       if (!wallet.isActive || !account.isActive || account.id === currentAccount.id) return void 0
 
       setCurrentState({ ...wallet, accounts: [account] })
@@ -44,7 +48,7 @@ export function AccountComponent({}: Readonly<{}>) {
   useEffectSync(
     async () => {
       const result = await findWallets()
-      setWallets(result)
+      setWallets(result as unknown as State[])
     },
     256,
     { deps: [isOpen], bool: isOpen }

@@ -8,34 +8,34 @@ import { numberToSpace } from '@/libs/utils'
 
 export function BalanceComponent({}: Readonly<{}>) {
   // __STATE's
-  const account = useWallet((state) => state.account)
+  const balance = useWallet((state) => state.balance)
 
   const total = useMemo(() => {
-    const value = account.balance.total
+    const value = balance.total
     const [coin, decimal] = satsToBitcoin(value).toFixed(8).split('.')
     return `${coin}.${numberToSpace(decimal, 4).padStart(6, '0')}`
-  }, [account])
+  }, [balance])
 
   const values = useMemo(
     () => [
       {
         label: 'confirmed',
-        value: account.balance.confirmed
+        value: balance.confirmed
       },
       {
         label: 'unconfirmed',
-        value: account.balance.unconfirmed
+        value: balance.unconfirmed
       },
       {
         label: 'immature',
-        value: account.balance.immature
+        value: balance.immature
       },
       {
         label: 'spendable',
-        value: account.balance.spendable
+        value: balance.spendable
       }
     ],
-    [account]
+    [balance]
   )
 
   // __RENDER

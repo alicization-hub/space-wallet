@@ -15,7 +15,7 @@ export function AmountComponent({
   onChange?: (value: number) => void
 }>) {
   // __STATE's
-  const { balance } = useWallet((state) => state.account)
+  const balance = useWallet((state) => state.balance)
   const [amount, setAmount] = useState<number>()
 
   // __FUNCTION's

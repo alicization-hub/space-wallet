@@ -1,4 +1,4 @@
-import { ciphersSchema, dbSchema, envSchema, jwtSchema, rpcSchema } from './validator.zod'
+import { cipherSchema, dbSchema, envSchema, jwtSchema, rpcSchema } from './validator.zod'
 
 export const ENV = envSchema.parse({
   APP_MODE: process.env.NEXT_PUBLIC_APP_MODE,
@@ -26,11 +26,14 @@ export const RPC = rpcSchema.parse({
   password: process.env.RPC_PASSWORD
 })
 
-export const CIPHERS = ciphersSchema.parse({
-  salt: process.env.CIPHER_SALT_LENGTH,
-  key: process.env.CIPHER_KEY_LENGTH,
-  nonce: process.env.CIPHER_NONCE_LENGTH,
-  security: process.env.CIPHER_SECURITY_LEVEL,
+export const CIPHER = cipherSchema.parse({
+  algorithm: process.env.CIPHER_ALGO,
+  secret: process.env.CIPHER_SECRET,
+  iv: process.env.CIPHER_IV,
+  salt: process.env.CIPHER_SALT,
+  key: process.env.CIPHER_KEY,
+  nonce: process.env.CIPHER_NONCE,
+  security: process.env.CIPHER_SECURITY,
   argon2: {
     iterations: process.env.CIPHER_ARGON2_ITERATIONS,
     parallelism: process.env.CIPHER_ARGON2_PARALLELISM

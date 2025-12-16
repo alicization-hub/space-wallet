@@ -4,15 +4,16 @@ declare type CountdownDuration = Record<
   number
 >
 
-declare type JwtPayload = {
-  /** wallet-id */
-  sub: UUID
-  /** account-id */
-  uid: UUID
-  iss: string
-  iat: number
-  exp: number
-}
+/**
+ * Access Token:
+ * ```text
+ * "PREFIX:SUB:UID:EXP"
+ * sub = walletId (UUID)
+ * uid = accountId (UUID)
+ * exp = expiredAt (timestamp)
+ * ```
+ */
+declare type AccessToken = `${string}:${string}:${string}:${number}`
 
 declare type Purpose = 84 | 86
 // declare type MnemonicLength = 12 | 15 | 18 | 21 | 24

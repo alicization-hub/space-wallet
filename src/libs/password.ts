@@ -10,7 +10,7 @@ export class password {
     })
   }
 
-  static async verify(hash: string, plain: string): Promise<boolean> {
-    return await verify(hash, plain)
+  static async verify(hash: string, plainText: string): Promise<boolean> {
+    return await verify(hash, plainText)
   }
 }

@@ -23,7 +23,7 @@ export function AddrComponent({
   const account = useWallet((state) => state.account)
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [state, setState] = useState<IPagination<Schema.iAddress>>()
+  const [state, setState] = useState<IPagination<Schema.IAddress>>()
   const [query, setQuery] = useState<QueryValidator>({
     page: 1,
     take: 8,

@@ -20,7 +20,7 @@ RUN bun run build
 
 # Production Stage
 # Use a slim Bun image for the final production container
-FROM oven/bun:1.2-slim
+FROM oven/bun:1.3-slim
 
 # Set the working directory
 WORKDIR /usr/src/app

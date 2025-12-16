@@ -2,13 +2,19 @@
 
 import 'server-only'
 
-import { and, asc, count, desc, eq, getTableColumns, SQL } from 'drizzle-orm'
+import { setTimeout } from 'timers/promises'
+
+import { getUnixTime } from 'date-fns'
+import { and, asc, count, desc, eq, SQL } from 'drizzle-orm'
 import { omit } from 'ramda'
 
-import { useAuthorized } from '@/libs/actions/guard'
+import { useAuth } from '@/libs/actions/auth'
+import { createDescriptors } from '@/libs/bitcoin/descriptor'
+import { RPCClient } from '@/libs/bitcoin/rpc'
 import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
-import { ciphers } from '@/libs/ciphers'
-import { db, schema } from '@/libs/drizzle'
+import { cipher } from '@/libs/cipher'
+import { addressColumns, db, schema } from '@/libs/drizzle'
+import type { AddressInsertValues } from '@/libs/drizzle/types'
 import { withPagination } from '@/libs/drizzle/utils'
 import { password } from '@/libs/password'
 import { createPagination } from '@/libs/utils'
@@ -17,15 +23,14 @@ import type { CreateValidator, QueryValidator } from './validator'
 
 export async function findAddress() {
   try {
-    const auth = await useAuthorized()
+    const auth = await useAuth()
 
-    const addressColumns = getTableColumns(schema.addresses)
     const [address] = await db
-      .select(omit(['accountId'], addressColumns))
+      .select()
       .from(schema.addresses)
       .where(
         and(
-          eq(schema.addresses.accountId, auth.uid),
+          eq(schema.addresses.accountId, auth.account.id),
           eq(schema.addresses.type, 'receive'),
           eq(schema.addresses.isUsed, false)
         )
@@ -41,10 +46,9 @@ export async function findAddress() {
 
 export async function findAddresses(query: QueryValidator) {
   try {
-    const auth = await useAuthorized()
+    const auth = await useAuth()
 
-    const addressTableColumns = getTableColumns(schema.addresses)
-    const filters: SQL[] = [eq(schema.addresses.accountId, auth.uid)]
+    const filters: SQL[] = [eq(schema.addresses.accountId, auth.account.id)]
 
     if (query?.status && query?.status !== 'all') {
       filters.push(eq(schema.addresses.isUsed, query.status === 'used'))
@@ -57,7 +61,7 @@ export async function findAddresses(query: QueryValidator) {
     const { total, results } = await db.transaction(async (tx) => {
       const queryBuilder = tx
         .select({
-          ...omit(['accountId'], addressTableColumns)
+          ...omit(['accountId'], addressColumns)
         })
         .from(schema.addresses)
         .where(and(...filters))
@@ -87,64 +91,88 @@ export async function findAddresses(query: QueryValidator) {
 
 export async function createAddresses({ passphrase }: CreateValidator) {
   try {
-    const auth = await useAuthorized()
-
-    const walletColumns = getTableColumns(schema.wallets)
-    const accountColumns = getTableColumns(schema.accounts)
-    const [wallet] = await db
-      .select({
-        ...walletColumns,
-        account: omit(['walletId'], accountColumns)
-      })
-      .from(schema.wallets)
-      .innerJoin(schema.accounts, eq(schema.accounts.walletId, schema.wallets.id))
-      .where(and(eq(schema.wallets.id, auth.sub), eq(schema.accounts.id, auth.uid)))
+    const auth = await useAuth()
 
     // Verify the passphrase
-    const isValid = await password.verify(wallet.passkey, passphrase)
+    const isValid = await password.verify(auth.passkey, passphrase)
     if (!isValid) {
       throw new Error('⚠️ - Invalid passphrase.')
     }
 
-    const [address] = await db
-      .select()
-      .from(schema.addresses)
-      .where(eq(schema.addresses.accountId, wallet.account.id))
-      .orderBy(desc(schema.addresses.index))
-      .limit(1)
+    // Create a new RPC client
+    const rpcClient = new RPCClient()
+    await rpcClient.setWallet(auth.account.id)
 
     // Decrypt the mnemonic and create the root key
-    const mnemonic = await ciphers.decrypt(wallet.bio, passphrase)
+    const mnemonic = await cipher.decrypt(auth.bio, passphrase)
     const rootKey = await createRootKey(mnemonic, passphrase)
     const addr = new AddressBuilder(rootKey)
 
-    const form = address ? address.index + 1 : 0
-    const to = address ? form + GAP_LIMIT - 1 : GAP_LIMIT
-    const addresses: (typeof schema.addresses.$inferInsert)[] = []
+    const [address] = await db
+      .select()
+      .from(schema.addresses)
+      .where(and(eq(schema.addresses.accountId, auth.account.id), eq(schema.addresses.type, 'receive')))
+      .orderBy(desc(schema.addresses.index))
+      .limit(1)
 
-    for (let index = form; index <= to; index++) {
-      const receiveAddress = addr.create(wallet.account.purpose, wallet.account.index, index)
-      addresses.push({
-        accountId: wallet.account.id,
-        address: receiveAddress,
-        type: 'receive',
-        index
-      })
+    const addressValues: AddressInsertValues[] = []
+    const start = address ? address.index + 1 : 0
+    const end = start + GAP_LIMIT
 
-      const changeAddress = addr.create(wallet.account.purpose, wallet.account.index, index, true)
-      addresses.push({
-        accountId: wallet.account.id,
-        address: changeAddress,
-        type: 'change',
-        index
-      })
+    // Generate addresses
+    for (let index = start; index <= end; index++) {
+      const receiveAddress = addr.create(auth.account.purpose, auth.account.index, index)
+      const changeAddress = addr.create(auth.account.purpose, auth.account.index, index, true)
+      addressValues.push(
+        {
+          accountId: auth.account.id,
+          label: `Receive No. ${index}`,
+          type: 'receive',
+          index,
+          address: receiveAddress
+        },
+        {
+          accountId: auth.account.id,
+          label: `Change No. ${index}`,
+          type: 'change',
+          index,
+          address: changeAddress
+        }
+      )
     }
 
-    await db.insert(schema.addresses).values(addresses)
+    // Generate descriptors
+    const descriptor = createDescriptors(rootKey, auth.account.purpose, auth.account.index)
+    await rpcClient.setWallet(auth.account.id)
+
+    const receive = await rpcClient.getDescriptor(descriptor.receive)
+    const change = await rpcClient.getDescriptor(descriptor.change)
+
+    await setTimeout(2e3)
+    await rpcClient.importDescriptors([
+      {
+        desc: receive.descriptor,
+        active: true,
+        range: [start, end],
+        timestamp: getUnixTime(new Date(auth.account.startedAt)),
+        internal: false,
+        next_index: start
+      },
+      {
+        desc: change.descriptor,
+        active: true,
+        range: [start, end],
+        timestamp: getUnixTime(new Date(auth.account.startedAt)),
+        internal: true,
+        next_index: start
+      }
+    ])
+
+    await db.insert(schema.addresses).values(addressValues)
 
     return {
       success: true,
-      message: 'The addresses have been successfully created.'
+      message: 'New addresses and descriptors has been successfully generated.'
     }
   } catch (error: any) {
     return {
