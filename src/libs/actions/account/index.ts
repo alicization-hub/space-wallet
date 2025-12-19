@@ -15,6 +15,41 @@ import { password } from '@/libs/password'
 import { generateToken } from '../token'
 import { switchValidator, type SwitchValidator } from './validator'
 
+export async function findAccount(id: string) {
+  try {
+    const auth = await useAuth()
+    const account = await db.query.accounts.findFirst({
+      where: and(eq(schema.accounts.id, id), eq(schema.accounts.walletId, auth.id)),
+      columns: {
+        walletId: false
+      },
+      with: {
+        wallet: {
+          columns: {
+            passkey: false,
+            bio: false
+          }
+        },
+        balances: {
+          columns: {
+            accountId: false
+          }
+        }
+      }
+    })
+
+    if (!account) {
+      throw new Error('Account not found.')
+    }
+
+    return account
+  } catch (error) {
+    throw error
+  }
+}
+
+export type AccountInfo = Awaited<ReturnType<typeof findAccount>>
+
 export async function switchAccount(params: SwitchValidator) {
   try {
     const auth = await useAuth()

@@ -1,9 +1,11 @@
-import { formatISO } from 'date-fns'
+import { isAfter } from 'date-fns'
 import { NextRequest, NextResponse } from 'next/server'
 import { v7 as uuidV7 } from 'uuid'
 
 import { APP_TOKEN } from '@/constants'
-import { logger } from '@/libs/logger'
+
+import { CIPHER } from './constants/env'
+import { cipher } from './libs/cipher'
 
 /**
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/middleware#matcher
@@ -26,14 +28,22 @@ export const config = {
  */
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
-  logger(`📝 Proxy ${pathname}`)
   if (pathname === '/') {
-    const hasJWT = req.cookies.has(APP_TOKEN)
-    const uuid = uuidV7()
-    if (hasJWT) {
-      return NextResponse.redirect(new URL(`/${uuid}`, req.url))
+    const token = req.cookies.get(APP_TOKEN)
+    if (token?.value) {
+      const decrypted = await cipher.symmetricDecrypt(CIPHER.secret, token.value)
+      const [_, __, accountId, exp] = (decrypted as AccessToken).split(':')
+
+      if (isAfter(new Date(), new Date(Number(exp)))) {
+        throw new Error('401 Token Expired')
+      }
+
+      return NextResponse.redirect(new URL(`/${accountId}`, req.url))
     } else {
-      return NextResponse.redirect(new URL(`/main?uuid=${uuid}&ts=${formatISO(Date.now())}`, req.url))
+      const uuid = uuidV7()
+      const timestamp = new Date().getTime()
+
+      return NextResponse.redirect(new URL(`/index?uuid=${uuid}&ts=${timestamp}`, req.url))
     }
   }
 

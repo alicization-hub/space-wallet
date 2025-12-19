@@ -3,7 +3,7 @@ import { ConnectHardwareComponent } from './components/hardware-wallet'
 import { ImportWalletComponent } from './components/import-wallet'
 import { RecoverWalletComponent } from './components/recover-wallet'
 
-export default function MainPage() {
+export default function IndexPage() {
   // __RENDER
   return (
     <div className='mx-auto flex max-w-xl flex-col gap-8 py-24'>

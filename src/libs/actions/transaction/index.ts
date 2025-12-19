@@ -2,6 +2,7 @@
 
 import 'server-only'
 
+import { cacheLife, cacheTag } from 'next/cache'
 import { pick } from 'ramda'
 
 import { useAuth } from '@/libs/actions/auth'
@@ -14,6 +15,10 @@ import { type QueryValidator } from './validator'
 export type Transaction = Awaited<ReturnType<typeof formatter>>
 
 export async function findTransactions(query: QueryValidator) {
+  'use cache'
+  cacheTag('transactions')
+  cacheLife('seconds')
+
   try {
     const auth = await useAuth()
 
@@ -37,6 +42,10 @@ export async function findTransactions(query: QueryValidator) {
 }
 
 export async function findUTXOs() {
+  'use cache'
+  cacheTag('utxos')
+  cacheLife('seconds')
+
   try {
     const auth = await useAuth()
 

@@ -2,7 +2,8 @@
 
 import 'server-only'
 
-import { and, asc, desc, eq, getTableColumns } from 'drizzle-orm'
+import { asc, desc, eq } from 'drizzle-orm'
+import { cacheLife, cacheTag } from 'next/cache'
 import { omit, pick } from 'ramda'
 
 import { useAuth } from '@/libs/actions/auth'
@@ -25,8 +26,12 @@ export async function generateMnemonic(length: MnemonicLength = 24) {
 }
 
 export async function findWallets() {
+  'use cache'
+  cacheTag('wallets')
+  cacheLife('seconds')
+
   try {
-    await useAuth()
+    const auth = await useAuth()
 
     return db.query.wallets.findMany({
       where: eq(schema.wallets.isActive, true),
@@ -50,25 +55,6 @@ export async function findWallets() {
         }
       }
     })
-  } catch (error) {
-    throw error
-  }
-}
-
-export async function currentAccount() {
-  try {
-    const auth = await useAuth()
-
-    const [result] = await db
-      .select({
-        ...omit(['bio', 'passkey'], walletColumns),
-        account: omit(['walletId', 'index'], accountColumns)
-      })
-      .from(schema.wallets)
-      .innerJoin(schema.accounts, eq(schema.accounts.walletId, schema.wallets.id))
-      .where(eq(schema.wallets.id, auth.id))
-
-    return result
   } catch (error) {
     throw error
   }

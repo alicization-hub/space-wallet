@@ -46,3 +46,5 @@ export async function getRPC() {
     return null
   }
 }
+
+export type NodeInfo = Awaited<ReturnType<typeof getRPC>>

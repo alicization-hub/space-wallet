@@ -1,5 +1,6 @@
 'use client'
 
+import { secondsToMilliseconds } from 'date-fns'
 import { useState } from 'react'
 
 import { useEffectSync } from '@/hooks'
@@ -31,8 +32,8 @@ export function TransactionComponent() {
         console.error(error)
       }
     },
-    512,
-    { interval: 10240 }
+    1e3,
+    { interval: secondsToMilliseconds(10) }
   )
 
   // __RENDER

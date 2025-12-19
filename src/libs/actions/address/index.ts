@@ -6,6 +6,7 @@ import { setTimeout } from 'timers/promises'
 
 import { getUnixTime } from 'date-fns'
 import { and, asc, count, desc, eq, SQL } from 'drizzle-orm'
+import { cacheLife, cacheTag } from 'next/cache'
 import { omit } from 'ramda'
 
 import { useAuth } from '@/libs/actions/auth'
@@ -22,6 +23,10 @@ import { createPagination } from '@/libs/utils'
 import type { CreateValidator, QueryValidator } from './validator'
 
 export async function findAddress() {
+  'use cache'
+  cacheTag('address')
+  cacheLife('seconds')
+
   try {
     const auth = await useAuth()
 
