@@ -1,186 +1,176 @@
-# Setting Up Bitcoin Core with Tor in WSL2 (Ubuntu)
+# Running Bitcoin Core with Tor (WSL 2)
 
-This guide summarizes the steps to install the Tor daemon in WSL2 (Ubuntu) and configure your Bitcoin Core
-node (running on Windows or WSL2) to connect through Tor, including setting up a Tor Hidden Service.
-
----
-
-## 1. Install Tor Daemon in WSL2 (Ubuntu)
-
-This ensures you're using the latest and most secure version of Tor.
-
-1.  **Open your Ubuntu terminal in WSL2.**
-
-2.  **Install necessary dependencies:**
-
-    ```bash
-    sudo apt update
-    sudo apt install apt-transport-https curl gnupg -y
-    ```
-
-3.  **Add Tor Project's GPG Key:**
-
-    ```bash
-    curl -s [https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc](https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc) | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
-    ```
-
-4.  **Add Tor Project Repository to APT sources:**
-
-    ```bash
-    echo "deb [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] [https://deb.torproject.org/torproject.org](https://deb.torproject.org/torproject.org) $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/tor.list >/dev/null
-    echo "deb-src [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] [https://deb.torproject.org/torproject.org](https://deb.torproject.org/torproject.org) $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/tor.list >/dev/null
-    ```
-
-5.  **Update APT cache and install Tor:**
-
-    ```bash
-    sudo apt update
-    sudo apt install tor deb.torproject.org-keyring -y
-    ```
-
-6.  **Configure Tor's ControlPort:** Bitcoin Core needs to communicate with Tor's ControlPort to manage the
-    Hidden Service.
-
-    - **Stop Tor service:**
-
-      ```bash
-      sudo systemctl stop tor
-      ```
-
-    - **Edit `torrc`:**
-
-      ```bash
-      sudo nano /etc/tor/torrc
-      ```
-
-    - **Choose one of these authentication methods:**
-
-      - **Option A: No Authentication (easiest for testing)** Add or uncomment these lines:
-
-        ```bash
-        ControlPort 9051
-        CookieAuthentication 0
-        ```
-
-      - **Option B: Hashed Password Authentication (more secure and recommended)**
-
-        1.  **Generate a hashed password** in your WSL2 terminal:
-
-            ```bash
-            tor --hash-password "your_strong_control_password"
-            ```
-
-            _Replace `"your_strong_control_password"` with a secure password you'll remember._ This command
-            will output a hashed string starting with `16:`. Copy this entire string.
-
-        2.  **Add these lines to `torrc`:**
-
-            ```bash
-            ControlPort 9051
-            HashedControlPassword <PASTE_YOUR_HASHED_PASSWORD_HERE>
-            ```
-
-            _Make sure `CookieAuthentication 0` is NOT present or commented out if you choose this option._
-
-    - **Save and exit** (`Ctrl+O`, `Enter`, `Ctrl+X`).
-
-    - **Start Tor service:**
-
-      ```bash
-      sudo systemctl start tor
-      ```
-
-    - **Verify Tor status:**
-
-      ```bash
-      sudo systemctl status tor
-      ```
-
-      It should show `active (running)`.
+This guide provides a comprehensive approach to running a **Bitcoin Core** node behind **Tor** for enhanced
+privacy. We will install the Tor daemon inside a WSL 2 (Ubuntu) environment and configure Bitcoin Core
+(whether running on Windows or WSL 2) to route all traffic seamlessly through it.
 
 ---
 
-## 2. Configure Bitcoin Core's `bitcoin.conf`
+## 1. Install Tor Daemon in WSL 2
 
-This section covers setting up Bitcoin Core (whether running on Windows or WSL2) to use the Tor daemon in
-WSL2.
+We use the official Tor Project repository to ensure we have the latest and most secure version.
 
-### For Bitcoin Core on Windows:
+### Step 1: Install Dependencies
 
-1.  **Locate your `bitcoin.conf` file:** Typically at `%APPDATA%\Roaming\Bitcoin\bitcoin.conf`. If it doesn't
-    exist, create it.
+Open your Ubuntu Terminal (WSL) and install the tools needed for secure package management.
 
-2.  **Add/Modify settings in `bitcoin.conf`:** Paste the following configuration. The `127.0.0.1:9050` address
-    for the proxy works because WSL2 automatically forwards localhost connections from Windows to services
-    running on localhost within WSL2.
+```bash
+sudo apt update
+sudo apt install apt-transport-https curl gnupg lsb-release -y
+```
 
+### Step 2: Add Tor Project Repository
+
+1.  **Add the GPG Key**: Verify the software integrity by adding the Tor Project's official key to your
+    keyring.
+
+    ```bash
+    curl -s https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor | sudo tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null
+    ```
+
+2.  **Add the Repository Source**: Configure `apt` to fetch packages from the Tor Project.
+
+    ```bash
+    echo "deb [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/tor.list >/dev/null
+    echo "deb-src [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $(lsb_release -cs) main" | sudo tee -a /etc/apt/sources.list.d/tor.list >/dev/null
+    ```
+
+### Step 3: Install Tor
+
+Update your package lists and install the Tor service.
+
+```bash
+sudo apt update
+sudo apt install tor deb.torproject.org-keyring -y
+```
+
+---
+
+## 2. Configure Tor
+
+To allow Bitcoin Core to create a **Hidden Service** (allowing incoming connections without port forwarding)
+and control Tor, we must configure the `ControlPort`.
+
+### Step 1: Edit Configuration
+
+1.  Stop the service before editing:
+
+    ```bash
+    sudo systemctl stop tor
+    ```
+
+2.  Open the configuration file:
+    ```bash
+    sudo nano /etc/tor/torrc
+    ```
+
+### Step 2: Setup Control Port
+
+Scroll to the relevant section or add these lines to the bottom. Choose **one** authentication method:
+
+#### Option A: No Authentication (Easiest)
+
+_Best for single-user secured machines._
+
+```ini
+ControlPort 9051
+CookieAuthentication 0
+```
+
+#### Option B: Hashed Password (Secure)
+
+_Recommended for shared environments._
+
+1.  Generate a hash:
+    ```bash
+    tor --hash-password "your_strong_password"
+    ```
+2.  Add to `torrc`:
     ```ini
-    # --- Tor Proxy Settings: Force all outgoing connections through Tor ---
-    # Specifies the IP address and port of your Tor SOCKS5 proxy.
-    proxy=127.0.0.1:9050
-
-    # Randomizes the source of the proxy connections and prevents DNS leaks.
-    proxyrandomize=1
-
-    # Forces Bitcoin Core to only connect to other nodes via the Tor network (.onion addresses).
-    # This is crucial for privacy and prevents IP address leakage.
-    onlynet=onion
-
-    # --- Tor Hidden Service Settings: Enable incoming connections via Tor ---
-    # Enables a Tor Hidden Service for your node. Bitcoin Core will automatically
-    # generate and manage the .onion address and its private key.
-    onion=1
-
-    # Enables listening for incoming connections. Essential for a full node.
-    listen=1
-
-    # Binds Bitcoin Core to the local interface only, routing incoming Tor connections.
-    bind=127.0.0.1
-
-    # Do not specify an external IP when using a Tor Hidden Service.
-    # Comment this line out, or ensure it's not present.
-    # externalip=
-
-    # Disable UPNP as it's not needed with a Tor Hidden Service.
-    upnp=0
-
-    # Disable automatic external IP discovery when using Tor.
-    discover=0
-
-    # Enable detailed Tor-related logging in debug.log.
-    debug=tor
-
-    # --- If you chose Hashed Password Authentication for Tor's ControlPort ---
-    # This password must match the "your_strong_control_password" you used to generate the hash.
-    # torpassword=your_strong_control_password
+    ControlPort 9051
+    HashedControlPassword 16:98AA...REPLACE_WITH_YOUR_HASH...
+    CookieAuthentication 0
     ```
 
-## 3. Start Bitcoin Core and Verify
+### Step 3: Restart Tor
 
-1.  **Start your Bitcoin Core node.**
+Save the file (`Ctrl+O` -> `Enter`) and exit (`Ctrl+X`), then restart the service.
 
-    - If on Windows, launch the Bitcoin Core GUI or `bitcoind.exe`.
-    - If on WSL2, run `bitcoind -daemon` in your Ubuntu terminal.
+```bash
+sudo systemctl start tor
+sudo systemctl status tor
+```
 
-2.  **Check the `debug.log` file.**
-
-    - On Windows: `%APPDATA%\Roaming\Bitcoin\debug.log`
-    - On WSL2: `~/.bitcoin/debug.log`
-    - Look for messages indicating successful Tor connection and Hidden Service creation:
-      - `[tor] Successfully connected!`
-      - `[tor] Authentication successful`
-      - `Got tor service ID {serviceId}`
-      - `[tor] Our Tor onion service is available at [your_onion_address].onion:8333/`
-
-3.  **Verify Peer Connections (Optional):** In the Bitcoin Core console (GUI) or using `bitcoin-cli` (Windows
-    CMD or WSL2 terminal):
-    ```bash
-    bitcoin-cli getpeerinfo
-    ```
-    You should see connections with `network: onion` and `.onion` addresses for your peers.
+_(Ensure the status is **active (running)**)_.
 
 ---
 
-By following these steps, your Bitcoin Core node will operate with enhanced privacy by routing all its traffic
-through the Tor network, and it will be discoverable by other Tor-enabled nodes via its unique `.onion`
-address.
+## 3. Configure Bitcoin Core
+
+Now, configure your Bitcoin node to proxy traffic through Tor.
+
+**File Location:**
+
+- **Windows**: `%APPDATA%\Bitcoin\bitcoin.conf`
+- **WSL 2**: `~/.bitcoin/bitcoin.conf`
+
+Add the following lines to your `bitcoin.conf`:
+
+```ini
+# --- Tor Proxy Settings ---
+
+# Connect to Tor SOCKS5 proxy (WSL 2 runs on localhost for Windows apps too)
+proxy=127.0.0.1:9050
+
+# Randomize credentials to prevent transaction linking
+proxyrandomize=1
+
+# Block all non-Tor traffic (Prevents IP leaks)
+onlynet=onion
+
+# --- Hidden Service (Incoming) ---
+
+# Automatically create a Hidden Service
+onion=1
+
+# Listen for incoming connections
+listen=1
+bind=127.0.0.1
+
+# --- Security ---
+
+# Disable UPnP (Not needed for Tor)
+upnp=0
+discover=0
+
+# Enable Tor debug logging
+debug=tor
+
+# If using Option B (Hashed Password), add your password here:
+# torpassword=your_strong_password
+```
+
+---
+
+## 4. Verification
+
+Restart Bitcoin Core and check the following to ensure you are private.
+
+1.  **Check `debug.log`**: Look for lines containing "tor". You should see:
+
+    > `tor: Got service ID <your_onion_address>, advertising service ...` `AddOnion successful`
+
+2.  **Check Peer Connections**: Run `bitcoin-cli getpeerinfo` (or use the Console).
+    - Ensure peers have **.onion** addresses.
+    - This confirms all traffic is routed through the Tor network.
+
+---
+
+### Troubleshooting
+
+- **Connection Issues?** If Bitcoin Core on Windows cannot reach Tor in WSL 2, ensure WSL is running. In rare
+  cases where `localhost` binding fails, find your WSL IP:
+  ```bash
+  ip addr show eth0
+  ```
+  Use that IP (e.g., `172.x.x.x`) instead of `127.0.0.1` in `bitcoin.conf`.
