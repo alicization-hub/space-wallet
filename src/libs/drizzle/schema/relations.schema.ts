@@ -1,6 +1,6 @@
 import { relations } from 'drizzle-orm'
 
-import { accounts, balances } from './accounts.schema'
+import { accounts } from './accounts.schema'
 import { addresses } from './addresses.schema'
 import { wallets } from './wallets.schema'
 
@@ -13,18 +13,7 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
     fields: [accounts.walletId],
     references: [wallets.id]
   }),
-  balances: one(balances, {
-    fields: [accounts.id],
-    references: [balances.accountId]
-  }),
   addresses: many(addresses)
-}))
-
-export const balancesRelations = relations(balances, ({ one, many }) => ({
-  account: one(accounts, {
-    fields: [balances.accountId],
-    references: [accounts.id]
-  })
 }))
 
 export const addressesRelations = relations(addresses, ({ one, many }) => ({

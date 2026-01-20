@@ -26,7 +26,7 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
           radius: 'none',
           timeout: 3_000,
           classNames: {
-            base: 'max-w-[320px] p-4 rounded-xs'
+            base: 'max-w-320 p-4 rounded-xs'
           }
         }}
       />

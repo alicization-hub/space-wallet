@@ -18,7 +18,7 @@ export default function ErrorContainer({
         <h1 className='mb-4 text-9xl font-extrabold'>Oops!</h1>
         <h3 className='text-3xl font-bold text-white/75 capitalize'>unexpected error</h3>
         <p className='text-white/75'>An error occurred and you request couldn't be completed.</p>
-        <code className='mirror text-foreground-500 mt-4 max-w-[440px] rounded-xs p-4'>{error?.message}</code>
+        <code className='mirror text-foreground-500 mt-4 max-w-440 rounded-xs p-4'>{error?.message}</code>
 
         <div className='mt-8 flex justify-center gap-4'>
           <button className='h-7 bg-white px-3 text-black hover:underline' onClick={reset}>

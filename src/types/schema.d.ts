@@ -1,3 +1,13 @@
+declare namespace Account {
+  export type Balance = {
+    confirmed: number
+    unconfirmed: number
+    immature: number
+    total: number
+    spendable: number
+  }
+}
+
 declare namespace Transaction {
   export type Type = 'send' | 'receive' | 'generate' | 'immature' | 'orphan'
   export type Status = 'pending' | 'confirmed' | 'abandoned'
