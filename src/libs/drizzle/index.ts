@@ -30,5 +30,4 @@ export const db = drizzle({
 
 export const walletColumns = getTableColumns(schema.wallets)
 export const accountColumns = getTableColumns(schema.accounts)
-export const balanceColumns = getTableColumns(schema.balances)
 export const addressColumns = getTableColumns(schema.addresses)

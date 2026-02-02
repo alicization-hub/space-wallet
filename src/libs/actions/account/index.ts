@@ -1,7 +1,5 @@
 'use server'
 
-import 'server-only'
-
 import { addDays } from 'date-fns'
 import { and, eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
@@ -28,11 +26,6 @@ export async function findAccount(id: string) {
           columns: {
             passkey: false,
             bio: false
-          }
-        },
-        balances: {
-          columns: {
-            accountId: false
           }
         }
       }

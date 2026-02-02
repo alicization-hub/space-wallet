@@ -1,7 +1,5 @@
 'use server'
 
-import 'server-only'
-
 import { cacheLife, cacheTag } from 'next/cache'
 import { pick } from 'ramda'
 
@@ -14,16 +12,16 @@ import { type QueryValidator } from './validator'
 
 export type Transaction = Awaited<ReturnType<typeof formatter>>
 
-export async function findTransactions(query: QueryValidator) {
-  'use cache'
-  cacheTag('transactions')
-  cacheLife('seconds')
+export async function findTransactions(accountId: string, query: QueryValidator) {
+  // 'use cache'
+  // cacheTag('transactions')
+  // cacheLife('seconds')
 
   try {
-    const auth = await useAuth()
+    await useAuth()
 
     const rpcClient = new RPCClient()
-    await rpcClient.setWallet(auth.account.id)
+    await rpcClient.setWallet(accountId)
 
     const wallet = await rpcClient.getWallet()
     const transactions = await rpcClient.listTransactions('*', query.take, (query.page - 1) * query.take)
@@ -41,16 +39,16 @@ export async function findTransactions(query: QueryValidator) {
   }
 }
 
-export async function findUTXOs() {
+export async function findUTXOs(accountId: string) {
   'use cache'
   cacheTag('utxos')
   cacheLife('seconds')
 
   try {
-    const auth = await useAuth()
+    await useAuth()
 
     const rpcClient = new RPCClient()
-    await rpcClient.setWallet(auth.account.id)
+    await rpcClient.setWallet(accountId)
 
     const utxos = await rpcClient.listUnspent()
     return utxos.map((utxo) =>

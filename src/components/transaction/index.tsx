@@ -9,7 +9,7 @@ import { findTransactions, type Transaction } from '@/libs/actions/transaction'
 import { EmptyComponent } from './empty'
 import { ListComponent } from './list'
 
-export function TransactionComponent() {
+export function TransactionComponent({ accountId }: Readonly<{ accountId: string }>) {
   // __STATE's
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [state, setState] = useState<IPagination<Transaction>>({
@@ -25,7 +25,7 @@ export function TransactionComponent() {
   useEffectSync(
     async () => {
       try {
-        const result = await findTransactions({ page: 1, take: 10 })
+        const result = await findTransactions(accountId, { page: 1, take: 10 })
         setState(result)
         setIsLoading(false)
       } catch (error) {
@@ -38,7 +38,9 @@ export function TransactionComponent() {
 
   // __RENDER
   return (
-    <section className='px-8' aria-label='Transactions'>
+    <section
+      className='scrollbar-hide max-h-[60svh] overflow-x-hidden overflow-y-auto px-8 py-1'
+      aria-label='Transactions'>
       {isLoading ? (
         <div className='grid gap-4'>
           <div className='bg-space-50/5 ring-space-50/10 h-20 animate-pulse rounded-xs ring-1' />

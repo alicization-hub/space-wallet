@@ -18,7 +18,7 @@ import { UtxoComponent } from './utxo-selection'
 const formValidator = createValidator.omit({ passphrase: true })
 type FormValidator = Omit<CreateValidator, 'passphrase'>
 
-export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
+export function FormComponent({ accountId, onClose }: Readonly<{ accountId: string; onClose?: () => void }>) {
   // __STATE's
   const {
     register,

@@ -1,3 +1,5 @@
+import { setTimeout } from 'timers/promises'
+
 import { eq } from 'drizzle-orm'
 
 import { RPCClient } from '@/libs/bitcoin/rpc'
@@ -31,20 +33,23 @@ async function getBalance(accountId: string) {
 
 async function main() {
   const startedAt = new Date()
-  const walletId = process.env.V_ID!
 
   try {
-    const accounts = await db
-      .select({
-        id: schema.accounts.id
-      })
-      .from(schema.accounts)
-      .where(eq(schema.accounts.walletId, walletId))
+    const accounts = await db.select().from(schema.accounts)
 
-    const calls = accounts.map((account) => getBalance(account.id))
-    const result = await Promise.all(calls)
+    for await (const account of accounts) {
+      const balance = await getBalance(account.id)
+      await db
+        .update(schema.accounts)
+        .set({
+          balance
+        })
+        .where(eq(schema.accounts.id, account.id))
 
-    console.log(result)
+      await setTimeout(2e3)
+    }
+
+    logger(`✅ The balance has been successfully updated.`, startedAt)
   } catch (error) {
     logger(`⚠️ An error occurred: ${error}`, startedAt)
   }

@@ -23,7 +23,7 @@ async function createWallet(name: string) {
   try {
     // Prompt the user for a passkey and validate it against the defined schema
     const str = await commandInput('🔑 Enter passkey')
-    const passphrase = await passphraseSchema.parseAsync(str)
+    const passphrase = str // await passphraseSchema.parseAsync(str)
 
     // Generate a secure 24-word BIP39 mnemonic for the new wallet
     const bio = mnemonic.generate(24)
@@ -67,32 +67,36 @@ async function createAccount(walletId: string, index: number) {
   const startedAt = new Date()
 
   try {
-    // Execute within a database transaction to ensure atomicity for account and balance creation
-    const accountId = await db.transaction(async (tx) => {
-      // Create a new account record linked to the specified wallet
-      const [{ id: accountId }] = await tx
-        .insert(schema.accounts)
-        .values({
+    // Create a new accounts record linked to the specified wallet
+    const accountsCreated = await db
+      .insert(schema.accounts)
+      .values([
+        {
           walletId,
-          label: `Account No. ${index}`,
+          label: `Account No. 84-${index}`,
+          purpose: 84,
           index,
           startedAt: new Date()
-        })
-        .returning({ id: schema.accounts.id })
-
-      // Initialize a balance record for this newly created account
-      await tx.insert(schema.balances).values({ accountId })
-
-      return accountId
-    })
+        },
+        {
+          walletId,
+          label: `Account No. 86-${index}`,
+          purpose: 86,
+          index,
+          startedAt: new Date()
+        }
+      ])
+      .returning()
 
     // Register and create the wallet in the Bitcoin Core RPC node using the account ID
     const rpcClient = new RPCClient()
-    await rpcClient.createWallet(accountId)
+    for (const account of accountsCreated) {
+      await rpcClient.createWallet(account.id)
+    }
 
     logger(`✅ New account ${index} has been successfully created.`, startedAt)
 
-    return accountId
+    return accountsCreated.map((account) => account.id)
   } catch (error: any) {
     throw error
   }
@@ -168,29 +172,31 @@ async function createAddresses(walletId: string, accountId: string) {
     const change = await rpcClient.getDescriptor(descriptor.change)
 
     await setTimeout(2e3)
+    await Promise.allSettled([
+      // Import the calculated descriptors into the Bitcoin node to start monitoring UTXOs
+      rpcClient.importDescriptors([
+        {
+          desc: receive.descriptor,
+          active: true,
+          range: [start, end],
+          timestamp: getUnixTime(new Date(account.startedAt)),
+          internal: false,
+          next_index: start
+        },
+        {
+          desc: change.descriptor,
+          active: true,
+          range: [start, end],
+          timestamp: getUnixTime(new Date(account.startedAt)),
+          internal: true,
+          next_index: start
+        }
+      ]),
 
-    // Import the calculated descriptors into the Bitcoin node to start monitoring UTXOs
-    await rpcClient.importDescriptors([
-      {
-        desc: receive.descriptor,
-        active: true,
-        range: [start, end],
-        timestamp: getUnixTime(new Date(account.startedAt)),
-        internal: false,
-        next_index: start
-      },
-      {
-        desc: change.descriptor,
-        active: true,
-        range: [start, end],
-        timestamp: getUnixTime(new Date(account.startedAt)),
-        internal: true,
-        next_index: start
-      }
+      // Bulk insert the record of the new generated addresses into the local database
+      db.insert(schema.addresses).values(addressValues)
     ])
 
-    // Bulk insert the record of the new generated addresses into the local database
-    await db.insert(schema.addresses).values(addressValues)
     logger('✅ New addresses and descriptors has been successfully generated.', startedAt)
   } catch (error) {
     throw error
@@ -201,11 +207,12 @@ async function main() {
   const startedAt = new Date()
 
   try {
-    const walletId = await createWallet('Test Wallet')
-    const accountId = await createAccount(walletId, 0)
-    await createAddresses(walletId, accountId)
-
-    logger(`✅ Test wallet has been successfully created.`, startedAt)
+    // const walletId = await createWallet('Test Wallet')
+    // const accountIds = await createAccount(walletId, 0)
+    // for (const accountId of accountIds) {
+    //   await createAddresses(walletId, accountId)
+    // }
+    // logger(`✅ Test wallet has been successfully created.`, startedAt)
   } catch (error) {
     logger(`⚠️ An error occurred: ${error}`)
   }

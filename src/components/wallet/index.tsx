@@ -21,7 +21,7 @@ export function WalletComponent({
   // __STATE's
   const setWallet = useWallet((state) => state.setWallet)
   const setAccount = useWallet((state) => state.setAccount)
-  const balance = useWallet((state) => state.balance)
+  const balance = useWallet((state) => state.account.balance)
 
   const [total, balances] = useMemo(() => {
     const totalBalance = balance.total || defaultBalance.total
@@ -84,8 +84,8 @@ export function WalletComponent({
       </div>
 
       <div className='flex items-center justify-center gap-4'>
-        <SendComponent />
-        <ReceiveComponent />
+        <SendComponent accountId={account.id} />
+        <ReceiveComponent accountId={account.id} />
       </div>
     </section>
   )

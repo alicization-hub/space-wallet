@@ -35,14 +35,14 @@ export function AddrComponent({
     setIsLoading(true)
 
     try {
-      const result = await findAddresses(query)
+      const result = await findAddresses(account.id, query)
       setState(result)
     } catch (error) {
       console.error(error)
     }
 
     setIsLoading(false)
-  }, [query])
+  }, [account, query])
 
   // __EFFECT's
   useEffectSync(handleFetch, 32, {

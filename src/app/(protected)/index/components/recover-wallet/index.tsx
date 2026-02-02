@@ -1,6 +1,7 @@
 'use client'
 
 import { Button, useDisclosure } from '@heroui/react'
+import { useCallback } from 'react'
 
 import { UndoIcon } from '@/components/icons'
 import { ModalComponent } from '@/components/ui/modal'
@@ -10,6 +11,9 @@ import { FormComponent } from './form'
 export function RecoverWalletComponent({}: Readonly<{}>) {
   // __STATE's
   const m = useDisclosure()
+
+  // __FUNCTIONS's
+  const handleClick = useCallback(() => {}, [])
 
   // __RENDER
   return (

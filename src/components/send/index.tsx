@@ -7,7 +7,7 @@ import { ModalComponent } from '@/components/ui/modal'
 
 import { FormComponent } from './form'
 
-export function SendComponent({}: Readonly<{}>) {
+export function SendComponent({ accountId }: Readonly<{ accountId: string }>) {
   // __STATE's
   const m = useDisclosure()
 
@@ -25,7 +25,7 @@ export function SendComponent({}: Readonly<{}>) {
       </Button>
 
       <ModalComponent control={m} size='xl'>
-        <FormComponent onClose={m.onClose} />
+        <FormComponent accountId={accountId} onClose={m.onClose} />
       </ModalComponent>
     </>
   )

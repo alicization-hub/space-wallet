@@ -11,6 +11,7 @@ import { mnemonic } from '@/libs/bitcoin/mnemonic'
 import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
 import { cipher } from '@/libs/cipher'
 import { accountColumns, db, schema, walletColumns } from '@/libs/drizzle'
+import { AccountInsertValues } from '@/libs/drizzle/types'
 import { password } from '@/libs/password'
 
 import type { CreateWalletValidator, UpdateWalletValidator } from './validator'
@@ -31,7 +32,7 @@ export async function findWallets() {
   cacheLife('seconds')
 
   try {
-    const auth = await useAuth()
+    await useAuth()
 
     return db.query.wallets.findMany({
       where: eq(schema.wallets.isActive, true),
@@ -46,12 +47,7 @@ export async function findWallets() {
             walletId: false,
             index: false
           },
-          orderBy: [desc(schema.accounts.purpose)],
-          with: {
-            balances: {
-              columns: { accountId: false }
-            }
-          }
+          orderBy: [desc(schema.accounts.purpose)]
         }
       }
     })
@@ -65,32 +61,37 @@ export async function findWallets() {
  */
 export async function createWallet(values: CreateWalletValidator) {
   try {
-    const passphraseHash = await password.hash(values.passphrase)
-    const mnemonicEncrypted = await cipher.encrypt(values.mnemonic, passphraseHash)
+    // Hash the passphrase for secure storage in the database
+    const passwordHash = await password.hash(values.passphrase)
 
-    const [walletCreated] = await db
+    // Encrypt the generated mnemonic using the user's passphrase
+    const bioEncrypted = await cipher.encrypt(values.mnemonic, values.passphrase)
+
+    // Create a URL-friendly name (slug) by trimming, lowercasing, and hyphenating
+    const slug = values.name
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters
+      .replace(/-+/g, '-') // Replace multiple hyphens with a single hyphen
+      .replace(/^-+|-+$/g, '') // Remove leading and trailing hyphens
+
+    // Persist the new wallet record to the database and return its unique ID
+    const [wallet] = await db
       .insert(schema.wallets)
       .values({
-        slug: values.name.trim().toLowerCase().replace(/\s+/g, '-'), // Generate a unique identifier for the wallet
+        slug,
         name: values.name,
-        bio: mnemonicEncrypted,
-        passkey: passphraseHash
+        bio: bioEncrypted,
+        passkey: passwordHash
       })
       .returning()
 
-    const accountValues = [84, 86].map((purpose: any) => ({
-      walletId: walletCreated.id,
-      label: `Account <${purpose}>`,
+    const accountValues: AccountInsertValues[] = [84, 86].map((purpose: any) => ({
+      walletId: wallet.id,
+      label: `Account No. ${purpose}`,
       purpose,
       index: values?.account?.index || 0,
-      balance: {
-        confirmed: 0,
-        unconfirmed: 0,
-        immature: 0,
-        total: 0,
-        spendable: 0
-      },
-      lastSyncHeight: 0,
       startedAt: values?.account?.startedAt ? new Date(values.account.startedAt) : new Date()
     }))
 
@@ -126,7 +127,7 @@ export async function createWallet(values: CreateWalletValidator) {
       success: true,
       message: 'The wallet has been successfully created.',
       data: {
-        ...pick(['id', 'slug', 'name'], walletCreated),
+        ...pick(['id', 'slug', 'name'], wallet),
         accounts: accountsCreated.map((account) => pick(['id', 'label', 'purpose'], account))
       }
     }

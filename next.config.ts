@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
     keepAlive: false
   },
 
+  images: {
+    qualities: [100]
+  },
+
   logging: {
     fetches: {
       fullUrl: false,

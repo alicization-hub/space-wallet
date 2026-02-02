@@ -18,7 +18,7 @@ export class cipher {
    *
    * @example
    * ```typescript
-   * const encryptedData = encrypt("your-password", "Hello, World!")
+   * const encryptedData = encrypt("Hello, World!", "your-password")
    * console.log(encryptedData) // Returns hex string like "a1b2c3d4e5f6..."
    * ```
    */
@@ -67,7 +67,7 @@ export class cipher {
    * @example
    * ```typescript
    * const encryptedData = encrypt("your-password", "Hello, World!")
-   * const plainText = decrypt("your-password", encryptedData)
+   * const plainText = decrypt(encryptedData, "your-password")
    * console.log(plainText) // "Hello, World!"
    * ```
    */

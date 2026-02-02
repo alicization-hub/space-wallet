@@ -4,8 +4,8 @@ import { CIPHER } from '@/constants/env'
 import { cipher } from '@/libs/cipher'
 
 async function main() {
-  const walletId = '019aee82-ca93-7d39-a37d-419a0afbb7e8'
-  const accountId = '019aee82-ca93-7d39-a37d-419a0afbb7e8'
+  const walletId = 'ff96f640-5c85-459b-a9e4-45317b748a93'
+  const accountId = '247b0540-8aae-4048-96b0-08b637fb0198'
   const expiredAt = addYears(new Date(), 1)
 
   const payload: AccessToken = `space:${walletId}:${accountId}:${expiredAt.getTime()}`

@@ -22,20 +22,20 @@ import { createPagination } from '@/libs/utils'
 
 import type { CreateValidator, QueryValidator } from './validator'
 
-export async function findAddress() {
+export async function findAddress(accountId: string) {
   'use cache'
   cacheTag('address')
   cacheLife('seconds')
 
   try {
-    const auth = await useAuth()
+    await useAuth()
 
     const [address] = await db
       .select()
       .from(schema.addresses)
       .where(
         and(
-          eq(schema.addresses.accountId, auth.account.id),
+          eq(schema.addresses.accountId, accountId),
           eq(schema.addresses.type, 'receive'),
           eq(schema.addresses.isUsed, false)
         )
@@ -49,11 +49,11 @@ export async function findAddress() {
   }
 }
 
-export async function findAddresses(query: QueryValidator) {
+export async function findAddresses(accountId: string, query: QueryValidator) {
   try {
-    const auth = await useAuth()
+    await useAuth()
 
-    const filters: SQL[] = [eq(schema.addresses.accountId, auth.account.id)]
+    const filters: SQL[] = [eq(schema.addresses.accountId, accountId)]
 
     if (query?.status && query?.status !== 'all') {
       filters.push(eq(schema.addresses.isUsed, query.status === 'used'))
@@ -94,7 +94,7 @@ export async function findAddresses(query: QueryValidator) {
   }
 }
 
-export async function createAddresses({ passphrase }: CreateValidator) {
+export async function createAddresses(accountId: string, { passphrase }: CreateValidator) {
   try {
     const auth = await useAuth()
 
@@ -106,38 +106,44 @@ export async function createAddresses({ passphrase }: CreateValidator) {
 
     // Create a new RPC client
     const rpcClient = new RPCClient()
-    await rpcClient.setWallet(auth.account.id)
+    await rpcClient.setWallet(accountId)
 
     // Decrypt the mnemonic and create the root key
     const mnemonic = await cipher.decrypt(auth.bio, passphrase)
     const rootKey = await createRootKey(mnemonic, passphrase)
     const addr = new AddressBuilder(rootKey)
 
-    const [address] = await db
-      .select()
-      .from(schema.addresses)
-      .where(and(eq(schema.addresses.accountId, auth.account.id), eq(schema.addresses.type, 'receive')))
-      .orderBy(desc(schema.addresses.index))
-      .limit(1)
+    // Fetch the account info and determine the next address index, index starting point
+    const [account, address] = await db.transaction(async (tx) => {
+      const [account] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
+      const [address] = await tx
+        .select()
+        .from(schema.addresses)
+        .where(and(eq(schema.addresses.accountId, accountId), eq(schema.addresses.type, 'receive')))
+        .orderBy(desc(schema.addresses.index))
+        .limit(1)
+
+      return [account, address] as const
+    })
 
     const addressValues: AddressInsertValues[] = []
     const start = address ? address.index + 1 : 0
     const end = start + GAP_LIMIT
 
-    // Generate addresses
+    // Generate a batch of new receive and change addresses up to the defined GAP_LIMIT
     for (let index = start; index <= end; index++) {
-      const receiveAddress = addr.create(auth.account.purpose, auth.account.index, index)
-      const changeAddress = addr.create(auth.account.purpose, auth.account.index, index, true)
+      const receiveAddress = addr.create(account.purpose, account.index, index)
+      const changeAddress = addr.create(account.purpose, account.index, index, true)
       addressValues.push(
         {
-          accountId: auth.account.id,
+          accountId: account.id,
           label: `Receive No. ${index}`,
           type: 'receive',
           index,
           address: receiveAddress
         },
         {
-          accountId: auth.account.id,
+          accountId: account.id,
           label: `Change No. ${index}`,
           type: 'change',
           index,
@@ -146,20 +152,22 @@ export async function createAddresses({ passphrase }: CreateValidator) {
       )
     }
 
-    // Generate descriptors
-    const descriptor = createDescriptors(rootKey, auth.account.purpose, auth.account.index)
-    await rpcClient.setWallet(auth.account.id)
+    // Construct output descriptors for both internal (change) and external (receive) chains
+    const descriptor = createDescriptors(rootKey, account.purpose, account.index)
+    await rpcClient.setWallet(account.id)
 
     const receive = await rpcClient.getDescriptor(descriptor.receive)
     const change = await rpcClient.getDescriptor(descriptor.change)
 
     await setTimeout(2e3)
+
+    // Import the calculated descriptors into the Bitcoin node to start monitoring UTXOs
     await rpcClient.importDescriptors([
       {
         desc: receive.descriptor,
         active: true,
         range: [start, end],
-        timestamp: getUnixTime(new Date(auth.account.startedAt)),
+        timestamp: getUnixTime(new Date(account.startedAt)),
         internal: false,
         next_index: start
       },
@@ -167,12 +175,13 @@ export async function createAddresses({ passphrase }: CreateValidator) {
         desc: change.descriptor,
         active: true,
         range: [start, end],
-        timestamp: getUnixTime(new Date(auth.account.startedAt)),
+        timestamp: getUnixTime(new Date(account.startedAt)),
         internal: true,
         next_index: start
       }
     ])
 
+    // Bulk insert the record of the new generated addresses into the local database
     await db.insert(schema.addresses).values(addressValues)
 
     return {

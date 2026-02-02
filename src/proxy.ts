@@ -32,9 +32,9 @@ export async function proxy(req: NextRequest) {
     const token = req.cookies.get(APP_TOKEN)
     if (token?.value) {
       const decrypted = await cipher.symmetricDecrypt(CIPHER.secret, token.value)
-      const [_, __, accountId, exp] = (decrypted as AccessToken).split(':')
+      const [_, walletId, accountId, expiredAt] = (decrypted as AccessToken).split(':')
 
-      if (isAfter(new Date(), new Date(Number(exp)))) {
+      if (isAfter(new Date(), new Date(Number(expiredAt)))) {
         throw new Error('401 Token Expired')
       }
 

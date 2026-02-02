@@ -57,41 +57,44 @@ export function ConfirmComponent({
   }, [account, formData])
 
   // __FUNCTION's
-  const handleClick = useCallback((formData: CreateValidator) => {
-    const func = async (resolve: (value: any) => void) => {
-      try {
-        const result = await createTransaction(formData)
-        if (result.success) {
+  const handleClick = useCallback(
+    (formData: CreateValidator) => {
+      const func = async (resolve: (value: any) => void) => {
+        try {
+          const result = await createTransaction(account.id, formData)
+          if (result.success) {
+            resolve(true)
+            toast({
+              title: '✅ Success',
+              description: result.message,
+              timeout: 0
+            })
+
+            if (onSuccess) onSuccess()
+          }
+        } catch (error: any) {
+          console.error('⚠️ An error occurred:', error)
           resolve(true)
           toast({
-            title: '✅ Success',
-            description: result.message,
-            timeout: 0
+            timeout: 9e3,
+            title: '⚠️ An error occurred',
+            description:
+              error?.message || 'Something went wrong while processing or broadcasting the transaction.'
           })
-
-          if (onSuccess) onSuccess()
         }
-      } catch (error: any) {
-        console.error('⚠️ An error occurred:', error)
-        resolve(true)
-        toast({
-          timeout: 9e3,
-          title: '⚠️ An error occurred',
-          description:
-            error?.message || 'Something went wrong while processing or broadcasting the transaction.'
-        })
+
+        setIsLoading(false)
       }
 
-      setIsLoading(false)
-    }
-
-    setIsLoading(true)
-    toast({
-      promise: new Promise((resolve) => func(resolve)),
-      description: '🚀 Your transaction was in processing and broadcasting...',
-      hideCloseButton: true
-    })
-  }, [])
+      setIsLoading(true)
+      toast({
+        promise: new Promise((resolve) => func(resolve)),
+        description: '🚀 Your transaction was in processing and broadcasting...',
+        hideCloseButton: true
+      })
+    },
+    [account]
+  )
 
   // __RENDER
   return (

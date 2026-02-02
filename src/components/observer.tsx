@@ -15,7 +15,6 @@ export default function DataObserver() {
   const setNode = useStore((state) => state.setNode)
   const setWallet = useWallet((state) => state.setWallet)
   const setAccount = useWallet((state) => state.setAccount)
-  const setBalance = useWallet((state) => state.setBalance)
 
   const params = useParams()
   const uuid = useMemo(() => params?.uuid || uuidV7(), [params])
@@ -46,8 +45,7 @@ export default function DataObserver() {
       const data: AccountInfo = await response.json()
       if (data) {
         setWallet(data.wallet)
-        setAccount(omit(['wallet', 'balances'], data))
-        setBalance(data.balances)
+        setAccount(omit(['wallet'], data))
       }
     },
     200,

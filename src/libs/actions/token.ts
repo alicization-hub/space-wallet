@@ -17,9 +17,9 @@ export async function validateToken(token: string) {
   cacheLife('minutes')
 
   const decrypted = await cipher.symmetricDecrypt(CIPHER.secret, token)
-  const [_, walletId, accountId, exp] = (decrypted as AccessToken).split(':')
+  const [_, walletId, accountId, expiredAt] = (decrypted as AccessToken).split(':')
 
-  if (isAfter(new Date(), new Date(Number(exp)))) {
+  if (isAfter(new Date(), new Date(Number(expiredAt)))) {
     throw new Error('401 Token Expired')
   }
 

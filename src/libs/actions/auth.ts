@@ -1,28 +1,20 @@
 'use server'
 
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
 import { cookies } from 'next/headers'
-import { omit } from 'ramda'
 
 import { APP_TOKEN } from '@/constants'
-import { accountColumns, db, schema, walletColumns } from '@/libs/drizzle'
+import { db, schema } from '@/libs/drizzle'
 
 import { validateToken } from './token'
 
-async function findWallet(walletId: string, accountId: string) {
+async function findWallet(walletId: string) {
   'use cache'
-  cacheTag('space-auth', walletId, accountId)
+  cacheTag('space-auth', walletId)
   cacheLife('hours')
 
-  return db
-    .select({
-      ...walletColumns,
-      account: omit(['walletId'], accountColumns)
-    })
-    .from(schema.wallets)
-    .innerJoin(schema.accounts, eq(schema.wallets.id, schema.accounts.walletId))
-    .where(and(eq(schema.wallets.id, walletId), eq(schema.accounts.id, accountId)))
+  return db.select().from(schema.wallets).where(eq(schema.wallets.id, walletId))
 }
 
 export async function useAuth() {
@@ -33,8 +25,8 @@ export async function useAuth() {
       throw new Error('401 Unauthorized')
     }
 
-    const { walletId, accountId } = await validateToken(token.value)
-    const [wallet] = await findWallet(walletId, accountId)
+    const { walletId } = await validateToken(token.value)
+    const [wallet] = await findWallet(walletId)
     if (!wallet) {
       throw new Error('401 Unauthorized')
     }

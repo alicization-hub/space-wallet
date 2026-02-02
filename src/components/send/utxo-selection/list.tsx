@@ -1,6 +1,7 @@
 'use client'
 
 import { Button, DrawerBody, DrawerFooter, DrawerHeader, Spinner } from '@heroui/react'
+import { useParams } from 'next/navigation'
 import { useCallback, useMemo, useState } from 'react'
 
 import { FilterIcon } from '@/components/icons'
@@ -20,6 +21,7 @@ export function ListComponent({
   onClose?: () => void
 }>) {
   // __STATE's
+  const { uuid } = useParams()
   const [isLoading, setIsLoading] = useState<boolean>(true)
 
   const [state, setState] = useState<UTXO[]>([])
@@ -48,15 +50,22 @@ export function ListComponent({
   )
 
   // __EFFECT's
-  useEffectSync(async () => {
-    try {
-      const result = await findUTXOs()
-      setState(result)
-      setIsLoading(false)
-    } catch (error) {
-      console.error(error)
+  useEffectSync(
+    async () => {
+      try {
+        const result = await findUTXOs(uuid as unknown as string)
+        setState(result)
+        setIsLoading(false)
+      } catch (error) {
+        console.error(error)
+      }
+    },
+    64,
+    {
+      deps: [uuid],
+      bool: true
     }
-  }, 64)
+  )
 
   // __RENDER
   return (

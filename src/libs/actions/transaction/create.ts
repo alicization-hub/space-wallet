@@ -18,11 +18,9 @@ import { createValidator, type CreateValidator } from './validator'
 
 /**
  * Creates a new transaction using the provided data.
- *
- * @param formData - The transaction data.
  * @returns A response object with the success status and a message.
  */
-export async function createTransaction(formData: CreateValidator) {
+export async function createTransaction(accountId: string, formData: CreateValidator) {
   try {
     const auth = await useAuth()
     const data = createValidator.parse(formData)
@@ -36,20 +34,25 @@ export async function createTransaction(formData: CreateValidator) {
 
     // Get the RPC client instance
     const rpcClient = new RPCClient()
-    await rpcClient.setWallet(auth.account.id)
+    await rpcClient.setWallet(accountId)
 
     // Get the addresses and the change address
     const [addresses, changeAddress] = await db.transaction(async (tx) => {
+      const [account] = await tx
+        .select()
+        .from(schema.accounts)
+        .where(and(eq(schema.accounts.walletId, auth.id), eq(schema.accounts.id, accountId)))
+
       const addresses = await tx
         .select({
           ...pick(['address', 'index', 'type'], addressColumns),
           account: pick(['purpose', 'index'], accountColumns)
         })
         .from(schema.addresses)
-        .innerJoin(schema.accounts, eq(schema.accounts.id, schema.addresses.accountId))
+        .leftJoin(schema.accounts, eq(schema.accounts.id, schema.addresses.accountId))
         .where(
           and(
-            eq(schema.accounts.id, auth.account.id),
+            eq(schema.addresses.accountId, accountId),
             eq(schema.addresses.isUsed, true),
             inArray(
               schema.addresses.address,
@@ -63,7 +66,7 @@ export async function createTransaction(formData: CreateValidator) {
         .from(schema.addresses)
         .where(
           and(
-            eq(schema.addresses.accountId, auth.account.id),
+            eq(schema.addresses.accountId, accountId),
             eq(schema.addresses.type, 'change'),
             eq(schema.addresses.isUsed, false)
           )
@@ -71,7 +74,7 @@ export async function createTransaction(formData: CreateValidator) {
         .orderBy(asc(schema.addresses.index))
         .limit(1)
 
-      return [addresses, changeAddress]
+      return [addresses, changeAddress] as const
     })
 
     // Get the utxos and filter the selected ones
@@ -83,16 +86,20 @@ export async function createTransaction(formData: CreateValidator) {
 
       if (utxo && address) {
         const change = address.type === 'change' ? 1 : 0
+        const account = address.account
+
+        if (!account) continue
+
         const derivationPath = derivationPathBuilder()
-          .purpose(address.account.purpose)
-          .account(address.account.index)
+          .purpose(account.purpose)
+          .account(account.index)
           .change(change)
           .address(address.index)
           .build()
 
         inputs.push({
           ...pick(['txid', 'vout', 'address', 'amount', 'scriptPubKey'], utxo),
-          type: address.account.purpose === 84 ? 'wpkh' : 'tr',
+          type: account.purpose === 84 ? 'wpkh' : 'tr',
           derivationPath
         })
       }

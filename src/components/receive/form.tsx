@@ -11,7 +11,7 @@ import { findAddress } from '@/libs/actions/address'
 
 import { AddrComponent } from './addr-selection'
 
-export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
+export function FormComponent({ accountId, onClose }: Readonly<{ accountId: string; onClose?: () => void }>) {
   // __STATE's
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [address, setAddress] = useState<string>('')
@@ -42,7 +42,7 @@ export function FormComponent({ onClose }: Readonly<{ onClose?: () => void }>) {
   // __EFFECT's
   useEffectSync(async () => {
     try {
-      const result = await findAddress()
+      const result = await findAddress(accountId)
       await handleChange(result.address)
       setIsLoading(false)
     } catch (error) {
