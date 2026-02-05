@@ -4,13 +4,14 @@ import 'server-only'
 
 import { asc, desc, eq } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
-import { omit, pick } from 'ramda'
+import { cookies } from 'next/headers'
+import { pick } from 'ramda'
 
 import { useAuth } from '@/libs/actions/auth'
 import { mnemonic } from '@/libs/bitcoin/mnemonic'
 import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
 import { cipher } from '@/libs/cipher'
-import { accountColumns, db, schema, walletColumns } from '@/libs/drizzle'
+import { db, schema } from '@/libs/drizzle'
 import { AccountInsertValues } from '@/libs/drizzle/types'
 import { password } from '@/libs/password'
 
@@ -32,7 +33,8 @@ export async function findWallets() {
   cacheLife('seconds')
 
   try {
-    await useAuth()
+    const cookieStore = await cookies()
+    await useAuth(cookieStore)
 
     return db.query.wallets.findMany({
       where: eq(schema.wallets.isActive, true),
@@ -145,7 +147,8 @@ export async function createWallet(values: CreateWalletValidator) {
  */
 export async function updateWallet(values: UpdateWalletValidator) {
   try {
-    const auth = await useAuth()
+    const cookieStore = await cookies()
+    const auth = await useAuth(cookieStore)
     await db.update(schema.wallets).set(values).where(eq(schema.wallets.id, auth.id))
 
     return {
@@ -166,7 +169,8 @@ export async function updateWallet(values: UpdateWalletValidator) {
  */
 export async function deleteWallet() {
   try {
-    const auth = await useAuth()
+    const cookieStore = await cookies()
+    const auth = await useAuth(cookieStore)
     await db.delete(schema.wallets).where(eq(schema.wallets.id, auth.id))
 
     return {

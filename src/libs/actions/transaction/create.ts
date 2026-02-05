@@ -1,8 +1,7 @@
 'use server'
 
-import 'server-only'
-
 import { and, asc, eq, inArray } from 'drizzle-orm'
+import { cookies } from 'next/headers'
 import { find, pick } from 'ramda'
 
 import { useAuth } from '@/libs/actions/auth'
@@ -22,7 +21,8 @@ import { createValidator, type CreateValidator } from './validator'
  */
 export async function createTransaction(accountId: string, formData: CreateValidator) {
   try {
-    const auth = await useAuth()
+    const cookieStore = await cookies()
+    const auth = await useAuth(cookieStore)
     const data = createValidator.parse(formData)
 
     // Verify the passphrase

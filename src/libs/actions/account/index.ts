@@ -3,7 +3,7 @@
 import { addDays } from 'date-fns'
 import { and, eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
-import { pick } from 'ramda'
+import { omit, pick } from 'ramda'
 
 import { APP_TOKEN } from '@/constants'
 import { useAuth } from '@/libs/actions/auth'
@@ -13,23 +13,19 @@ import { password } from '@/libs/password'
 import { generateToken } from '../token'
 import { switchValidator, type SwitchValidator } from './validator'
 
-export async function findAccount(id: string) {
+export async function findAccount(accountId: string) {
   try {
-    const auth = await useAuth()
-    const account = await db.query.accounts.findFirst({
-      where: and(eq(schema.accounts.id, id), eq(schema.accounts.walletId, auth.id)),
-      columns: {
-        walletId: false
-      },
-      with: {
-        wallet: {
-          columns: {
-            passkey: false,
-            bio: false
-          }
-        }
-      }
-    })
+    const cookieStore = await cookies()
+    const auth = await useAuth(cookieStore)
+
+    const [account] = await db
+      .select({
+        ...omit(['walletId'], accountColumns),
+        wallet: omit(['bio', 'passkey'], walletColumns)
+      })
+      .from(schema.accounts)
+      .leftJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
+      .where(and(eq(schema.accounts.id, accountId), eq(schema.accounts.walletId, auth.id)))
 
     if (!account) {
       throw new Error('Account not found.')
@@ -45,7 +41,9 @@ export type AccountInfo = Awaited<ReturnType<typeof findAccount>>
 
 export async function switchAccount(params: SwitchValidator) {
   try {
-    const auth = await useAuth()
+    const cookieStore = await cookies()
+    await useAuth(cookieStore)
+
     const { walletId, accountId, passphrase } = switchValidator.parse(params)
 
     const [{ wallet, ...account }] = await db
@@ -74,7 +72,6 @@ export async function switchAccount(params: SwitchValidator) {
     }
 
     const token = await generateToken(wallet.id, account.id)
-    const cookieStore = await cookies()
     cookieStore.set(APP_TOKEN, token, {
       priority: 'high',
       secure: true,

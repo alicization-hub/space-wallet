@@ -1,4 +1,5 @@
 import { secondsToMilliseconds } from 'date-fns'
+import { NIL, v5 as uuidV5 } from 'uuid'
 
 import { RPC } from '@/constants/env'
 
@@ -20,7 +21,7 @@ export class RPCClient {
    * @returns The result of the RPC method, or an error if the call fails.
    */
   private async call<T = any>(method: string, params: any[] = []): Promise<T> {
-    const vid = `curl-${method}-${Math.random().toString(16).slice(2)}`
+    const vid = uuidV5(`jsonrpc-${method}`, NIL)
     const url = `http://${RPC.hostname}:${RPC.port}`
     const pathname = this.walletName ? `/wallet/${this.walletName}` : ''
     const auth = Buffer.from(`${RPC.username}:${RPC.password}`).toString('base64')

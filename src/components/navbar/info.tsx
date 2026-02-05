@@ -3,8 +3,6 @@
 import { GlobeIcon, PackageIcon } from '@/components/icons'
 import { useStore } from '@/hooks'
 
-import { AccountComponent } from './account'
-
 export function InfoComponent({}: Readonly<{}>) {
   // __STATE's
   const node = useStore((state) => state.node)
@@ -12,8 +10,6 @@ export function InfoComponent({}: Readonly<{}>) {
   // __RENDER
   return (
     <div className='flex gap-4'>
-      <AccountComponent />
-
       <div className='flex items-center gap-2 px-2' title='Current blocks'>
         <PackageIcon className='size-5' />
         {node.blocks ? (

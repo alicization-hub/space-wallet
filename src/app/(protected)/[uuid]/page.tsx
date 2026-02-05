@@ -7,13 +7,15 @@ import { paramValidator } from '@/libs/validator.zod'
 
 export default async function IndexPage({ params }: Readonly<{ params: Promise<{ uuid: string }> }>) {
   try {
-    const { uuid } = paramValidator.parse(await params)
+    const { uuid } = await paramValidator.parseAsync(await params)
     const { wallet, ...account } = await findAccount(uuid)
 
     return (
       <div className='flex flex-col gap-4'>
-        <WalletComponent wallet={wallet} account={account} defaultBalance={account.balance} />
-        <TransactionComponent accountId={account.id} />
+        <Suspense fallback={null}>
+          <WalletComponent wallet={wallet!} account={account} defaultBalance={account.balance} />
+          <TransactionComponent accountId={account.id} />
+        </Suspense>
       </div>
     )
   } catch (error) {

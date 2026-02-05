@@ -1,11 +1,10 @@
 import { fromUnixTime } from 'date-fns'
+import { and, eq, inArray } from 'drizzle-orm'
 
 import { RPCClient } from '@/libs/bitcoin/rpc'
 import { bitcoinToSats } from '@/libs/bitcoin/unit'
+import { db, schema } from '@/libs/drizzle'
 import { logger } from '@/libs/logger'
-
-const walletId = 'ea366567-8782-47ef-9d8b-68cf6cc39373'
-const accountId = 'ea366567-8782-47ef-9d8b-68cf6cc39373'
 
 async function formatter(rpcClient: RPCClient, tx: ITransaction.List) {
   const raw = await rpcClient.getTransaction(tx.txid)
@@ -87,6 +86,7 @@ async function getTransactions(rpcClient: RPCClient, page: number, take: number)
 async function main() {
   logger('🔍 Fetch transactions...')
   const startedAt = new Date()
+  const [walletId, accountId] = [process.env.PRIV_SUB!, process.env.PRIV_UID!]
 
   try {
     const rpcClient = new RPCClient()
@@ -98,7 +98,20 @@ async function main() {
 
     logger(`📄 Fetching page ${page} (limit ${take})...`)
     const transactions = await getTransactions(rpcClient, page, take)
-    console.log(transactions)
+
+    const addrs = new Set(transactions.flatMap((tx) => [...tx.inputs, ...tx.outputs].map((r) => r.address)))
+    await db
+      .update(schema.addresses)
+      .set({
+        isUsed: true
+      })
+      .where(
+        and(
+          eq(schema.addresses.accountId, accountId),
+          eq(schema.addresses.isUsed, false),
+          inArray(schema.addresses.address, Array.from(addrs))
+        )
+      )
 
     logger(`✅ Transactions fetched successfully`, startedAt)
   } catch (error) {

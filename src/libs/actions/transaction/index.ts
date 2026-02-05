@@ -1,6 +1,7 @@
 'use server'
 
 import { cacheLife, cacheTag } from 'next/cache'
+import { cookies } from 'next/headers'
 import { pick } from 'ramda'
 
 import { useAuth } from '@/libs/actions/auth'
@@ -18,7 +19,8 @@ export async function findTransactions(accountId: string, query: QueryValidator)
   // cacheLife('seconds')
 
   try {
-    await useAuth()
+    const cookieStore = await cookies()
+    await useAuth(cookieStore)
 
     const rpcClient = new RPCClient()
     await rpcClient.setWallet(accountId)
@@ -40,12 +42,13 @@ export async function findTransactions(accountId: string, query: QueryValidator)
 }
 
 export async function findUTXOs(accountId: string) {
-  'use cache'
-  cacheTag('utxos')
-  cacheLife('seconds')
+  // 'use cache'
+  // cacheTag('utxos')
+  // cacheLife('seconds')
 
   try {
-    await useAuth()
+    const cookieStore = await cookies()
+    await useAuth(cookieStore)
 
     const rpcClient = new RPCClient()
     await rpcClient.setWallet(accountId)

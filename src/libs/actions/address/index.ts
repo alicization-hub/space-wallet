@@ -1,12 +1,11 @@
 'use server'
 
-import 'server-only'
-
 import { setTimeout } from 'timers/promises'
 
 import { getUnixTime } from 'date-fns'
 import { and, asc, count, desc, eq, SQL } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
+import { cookies } from 'next/headers'
 import { omit } from 'ramda'
 
 import { useAuth } from '@/libs/actions/auth'
@@ -23,12 +22,9 @@ import { createPagination } from '@/libs/utils'
 import type { CreateValidator, QueryValidator } from './validator'
 
 export async function findAddress(accountId: string) {
-  'use cache'
-  cacheTag('address')
-  cacheLife('seconds')
-
   try {
-    await useAuth()
+    const cookieStore = await cookies()
+    await useAuth(cookieStore)
 
     const [address] = await db
       .select()
@@ -51,7 +47,8 @@ export async function findAddress(accountId: string) {
 
 export async function findAddresses(accountId: string, query: QueryValidator) {
   try {
-    await useAuth()
+    const cookieStore = await cookies()
+    await useAuth(cookieStore)
 
     const filters: SQL[] = [eq(schema.addresses.accountId, accountId)]
 
@@ -96,7 +93,8 @@ export async function findAddresses(accountId: string, query: QueryValidator) {
 
 export async function createAddresses(accountId: string, { passphrase }: CreateValidator) {
   try {
-    const auth = await useAuth()
+    const cookieStore = await cookies()
+    const auth = await useAuth(cookieStore)
 
     // Verify the passphrase
     const isValid = await password.verify(auth.passkey, passphrase)

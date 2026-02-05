@@ -20,7 +20,8 @@ const nextConfig: NextConfig = {
     fetches: {
       fullUrl: false,
       hmrRefreshes: false
-    }
+    },
+    incomingRequests: false
   },
 
   poweredByHeader: false,

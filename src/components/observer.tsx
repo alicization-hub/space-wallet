@@ -43,7 +43,7 @@ export default function DataObserver() {
     async () => {
       const response = await fetch(`/v0/${uuid}?id=1&ts=${new Date().getTime()}`, { method: 'POST' })
       const data: AccountInfo = await response.json()
-      if (data) {
+      if (data.wallet) {
         setWallet(data.wallet)
         setAccount(omit(['wallet'], data))
       }

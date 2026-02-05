@@ -2,7 +2,9 @@
 
 import { eq } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
+import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 import { cookies } from 'next/headers'
+import { connection } from 'next/server'
 
 import { APP_TOKEN } from '@/constants'
 import { db, schema } from '@/libs/drizzle'
@@ -17,9 +19,8 @@ async function findWallet(walletId: string) {
   return db.select().from(schema.wallets).where(eq(schema.wallets.id, walletId))
 }
 
-export async function useAuth() {
+export async function useAuth(cookieStore: ReadonlyRequestCookies) {
   try {
-    const cookieStore = await cookies()
     const token = cookieStore.get(APP_TOKEN)
     if (!token?.value) {
       throw new Error('401 Unauthorized')
