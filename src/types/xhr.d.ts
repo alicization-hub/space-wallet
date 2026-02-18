@@ -17,3 +17,7 @@ declare type IPagination<T = any> = {
 declare type NextParams<T = Record<string, string>> = Readonly<{
   params: Promise<T>
 }>
+
+declare type NextSearchParams<T = Record<string, string | string[] | undefined>> = Readonly<{
+  searchParams: Promise<T>
+}>

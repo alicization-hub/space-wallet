@@ -27,6 +27,14 @@ export async function generateMnemonic(length: MnemonicLength = 24) {
   return mnemonic.generate(length)
 }
 
+export async function findWallet(walletId: string) {
+  'use cache'
+  cacheTag('wallet', walletId)
+  cacheLife('hours')
+
+  return db.select().from(schema.wallets).where(eq(schema.wallets.id, walletId))
+}
+
 export async function findWallets() {
   'use cache'
   cacheTag('wallets')

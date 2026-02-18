@@ -3,9 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { v7 as uuidV7 } from 'uuid'
 
 import { APP_TOKEN } from '@/constants'
-
-import { CIPHER } from './constants/env'
-import { cipher } from './libs/cipher'
+import { CIPHER } from '@/constants/env'
+import { cipher } from '@/libs/cipher'
 
 /**
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/middleware#matcher
@@ -27,8 +26,7 @@ export const config = {
  * @see https://nextjs.org/docs/app/api-reference/file-conventions/middleware
  */
 export async function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl
-  if (pathname === '/') {
+  if (req.nextUrl.pathname === '/') {
     const token = req.cookies.get(APP_TOKEN)
     if (token?.value) {
       const decrypted = await cipher.symmetricDecrypt(CIPHER.secret, token.value)

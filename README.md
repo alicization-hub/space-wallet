@@ -24,7 +24,7 @@ Here are the initial features implemented, with more planned for future updates:
 ### ⚙️ Tech Stack
 
 - **Framework:**
-  - [Next.js 15](https://nextjs.org/docs)
+  - [Next.js 16](https://nextjs.org/docs)
     - Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
 - **User Interface:**

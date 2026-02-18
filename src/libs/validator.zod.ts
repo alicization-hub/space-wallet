@@ -4,10 +4,14 @@ import { z } from 'zod'
 export const paramValidator = z.object({ uuid: z.uuid() })
 
 export const queryValidator = z.object({
-  page: z.string().default('1').transform(Number),
-  take: z.string().default('10').transform(Number),
+  page: z.int().min(1),
+  take: z.int().min(10),
   status: z.enum(['all', 'active', 'inactive']).optional(),
-  search: z.string().optional()
+  search: z
+    .string()
+    .trim()
+    .transform((value) => (value === '' ? undefined : value))
+    .optional()
 })
 
 export const passphraseSchema = z

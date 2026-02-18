@@ -4,7 +4,6 @@ import { eq } from 'drizzle-orm'
 import { cacheLife, cacheTag } from 'next/cache'
 import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies'
 import { cookies } from 'next/headers'
-import { connection } from 'next/server'
 
 import { APP_TOKEN } from '@/constants'
 import { db, schema } from '@/libs/drizzle'
