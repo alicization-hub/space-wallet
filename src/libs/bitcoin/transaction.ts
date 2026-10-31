@@ -1,9 +1,10 @@
-import { hexToBytes } from '@noble/hashes/utils.js'
-import { HDKey } from '@scure/bip32'
-import { Transaction } from '@scure/btc-signer'
+import { hexToBytes } from "@noble/hashes/utils.js"
+import { HDKey } from "@scure/bip32"
+import { Transaction, utils } from "@scure/btc-signer"
 
-import { createPrivateKey } from './scure'
-import { bitcoinToSats, calcEstimator } from './unit'
+import { MAX_FEE_SATS } from "./constants"
+import { createPrivateKey } from "./scure"
+import { bitcoinToSats, calcEstimator } from "./unit"
 
 /**
  * Creates an signed transaction from a list of UTXOs, an amount to send, a fee rate, and the recipient and change addresses.
@@ -18,22 +19,27 @@ import { bitcoinToSats, calcEstimator } from './unit'
 export async function createSignedTransaction(
   rootKey: HDKey,
   feeRate: number,
-  inputs: Transaction.PrepareInput<'server'>[],
+  inputs: Transaction.PrepareInput<"server">[],
   outputs: Transaction.PrepareOutput[]
 ): Promise<Transaction> {
   // Validate inputs
-  if (!inputs.length) throw new Error('No inouts provided')
-  if (!outputs.length) throw new Error('No outputs provided')
-  if (feeRate <= 0) throw new Error('Invalid fee rate')
-  if (outputs.filter((o) => o.isChange).length > 1) throw new Error('Change address is not unique')
+  if (!inputs.length) throw new Error("No inputs provided")
+  if (!outputs.length) throw new Error("No outputs provided")
+  if (feeRate <= 0) throw new Error("Invalid fee rate")
+  if (outputs.filter((o) => o.isChange).length > 1)
+    throw new Error("Change address is not unique")
 
   // Calculate the estimated transaction details
-  const { changeAmount, isDust, isInsufficientFee } = calcEstimator(feeRate, inputs, outputs)
+  const { changeAmount, isDust, isInsufficientFee } = calcEstimator(
+    feeRate,
+    inputs,
+    outputs
+  )
 
   // Validate the transaction
   if (isInsufficientFee) {
     throw new Error(
-      'Insufficient fee. The total amount of the transaction is less than the fee required to relay it on the network.'
+      "Insufficient fee. The total amount of the transaction is less than the fee required to relay it on the network."
     )
   }
 
@@ -41,18 +47,22 @@ export async function createSignedTransaction(
   const tx = new Transaction()
 
   // Add inputs to the transaction
-  for (let index = 0; index < inputs.length; index++) {
-    const utxo = inputs[index]
+  for (const utxo of inputs) {
     const amount = BigInt(bitcoinToSats(utxo.amount))
     const script = hexToBytes(utxo.scriptPubKey)
+    const privateKey = createPrivateKey(rootKey, utxo.derivationPath)
 
     // Add the UTXO as an input to the transaction
     tx.addInput({
       txid: utxo.txid,
       index: utxo.vout,
       witnessUtxo: { amount, script },
-      tapInternalKey: utxo.type === 'tr' ? script.slice(2) : undefined
+      // BIP-86: the internal key is the untweaked x-only key. The key inside `script` is already
+      // tweaked.
+      tapInternalKey: utxo.type === "tr" ? utils.pubSchnorr(privateKey) : undefined
     })
+
+    privateKey.fill(0)
   }
 
   // Add outputs to the transaction
@@ -71,9 +81,18 @@ export async function createSignedTransaction(
     const privateKey = createPrivateKey(rootKey, utxo.derivationPath)
 
     tx.signIdx(privateKey, index)
+    privateKey.fill(0)
   }
 
   // Finalize the transaction and compute its txid and hash
   tx.finalize()
+
+  // The last check before the transaction can leave the server
+  if (tx.fee > BigInt(MAX_FEE_SATS)) {
+    throw new Error(
+      `The transaction fee (${tx.fee} sats) exceeds the safety limit of ${MAX_FEE_SATS} sats.`
+    )
+  }
+
   return tx
 }

@@ -1,19 +1,8 @@
 declare type UUID = `${string}-${string}-${string}-${string}-${string}`
 declare type CountdownDuration = Record<
-  'years' | 'months' | 'weeks' | 'days' | 'hours' | 'minutes' | 'seconds',
+  "years" | "months" | "weeks" | "days" | "hours" | "minutes" | "seconds",
   number
 >
-
-/**
- * Access Token:
- * ```text
- * "PREFIX:SUB:UID:EXP"
- * sub = walletId (UUID)
- * uid = accountId (UUID)
- * exp = expiredAt (timestamp)
- * ```
- */
-declare type AccessToken = `${string}:${string}:${string}:${number}`
 
 declare type Purpose = 84 | 86
 // declare type MnemonicLength = 12 | 15 | 18 | 21 | 24

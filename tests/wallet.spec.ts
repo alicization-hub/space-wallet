@@ -1,223 +1,87 @@
-import { setTimeout } from 'timers/promises'
+import { parseArgs } from "util"
 
-import { getUnixTime } from 'date-fns'
-import { and, desc, eq } from 'drizzle-orm'
+import { DrizzleQueryError } from "drizzle-orm"
 
-import { createDescriptors } from '@/libs/bitcoin/descriptor'
-import { mnemonic } from '@/libs/bitcoin/mnemonic'
-import { RPCClient } from '@/libs/bitcoin/rpc'
-import { AddressBuilder, createRootKey, GAP_LIMIT } from '@/libs/bitcoin/scure'
-import { cipher } from '@/libs/cipher'
-import { db, schema } from '@/libs/drizzle'
-import type { AddressInsertValues } from '@/libs/drizzle/types'
-import { logger } from '@/libs/logger'
-import { password } from '@/libs/password'
-import { passphraseSchema } from '@/libs/validator.zod'
+import { db } from "@/drizzle"
+import { logger } from "@/libs/logger"
 
-import { commandInput } from './cmd.spec'
+import { extendAddresses } from "./wallets/addresses"
+import { createWallet } from "./wallets/create"
+import { listWallets } from "./wallets/list"
+import { recoverWallet } from "./wallets/recover"
+import { optionsValidator } from "./wallets/shared"
 
-async function createWallet(name: string) {
-  logger('🚀 Create wallet...')
-  const startedAt = new Date()
+const USAGE = `
+Usage: bun tests/wallet.spec.ts <command> [options]
 
-  try {
-    // Prompt the user for a passkey and validate it against the defined schema
-    const str = await commandInput('🔑 Enter passkey')
-    const passphrase = str // await passphraseSchema.parseAsync(str)
+  create    --name <name> [--words 12|24] [--account <n>]
+            Generates a new seed, shows it once, and sets up the wallet.
 
-    // Generate a secure 24-word BIP39 mnemonic for the new wallet
-    const bio = mnemonic.generate(24)
+  recover   --name <name> [--started-at YYYY-MM-DD] [--account <n>]
+            Sets up a wallet from an existing seed. Without --started-at it rescans the whole chain.
 
-    // Hash the passphrase for secure storage in the database
-    const passwordHash = await password.hash(passphrase)
+  addresses --wallet <name> [--account <n>]
+            Generates the next batch of addresses for a wallet's accounts.
 
-    // Encrypt the generated mnemonic using the user's passphrase
-    const bioEncrypted = await cipher.encrypt(bio, passphrase)
+  list      Shows the wallets and their accounts.
 
-    // Create a URL-friendly name (slug) by trimming, lowercasing, and hyphenating
-    const slug = name
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/[^a-z0-9-]/g, '') // Remove non-alphanumeric characters
-      .replace(/-+/g, '-') // Replace multiple hyphens with a single hyphen
-      .replace(/^-+|-+$/g, '') // Remove leading and trailing hyphens
+Seeds and passphrases are always asked for in the terminal, never taken as arguments.
+`
 
-    // Persist the new wallet record to the database and return its unique ID
-    const [wallet] = await db
-      .insert(schema.wallets)
-      .values({
-        slug,
-        name,
-        bio: bioEncrypted,
-        passkey: passwordHash
-      })
-      .returning({ id: schema.wallets.id })
-
-    logger(`✅ New wallet "${name}" has been successfully created.`, startedAt)
-
-    return wallet.id
-  } catch (error) {
-    throw error
-  }
-}
-
-async function createAccount(walletId: string, index: number) {
-  logger('🚀 Create account...')
-  const startedAt = new Date()
-
-  try {
-    // Create a new accounts record linked to the specified wallet
-    const accountsCreated = await db
-      .insert(schema.accounts)
-      .values([
-        {
-          walletId,
-          label: `Account No. 84-${index}`,
-          purpose: 84,
-          index,
-          startedAt: new Date()
-        },
-        {
-          walletId,
-          label: `Account No. 86-${index}`,
-          purpose: 86,
-          index,
-          startedAt: new Date()
-        }
-      ])
-      .returning()
-
-    // Register and create the wallet in the Bitcoin Core RPC node using the account ID
-    const rpcClient = new RPCClient()
-    for (const account of accountsCreated) {
-      await rpcClient.createWallet(account.id)
-    }
-
-    logger(`✅ New account ${index} has been successfully created.`, startedAt)
-
-    return accountsCreated.map((account) => account.id)
-  } catch (error: any) {
-    throw error
-  }
-}
-
-async function createAddresses(walletId: string, accountId: string) {
-  logger('🚀 Create addresses...')
-  const startedAt = new Date()
-
-  try {
-    // Request the passkey from the user and validate it
-    const str = await commandInput('🔑 Enter passkey')
-    const passphrase = await passphraseSchema.parseAsync(str)
-
-    // Retrieve wallet records and verify the user's passphrase
-    const [wallet] = await db.select().from(schema.wallets).where(eq(schema.wallets.id, walletId))
-    const isValid = await password.verify(wallet.passkey, passphrase)
-    if (!isValid) {
-      throw new Error('Invalid passphrase.')
-    }
-
-    const rpcClient = new RPCClient()
-
-    // Decrypt the wallet's mnemonic and derive the BIP32 Root Key
-    const mnemonic = await cipher.decrypt(wallet.bio, passphrase)
-    const rootKey = await createRootKey(mnemonic, passphrase)
-    const addr = new AddressBuilder(rootKey)
-
-    // Fetch the account info and determine the next address index, index starting point
-    const [account, address] = await db.transaction(async (tx) => {
-      const [account] = await tx.select().from(schema.accounts).where(eq(schema.accounts.id, accountId))
-      const [address] = await tx
-        .select()
-        .from(schema.addresses)
-        .where(and(eq(schema.addresses.accountId, accountId), eq(schema.addresses.type, 'receive')))
-        .orderBy(desc(schema.addresses.index))
-        .limit(1)
-
-      return [account, address] as const
-    })
-
-    const addressValues: AddressInsertValues[] = []
-    const start = address ? address.index + 1 : 0
-    const end = start + GAP_LIMIT
-
-    // Generate a batch of new receive and change addresses up to the defined GAP_LIMIT
-    for (let index = start; index <= end; index++) {
-      const receiveAddress = addr.create(account.purpose, account.index, index)
-      const changeAddress = addr.create(account.purpose, account.index, index, true)
-      addressValues.push(
-        {
-          accountId: account.id,
-          label: `Receive No. ${index}`,
-          type: 'receive',
-          index,
-          address: receiveAddress
-        },
-        {
-          accountId: account.id,
-          label: `Change No. ${index}`,
-          type: 'change',
-          index,
-          address: changeAddress
-        }
-      )
-    }
-
-    // Construct output descriptors for both internal (change) and external (receive) chains
-    const descriptor = createDescriptors(rootKey, account.purpose, account.index)
-    await rpcClient.setWallet(account.id)
-
-    const receive = await rpcClient.getDescriptor(descriptor.receive)
-    const change = await rpcClient.getDescriptor(descriptor.change)
-
-    await setTimeout(2e3)
-    await Promise.allSettled([
-      // Import the calculated descriptors into the Bitcoin node to start monitoring UTXOs
-      rpcClient.importDescriptors([
-        {
-          desc: receive.descriptor,
-          active: true,
-          range: [start, end],
-          timestamp: getUnixTime(new Date(account.startedAt)),
-          internal: false,
-          next_index: start
-        },
-        {
-          desc: change.descriptor,
-          active: true,
-          range: [start, end],
-          timestamp: getUnixTime(new Date(account.startedAt)),
-          internal: true,
-          next_index: start
-        }
-      ]),
-
-      // Bulk insert the record of the new generated addresses into the local database
-      db.insert(schema.addresses).values(addressValues)
-    ])
-
-    logger('✅ New addresses and descriptors has been successfully generated.', startedAt)
-  } catch (error) {
-    throw error
-  }
-}
-
+/**
+ * Wallets are managed from the terminal instead of the UI, so a seed never passes through a
+ * browser, an extension, or a network request.
+ */
 async function main() {
-  const startedAt = new Date()
+  const { values, positionals } = parseArgs({
+    allowPositionals: true,
+    options: {
+      "name": { type: "string" },
+      "words": { type: "string" },
+      "account": { type: "string" },
+      "started-at": { type: "string" },
+      "wallet": { type: "string" }
+    }
+  })
 
-  try {
-    // const walletId = await createWallet('Test Wallet')
-    // const accountIds = await createAccount(walletId, 0)
-    // for (const accountId of accountIds) {
-    //   await createAddresses(walletId, accountId)
-    // }
-    // logger(`✅ Test wallet has been successfully created.`, startedAt)
-  } catch (error) {
-    logger(`⚠️ An error occurred: ${error}`)
+  const options = optionsValidator.parse(values)
+
+  switch (positionals[0]) {
+    case "create":
+      return createWallet(options)
+
+    case "recover":
+      return recoverWallet(options)
+
+    case "addresses":
+      return extendAddresses(options)
+
+    case "list":
+      return listWallets()
+
+    default:
+      console.info(USAGE)
+  }
+}
+
+/**
+ * A failed query's own message lists its parameters, which can include `bio` and `passkey`. Only
+ * the reason is shown.
+ */
+function describeError(error: unknown) {
+  if (error instanceof DrizzleQueryError) {
+    return `The database refused the change: ${error.cause?.message}`
   }
 
-  process.exit()
+  return error instanceof Error ? error.message : String(error)
 }
 
 main()
+  .catch((error) => {
+    logger(`❌ ${describeError(error)}`)
+    process.exitCode = 1
+  })
+  .finally(async () => {
+    await db.$client.end()
+    process.exit()
+  })

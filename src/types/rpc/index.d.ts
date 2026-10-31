@@ -1,4 +1,4 @@
-declare namespace IBlockchain {
+declare namespace Blockchain {
   /**
    * numeric statistics about BIP9 signalling for a softfork (only for "started" status)
    */
@@ -53,6 +53,8 @@ declare namespace IBlockchain {
     bestblockhash: string
     /** the current difficulty */
     difficulty: number
+    /** time of the current best block */
+    time: number
     /** median time for the current best block */
     mediantime: number
     /** estimate of verification progress [0..1] */
@@ -76,9 +78,16 @@ declare namespace IBlockchain {
     /** any network and blockchain warnings */
     warnings: string
   }
+
+  export type BlockHeader = {
+    /** the block height */
+    height: number
+    /** the block time */
+    time: number
+  }
 }
 
-declare namespace INetwork {
+declare namespace Network {
   export type Detail = {
     /** network (ipv4, ipv6, onion, i2p) */
     name: string
@@ -175,7 +184,7 @@ declare namespace INetwork {
     /** The time offset in seconds */
     timeoffset: number
     /** ping time (if available) */
-    pingtime: number
+    pingtime?: number
     /** minimum observed ping time (if any at all) */
     minping: number
     /** ping wait (if non-zero) */
@@ -216,9 +225,16 @@ declare namespace INetwork {
      */
     connection_type: string
   }
+
+  export type Totals = {
+    /** the total bytes received since the node started */
+    totalbytesrecv: number
+    /** the total bytes sent since the node started */
+    totalbytessent: number
+  }
 }
 
-declare namespace IMempool {
+declare namespace Mempool {
   export type Info = {
     /** True if the mempool is fully loaded */
     loaded: boolean
@@ -249,9 +265,19 @@ declare namespace IMempool {
     /** Whether the mempool is in RBF mode */
     fullrbf: boolean
   }
+
+  /**
+   * One step of `getmempoolfeeratediagram`. The first point is always zero.
+   */
+  export type FeeratePoint = {
+    /** cumulative sigops-adjusted weight */
+    weight: number
+    /** cumulative fee in BTC */
+    fee: number
+  }
 }
 
-declare namespace IWallet {
+declare namespace NodeWallet {
   export type Created = {
     /** The wallet name if created successfully. If the wallet was created using a full path, the wallet_name will be the full path. */
     name: string
@@ -266,6 +292,18 @@ declare namespace IWallet {
     progress: number
   }
 
+  export type Balances = {
+    /** balances from outputs that the wallet can sign */
+    mine: {
+      /** trusted balance (outputs created by the wallet or confirmed outputs) */
+      trusted: number
+      /** untrusted pending balance (outputs created by others that are in the mempool) */
+      untrusted_pending: number
+      /** balance from immature coinbase outputs */
+      immature: number
+    }
+  }
+
   export type Info = {
     /** the wallet name */
     walletname: string
@@ -273,12 +311,6 @@ declare namespace IWallet {
     walletversion: number
     /** the database format (bdb or sqlite) */
     format: string
-    /** the total balance of the wallet */
-    balance: number
-    /** the unconfirmed balance of the wallet */
-    unconfirmed_balance: number
-    /** the immature balance of the wallet */
-    immature_balance: number
     /** the total number of transactions in the wallet */
     txcount: number
     /** how many new keys are pre-generated (only counts external keys) */

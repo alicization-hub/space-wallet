@@ -1,31 +1,37 @@
-'use client'
+"use client"
 
-import { Button, useDisclosure } from '@heroui/react'
+import { SendIcon } from "@keyline-icons/react"
 
-import { SendIcon } from '@/components/icons'
-import { ModalComponent } from '@/components/ui/modal'
+import { Button } from "@/components/ui/button"
+import { ModalComponent } from "@/components/ui/modal"
+import { useOverlayState } from "@/hooks"
 
-import { FormComponent } from './form'
+import { SendForm } from "./form"
 
-export function SendComponent({ accountId }: Readonly<{ accountId: string }>) {
-  // __STATE's
-  const m = useDisclosure()
+export function Send({
+  accountId,
+  purpose,
+  spendable
+}: Readonly<{ accountId: string; purpose: Purpose; spendable: number }>) {
+  const modal = useOverlayState()
 
-  // __RENDER
   return (
     <>
       <Button
         className='hover:bg-space-50/5 hover:ring-space-50/10 h-10 gap-2 rounded-xs bg-transparent px-4 hover:ring-1'
-        radius='none'
-        type='button'
         aria-label='Button send'
-        onPress={m.onOpen}>
+        onClick={modal.open}>
         <SendIcon className='size-5' />
         <span className='text-sm font-semibold uppercase'>send</span>
       </Button>
 
-      <ModalComponent control={m} size='xl'>
-        <FormComponent accountId={accountId} onClose={m.onClose} />
+      <ModalComponent control={modal} label='Send bitcoin' size='xl'>
+        <SendForm
+          accountId={accountId}
+          purpose={purpose}
+          spendable={spendable}
+          onClose={modal.close}
+        />
       </ModalComponent>
     </>
   )

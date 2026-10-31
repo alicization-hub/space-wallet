@@ -1,27 +1,10 @@
-import { HDKey } from '@scure/bip32'
-import { mnemonicToSeed, validateMnemonic } from '@scure/bip39'
-import { getAddress, NETWORK } from '@scure/btc-signer'
+import { HDKey } from "@scure/bip32"
+import { mnemonicToSeed, validateMnemonic } from "@scure/bip39"
+import { getAddress, NETWORK } from "@scure/btc-signer"
 
-import { wordlist } from '@/constants/wordlists/english'
+import { WORDLIST } from "@/constants/wordlists/english"
 
-import { derivationPathBuilder } from './derivation'
-
-/**
- * The amount of satoshis in one BTC.
- */
-export const COIN = 100_000_000
-
-/**
- * The maximum number of consecutive unused addresses to generate.
- * `range(0, GAP_LIMIT)`
- */
-export const GAP_LIMIT = 23
-
-/**
- * The minimum amount of satoshis that is considered a dust output.
- * Below this threshold, the transaction will not be relayed by the network.
- */
-export const DUST_THRESHOLD = 546
+import { derivationPathBuilder } from "./derivation"
 
 /**
  * Creates a root key from a mnemonic phrase for the Bitcoin main chain.
@@ -31,15 +14,18 @@ export const DUST_THRESHOLD = 546
  */
 export async function createRootKey(mnemonic: string, passphrase?: string) {
   // Validate and normalize mnemonic
-  if (!validateMnemonic(mnemonic, wordlist)) {
-    throw new Error('Invalid mnemonic phrase')
+  if (!validateMnemonic(mnemonic, WORDLIST)) {
+    throw new Error("Invalid mnemonic phrase")
   }
 
   // Convert mnemonic to seed
   const seed = await mnemonicToSeed(mnemonic, passphrase)
 
   // Create master key from seed
-  return HDKey.fromMasterSeed(seed)
+  const rootKey = HDKey.fromMasterSeed(seed)
+  seed.fill(0)
+
+  return rootKey
 }
 
 /**
@@ -54,7 +40,7 @@ export function createPrivateKey(rootKey: HDKey, derivationPath: string) {
 
   // Ensure private key exists
   if (!privateKey) {
-    throw new Error('Failed to derive private key.')
+    throw new Error("Failed to derive private key.")
   }
 
   return privateKey
@@ -84,7 +70,12 @@ export class AddressBuilder {
    * @param addressIndex - The address index.
    * @param isChange - The change boolean.
    */
-  public create(purpose: Purpose, accountNo: number, addressIndex: number, isChange?: boolean) {
+  public create(
+    purpose: Purpose,
+    accountNo: number,
+    addressIndex: number,
+    isChange?: boolean
+  ) {
     const derivationPath = derivationPathBuilder()
       .purpose(purpose)
       .coinType(0)
@@ -93,7 +84,7 @@ export class AddressBuilder {
       .address(addressIndex)
       .build()
     const privateKey = createPrivateKey(this.rootKey, derivationPath)
-    const type = purpose === 84 ? 'wpkh' : 'tr'
+    const type = purpose === 84 ? "wpkh" : "tr"
 
     return getAddress(type, privateKey, NETWORK)!
   }

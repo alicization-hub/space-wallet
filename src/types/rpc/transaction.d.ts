@@ -1,4 +1,4 @@
-declare namespace ITransaction {
+declare namespace NodeTransaction {
   export type List = {
     /** Only returns true if imported addresses were involved in transaction. */
     involvesWatchonly: boolean
@@ -66,7 +66,7 @@ declare namespace ITransaction {
      * ("yes|no|unknown") Whether this transaction could be replaced due to BIP125 (replace-by-fee);
      * may be unknown for unconfirmed transactions not in the mempool
      */
-    'bip125-replaceable': string
+    "bip125-replaceable": string
   }
 
   export type Raw = {
@@ -163,6 +163,6 @@ declare namespace ITransaction {
     }
   } & {
     /** Rejection string (only present when 'allowed' is false) */
-    'reject-reason': string
+    "reject-reason": string
   }
 }

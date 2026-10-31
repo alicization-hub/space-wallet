@@ -1,7 +1,5 @@
-@import 'tailwindcss';
-@import './theme.css';
-
-@config "../../tailwind.config.js";
+@import "tailwindcss";
+@import "./theme.css";
 
 @layer base {
   * {
@@ -18,7 +16,6 @@
 
   button {
     @apply flex cursor-pointer items-center justify-center;
-    scale: 1 !important;
   }
 }
 
@@ -43,7 +40,7 @@
 
   .is-required::after {
     @apply pl-1 text-sm text-red-500;
-    content: '*';
+    content: "*";
   }
 
   .form-input {
@@ -58,4 +55,12 @@
 
 @utility word-* {
   word-spacing: --value(--word-spacing-*);
+}
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }

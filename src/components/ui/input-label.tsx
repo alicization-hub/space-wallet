@@ -1,18 +1,19 @@
-import { cls } from '@/libs/utils'
+import { cls } from "@/libs/utils"
 
-export function LabelComponent({
+export function InputLabel({
   title,
   description,
-  required
+  isRequired
 }: Readonly<{
   title: string
   description: string
-  required?: boolean
+  isRequired?: boolean
 }>) {
-  // __RENDER
   return (
     <div className='flex flex-col'>
-      <div className={cls('font-medium capitalize', { 'is-required': required })}>{title}</div>
+      <div className={cls("font-medium capitalize", { "is-required": isRequired })}>
+        {title}
+      </div>
       <div className='text-space-600 text-xs'>{description}</div>
     </div>
   )

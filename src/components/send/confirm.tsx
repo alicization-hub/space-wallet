@@ -1,28 +1,34 @@
-'use client'
+"use client"
 
-import { Button } from '@heroui/react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useCallback, useMemo, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { FileTextIcon, TriangleAlertIcon } from "@keyline-icons/react"
+import { useCallback, useMemo, useTransition } from "react"
+import { useForm } from "react-hook-form"
 
-import { DangerIcon, DocumentIcon } from '@/components/icons'
-import { LabelComponent } from '@/components/ui/input-label'
-import { useWallet } from '@/hooks'
-import { createTransaction } from '@/libs/actions/transaction/create'
-import { createValidator, type CreateValidator } from '@/libs/actions/transaction/validator'
-import { calcEstimator, satsToBitcoin } from '@/libs/bitcoin/unit'
-import { toast } from '@/libs/utils'
+import { syncAccount } from "@/actions/account/update"
+import { createTransaction } from "@/actions/transaction/create"
+import {
+  createValidator,
+  type CreateValidator
+} from "@/actions/transaction/validator.zod"
+import { Button } from "@/components/ui/button"
+import { InputLabel } from "@/components/ui/input-label"
+import { toast } from "@/components/ui/toast"
+import { calcEstimator, satsToBitcoin } from "@/libs/bitcoin/unit"
 
-export function ConfirmComponent({
+export function SendConfirm({
+  accountId,
+  purpose,
   formData,
-  onSuccess,
+  onFinish,
   onClose
 }: Readonly<{
-  formData: Omit<CreateValidator, 'passphrase'>
-  onSuccess?: () => void
+  accountId: string
+  purpose: Purpose
+  formData: Omit<CreateValidator, "passphrase">
+  onFinish?: () => void
   onClose?: () => void
 }>) {
-  // __STATE's
   const {
     register,
     handleSubmit,
@@ -33,9 +39,8 @@ export function ConfirmComponent({
     defaultValues: formData
   })
 
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isPending, startTransition] = useTransition()
 
-  const account = useWallet((state) => state.account)
   const summary = useMemo(() => {
     const inputs = formData.utxos as any[]
     const outputs: Transaction.PrepareOutput[] = [
@@ -46,7 +51,7 @@ export function ConfirmComponent({
         isChange: false
       },
       {
-        address: account.purpose === 84 ? 'bc1q...' : 'bc1p...',
+        address: purpose === 84 ? "bc1q..." : "bc1p...",
         amount: 0,
         isRecipient: false,
         isChange: true
@@ -54,71 +59,93 @@ export function ConfirmComponent({
     ]
 
     return calcEstimator(formData.fee, inputs, outputs)
-  }, [account, formData])
+  }, [purpose, formData])
 
-  // __FUNCTION's
   const handleClick = useCallback(
-    (formData: CreateValidator) => {
-      const func = async (resolve: (value: any) => void) => {
-        try {
-          const result = await createTransaction(account.id, formData)
-          if (result.success) {
-            resolve(true)
-            toast({
-              title: '✅ Success',
-              description: result.message,
-              timeout: 0
-            })
+    (values: CreateValidator) => {
+      startTransition(async () => {
+        const sending = createTransaction(accountId, values)
 
-            if (onSuccess) onSuccess()
-          }
-        } catch (error: any) {
-          console.error('⚠️ An error occurred:', error)
-          resolve(true)
+        toast({
+          promise: sending,
+          description: "🚀 Your transaction was in processing and broadcasting...",
+          hasCloseButton: false
+        })
+
+        const result = await sending
+        if (result.success) {
+          toast({
+            title: "✅ Success",
+            description: result.message,
+            timeout: 0
+          })
+
+          if (onFinish) onFinish()
+
+          // Not awaited: the money has gone out, so a failure here must not read as a failed send
+          syncAccount(accountId)
+        } else if (result.isUnknown) {
+          // It stays up and the form closes, because sending again from other coins could pay twice
+          toast({
+            title: "⚠️ It may have gone out",
+            description: result.message,
+            timeout: 0
+          })
+
+          if (onFinish) onFinish()
+
+          syncAccount(accountId)
+        } else {
           toast({
             timeout: 9e3,
-            title: '⚠️ An error occurred',
-            description:
-              error?.message || 'Something went wrong while processing or broadcasting the transaction.'
+            title: "⚠️ An error occurred",
+            description: result.message
           })
         }
-
-        setIsLoading(false)
-      }
-
-      setIsLoading(true)
-      toast({
-        promise: new Promise((resolve) => func(resolve)),
-        description: '🚀 Your transaction was in processing and broadcasting...',
-        hideCloseButton: true
       })
     },
-    [account]
+    [accountId, onFinish]
   )
 
-  // __RENDER
   return (
     <form className='flex flex-col gap-4' onSubmit={handleSubmit(handleClick)}>
       <div className='flex items-center justify-center gap-2 select-none'>
-        <DocumentIcon className='size-5' />
-        <span className='font-number text-lg font-medium capitalize'>transaction summary</span>
+        <FileTextIcon className='size-5' />
+        <span className='font-number text-lg font-medium capitalize'>
+          transaction summary
+        </span>
       </div>
 
       <div className='flex flex-col gap-6'>
         <div className='border-y-foreground/5 flex flex-col gap-2 border-y-2 py-4'>
+          <div className='flex flex-col gap-1'>
+            <div className='text-foreground-500 text-sm capitalize'>recipient</div>
+            <div className='font-number font-medium break-all'>
+              {formData.recipientAddress}
+            </div>
+          </div>
+
           <div className='flex items-center justify-between gap-4'>
-            <div className='text-foreground-500 text-sm capitalize'>total amount to send</div>
-            <div className='font-number font-medium'>{satsToBitcoin(summary.totalAmount).toFixed(8)} BTC</div>
+            <div className='text-foreground-500 text-sm capitalize'>
+              total amount to send
+            </div>
+            <div className='font-number font-medium'>
+              {satsToBitcoin(summary.totalAmount).toFixed(8)} BTC
+            </div>
           </div>
 
           <div className='flex items-center justify-between gap-4'>
             <div className='text-foreground-500 text-sm capitalize'>total input</div>
-            <div className='font-number font-medium'>{satsToBitcoin(summary.totalInput).toFixed(8)} BTC</div>
+            <div className='font-number font-medium'>
+              {satsToBitcoin(summary.totalInput).toFixed(8)} BTC
+            </div>
           </div>
 
           <div className='flex items-center justify-between gap-4'>
             <div className='text-foreground-500 text-sm capitalize'>total fee</div>
-            <div className='font-number font-medium'>{satsToBitcoin(summary.fee).toFixed(8)} BTC</div>
+            <div className='font-number font-medium'>
+              {satsToBitcoin(summary.fee).toFixed(8)} BTC
+            </div>
           </div>
 
           <div className='flex items-center justify-between gap-4'>
@@ -126,7 +153,9 @@ export function ConfirmComponent({
             <div className='font-number font-medium'>
               {summary.isDust ? (
                 <>
-                  {summary.changeAmount > 0 && <span className='text-sm text-red-400'>(Dust Threshold)</span>}
+                  {summary.changeAmount > 0 && (
+                    <span className='text-sm text-red-400'>(Dust Threshold)</span>
+                  )}
                   <span className='pl-2'>{`${Math.max(summary.changeAmount, 0)} Satoshis`}</span>
                 </>
               ) : (
@@ -141,24 +170,28 @@ export function ConfirmComponent({
         </div>
 
         <div className='flex flex-col gap-2'>
-          <LabelComponent
+          <InputLabel
             title='passphrase'
             description='Enter your wallet passphrase to confirm the transaction.'
-            required
+            isRequired
           />
 
           <input
             className='ring-foreground-50 focus:ring-foreground-100 h-12 rounded-xs px-4 font-semibold tracking-widest ring-1 outline-none placeholder:text-sm focus:ring-2'
             type='password'
-            disabled={isLoading}
-            {...register('passphrase')}
+            autoComplete='off'
+            aria-label='Passphrase'
+            disabled={isPending}
+            {...register("passphrase")}
           />
 
-          {error.passphrase && <div className='text-xs text-red-500'>{error.passphrase.message}</div>}
+          {error.passphrase && (
+            <div className='text-xs text-red-500'>{error.passphrase.message}</div>
+          )}
         </div>
 
         <div className='bg-foreground-100/25 flex items-center gap-4 rounded-xs px-4 py-3'>
-          <DangerIcon className='size-7' />
+          <TriangleAlertIcon className='size-7' />
           <span className='text-foreground-500 text-xs'>
             Bitcoin transactions are irreversible. Make sure the data is correct.
           </span>
@@ -168,10 +201,9 @@ export function ConfirmComponent({
       <div className='flex justify-center gap-4'>
         <Button
           className='bg-foreground/5 text-foreground-400 rounded-xs'
-          type='button'
           aria-label='Button cancel'
-          isDisabled={isLoading}
-          onPress={onClose}>
+          disabled={isPending}
+          onClick={onClose}>
           <span className='text-sm capitalize'>cancel</span>
         </Button>
 
@@ -179,8 +211,8 @@ export function ConfirmComponent({
           className='bg-foreground text-background rounded-xs px-8'
           type='submit'
           aria-label='Button send'
-          isLoading={isLoading}
-          isDisabled={!watch('passphrase') || summary.isInsufficientFee}>
+          isLoading={isPending}
+          disabled={!watch("passphrase") || summary.isInsufficientFee}>
           <span className='font-bold capitalize'>send</span>
         </Button>
       </div>

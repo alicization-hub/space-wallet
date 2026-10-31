@@ -1,38 +1,39 @@
-import { fromUnixTime } from 'date-fns'
-import { and, eq, inArray } from 'drizzle-orm'
+import { fromUnixTime } from "date-fns"
+import { and, eq, inArray } from "drizzle-orm"
 
-import { RPCClient } from '@/libs/bitcoin/rpc'
-import { bitcoinToSats } from '@/libs/bitcoin/unit'
-import { db, schema } from '@/libs/drizzle'
-import { logger } from '@/libs/logger'
+import { db, schema } from "@/drizzle"
+import { RPCClient } from "@/libs/bitcoin/rpc"
+import { bitcoinToSats } from "@/libs/bitcoin/unit"
+import { logger } from "@/libs/logger"
 
-async function formatter(rpcClient: RPCClient, tx: ITransaction.List) {
+async function formatTransaction(rpcClient: RPCClient, tx: NodeTransaction.List) {
   const raw = await rpcClient.getTransaction(tx.txid)
 
   // Optimize: Batch fetch all parent transactions for inputs
   const batchCalls = raw.vin
     .filter((vin) => vin.txid)
     .map((vin) => ({
-      method: 'getrawtransaction',
+      method: "getrawtransaction",
       params: [vin.txid, true]
     }))
 
-  const parentTxs = batchCalls.length > 0 ? await rpcClient.batch<ITransaction.Raw>(batchCalls) : []
+  const parentTxs =
+    batchCalls.length > 0 ? await rpcClient.batch<NodeTransaction.Raw>(batchCalls) : []
 
   let fetchIndex = 0
-  const inputs: Transaction.Schema['inputs'] = raw.vin.map((vin) => {
+  const inputs: Transaction.Schema["inputs"] = raw.vin.map((vin) => {
     if (!vin.txid) {
       // Handle coinbase transaction
       return {
-        txid: 'coinbase',
-        address: 'coinbase',
+        txid: "coinbase",
+        address: "coinbase",
         value: 0
       }
     }
 
     const prevTx = parentTxs[fetchIndex++]
     const prevOut = prevTx.vout[vin.vout]
-    const { address = '', hex: pkScript = '' } = prevOut.scriptPubKey || {}
+    const { address = "", hex: pkScript = "" } = prevOut.scriptPubKey || {}
 
     return {
       txid: vin.txid,
@@ -41,10 +42,12 @@ async function formatter(rpcClient: RPCClient, tx: ITransaction.List) {
     }
   })
 
-  const outputs: Transaction.Schema['outputs'] = raw.vout.map(({ value, scriptPubKey }) => ({
-    address: scriptPubKey?.address || '',
-    value: bitcoinToSats(value)
-  }))
+  const outputs: Transaction.Schema["outputs"] = raw.vout.map(
+    ({ value, scriptPubKey }) => ({
+      address: scriptPubKey?.address || "",
+      value: bitcoinToSats(value)
+    })
+  )
 
   const vin = inputs.reduce((sum, { value }) => sum + value, 0)
   const vout = raw.vout.reduce((sum, { value }) => sum + value, 0)
@@ -60,10 +63,10 @@ async function formatter(rpcClient: RPCClient, tx: ITransaction.List) {
     outputs,
     type: tx.category as Transaction.Type,
     status: (tx?.confirmations < 1
-      ? 'pending'
+      ? "pending"
       : tx.abandoned
-        ? 'abandoned'
-        : 'confirmed') as Transaction.Status,
+        ? "abandoned"
+        : "confirmed") as Transaction.Status,
     timestamp: fromUnixTime(tx.time),
     confirmations: tx?.confirmations || 0,
     blockHash: tx.blockhash,
@@ -73,9 +76,11 @@ async function formatter(rpcClient: RPCClient, tx: ITransaction.List) {
   }
 }
 
-async function getTransactions(rpcClient: RPCClient, page: number, take: number) {
-  const transactions = await rpcClient.listTransactions('*', take, (page - 1) * take)
-  const formatted = await Promise.all(transactions.map((tx) => formatter(rpcClient, tx)))
+async function readTransactions(rpcClient: RPCClient, page: number, take: number) {
+  const transactions = await rpcClient.listTransactions("*", take, (page - 1) * take)
+  const formatted = await Promise.all(
+    transactions.map((tx) => formatTransaction(rpcClient, tx))
+  )
 
   // Sort by timestamp descending (newest first)
   // Since listTransactions returns a batch of "recent" transactions,
@@ -84,7 +89,7 @@ async function getTransactions(rpcClient: RPCClient, page: number, take: number)
 }
 
 async function main() {
-  logger('🔍 Fetch transactions...')
+  logger("🔍 Fetch transactions...")
   const startedAt = new Date()
   const [walletId, accountId] = [process.env.PRIV_SUB!, process.env.PRIV_UID!]
 
@@ -97,9 +102,11 @@ async function main() {
     const take = 10
 
     logger(`📄 Fetching page ${page} (limit ${take})...`)
-    const transactions = await getTransactions(rpcClient, page, take)
+    const transactions = await readTransactions(rpcClient, page, take)
 
-    const addrs = new Set(transactions.flatMap((tx) => [...tx.inputs, ...tx.outputs].map((r) => r.address)))
+    const addrs = new Set(
+      transactions.flatMap((tx) => [...tx.inputs, ...tx.outputs].map((r) => r.address))
+    )
     await db
       .update(schema.addresses)
       .set({

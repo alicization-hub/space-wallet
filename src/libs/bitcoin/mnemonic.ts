@@ -1,14 +1,14 @@
-import { generateMnemonic, validateMnemonic } from '@scure/bip39'
+import { generateMnemonic, validateMnemonic } from "@scure/bip39"
 
-import { wordlist } from '@/constants/wordlists/english'
+import { WORDLIST } from "@/constants/wordlists/english"
 
-export class mnemonic {
+export class Mnemonic {
   static generate(wordCount: MnemonicLength = 24): string {
     const strength = wordCount === 24 ? 256 : 128
-    return generateMnemonic(wordlist, strength)
+    return generateMnemonic(WORDLIST, strength)
   }
 
   static validate(mnemonic: string) {
-    return validateMnemonic(mnemonic.trim().toLowerCase(), wordlist)
+    return validateMnemonic(mnemonic.trim().toLowerCase(), WORDLIST)
   }
 }

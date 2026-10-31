@@ -1,59 +1,27 @@
-'use client'
+import type { Transaction } from "@/actions/transaction/read"
 
-import { secondsToMilliseconds } from 'date-fns'
-import { useState } from 'react'
+import { TransactionsEmpty } from "./empty"
+import { TransactionRow } from "./row"
 
-import { useEffectSync } from '@/hooks'
-import { findTransactions, type Transaction } from '@/libs/actions/transaction'
-
-import { EmptyComponent } from './empty'
-import { ListComponent } from './list'
-
-export function TransactionComponent({ accountId }: Readonly<{ accountId: string }>) {
-  // __STATE's
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [state, setState] = useState<IPagination<Transaction>>({
-    data: [],
-    count: 0,
-    currentPage: 1,
-    nextPage: null,
-    prevPage: null,
-    lastPage: 1
-  })
-
-  // __EFFECT's
-  useEffectSync(
-    async () => {
-      try {
-        const result = await findTransactions(accountId, { page: 1, take: 10 })
-        setState(result)
-        setIsLoading(false)
-      } catch (error) {
-        console.error(error)
-      }
-    },
-    1e3,
-    { interval: secondsToMilliseconds(10) }
-  )
-
-  // __RENDER
+export function Transactions({
+  transactions
+}: Readonly<{ transactions: Transaction[] | null }>) {
   return (
     <section
       className='scrollbar-hide max-h-[60svh] overflow-x-hidden overflow-y-auto px-8 py-1'
       aria-label='Transactions'>
-      {isLoading ? (
-        <div className='grid gap-4'>
-          <div className='bg-space-50/5 ring-space-50/10 h-20 animate-pulse rounded-xs ring-1' />
-          <div className='bg-space-50/5 ring-space-50/10 h-20 animate-pulse rounded-xs ring-1' />
+      {transactions === null ? (
+        <div className='text-space-500 font-number py-20 text-center text-lg font-light select-none'>
+          The node didn't answer, so the history can't be shown right now.
         </div>
-      ) : state.data.length > 0 ? (
+      ) : transactions.length > 0 ? (
         <div className='grid gap-4'>
-          {state.data.map((tx, index) => (
-            <ListComponent key={index} idx={index} tx={tx} />
+          {transactions.map((tx, index) => (
+            <TransactionRow key={index} idx={index} tx={tx} />
           ))}
         </div>
       ) : (
-        <EmptyComponent />
+        <TransactionsEmpty />
       )}
     </section>
   )

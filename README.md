@@ -1,17 +1,19 @@
 # Project Space - Bitcoin Wallet.
 
-#### This is a private, web-based Bitcoin wallet application built primarily with Next.js 15. It prioritizes user control and privacy, designed to run with own **Bitcoin Core full node**.
+#### This is a private, web-based Bitcoin wallet application built primarily with Next.js 16. It prioritizes user control and privacy, designed to run with own **Bitcoin Core full node**.
 
-_This project was developed through collaboration between developers and generative AI tools, including
-`Grok AI`, `Gemini Pro`, `GitHub Copilot`, `ChatGPT`, `Claude AI`, `DeepSeek AI`, and `Windsurf`. I then
-refined and optimized the code for enhanced performance._
+_This project was developed through collaboration between developers and generative AI
+tools, including `Grok AI`, `Gemini Pro`, `GitHub Copilot`, `ChatGPT`, `Claude AI`,
+`DeepSeek AI`, and `Windsurf`. I then refined and optimized the code for enhanced
+performance._
 
 ### ✨ Features
 
 Here are the initial features implemented, with more planned for future updates:
 
-- **Secure Key Management**: Generate mnemonics, build custom derivation paths, and create `xpub` descriptors
-  only for wallet accounts.
+- **Secure Key Management**: Generate mnemonics, build custom derivation paths, and create
+  `xpub` descriptors only for wallet accounts. Wallets are managed from the terminal, so a
+  seed never passes through a browser.
 - **Transaction History**: View a clear and concise history of your Bitcoin transactions.
 - **Send/Receive Functionality**: Easily send and receive Bitcoin directly from wallet.
 
@@ -23,29 +25,33 @@ Here are the initial features implemented, with more planned for future updates:
 
 ### ⚙️ Tech Stack
 
+- **Runtime:**
+  - [Bun](https://bun.sh) replaces Node.js, for both the app and the package manager.
+
 - **Framework:**
   - [Next.js 16](https://nextjs.org/docs)
-    - Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+    - Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment)
+      for more details.
 
 - **User Interface:**
-  - [HeroUI](https://www.heroui.com)
   - [Tailwind CSS](https://tailwindcss.com)
-  - [Framer Motion](https://www.framer.com/motion)
+  - [Framer Motion](https://www.framer.com/motion), with the project's own components in
+    `src/components/ui`.
 
 - **Cryptographic Libraries:**
-  - `@noble/*` (e.g., `@noble/secp256k1`, `@noble/hashes`) for cryptographic operations.
+  - `@noble/*` (e.g., `@noble/ciphers`, `@noble/hashes`) for cryptographic operations.
   - `@scure/*` (e.g., `@scure/bip39`) for BIP-39 mnemonic generation.
-  - `Argon2` for secure keys.
+  - Argon2id for secure keys, through `Bun.password` and `@noble/hashes`.
 
 - **Database:**
   - [DrizzleORM](https://orm.drizzle.team)
   - `pg` (PostgreSQL) - running on WSL2 Ubuntu for locally.
 
-- **Bitcoin Core Integration**: Connects to **Bitcoin Core Full Node** for direct interaction with the Bitcoin
-  network.
+- **Bitcoin Core Integration**: Connects to **Bitcoin Core Full Node** for direct
+  interaction with the Bitcoin network.
 
-- **Privacy**: Integrated with **Tor** for enhanced privacy when communicating with **Bitcoin Core Full
-  Node**.
+- **Privacy**: Integrated with **Tor** for enhanced privacy when communicating with
+  **Bitcoin Core Full Node**.
 
 ## 🧩 VS Code Extensions
 
@@ -57,67 +63,89 @@ Here are the initial features implemented, with more planned for future updates:
 
 ```
 src               # App entry point.
+└─ actions        # Server Actions and server-only helpers.
 └─ app            # App Router.
 └─ components     # Shared components.
 └─ constants      # Constant variable.
+└─ drizzle        # Database client, schema and migrations.
 └─ hooks          # Customs hooks.
 └─ libs           # Libraries, utilities.
+└─ stores         # Client state.
 └─ styles         # Stylesheet.
-└─ tasks          # Tasks scheduler.
 └─ types          # TypeScript decorators.
+tests             # Maintenance scripts, including wallet management.
 ```
 
 ## 🚀 Getting Started
 
-More detailed setup instructions will be provided soon. In the meantime, here's a brief overview of what
-you'll need:
+More detailed setup instructions will be provided soon. In the meantime, here's a brief
+overview of what you'll need:
 
-1. **Bitcoin Core Full Node**: Ensure you have a synced _Bitcoin Core full node_ running, preferably
-   configured to accept connections over _Tor_.
+1. **Bitcoin Core Full Node**: Ensure you have a synced _Bitcoin Core full node_ running
+   with `txindex=1`, preferably configured to accept connections over _Tor_. The app shows
+   a warning instead of the wallet until it has passed 97%.
 
-2. **PostgreSQL Database**: Set up a PostgreSQL database instance. For locally use _WSL2 Ubuntu_.
+2. **PostgreSQL Database**: Set up a PostgreSQL database instance. For locally use _WSL2
+   Ubuntu_.
 
-3. **Dependencies**: Install project dependencies using your preferred package manager, use one of them
-   `yarn`, `pnpm`, `bun`, Example using `bun`:
+3. **Dependencies**: Install [Bun](https://bun.sh) 1.4, then the project dependencies:
 
 ```bash
 bun install
 ```
 
-4. **Environment Variables**: Configure your environment variables for database connection, Bitcoin Core RPC,
-   and Tor.
+4. **Environment Variables**: Copy `.env.example` to `.env` and fill it in. The app
+   refuses to start without the database and Bitcoin Core RPC credentials.
+
+5. **HTTPS Certificate**: `start:dev` and `start:prod` both read
+   `certificates/localhost.pem` and `certificates/localhost-key.pem`. Create them once
+   with [mkcert](https://github.com/FiloSottile/mkcert). The app only serves HTTPS, and
+   only on this machine.
+
+   ```bash
+   mkdir -p certificates
+   mkcert -install
+   mkcert -key-file certificates/localhost-key.pem -cert-file certificates/localhost.pem localhost 127.0.0.1
+   ```
+
+## 👛 Wallets
+
+Wallets are created and recovered from the terminal, never through the UI. Run these from
+the repository root in a real terminal: seeds and passphrases are asked for there and are
+never arguments.
+
+```bash
+bun tests/wallet.spec.ts create --name "My Wallet"         # generate a new seed
+bun tests/wallet.spec.ts recover --name "Old Wallet"       # from an existing seed
+bun tests/wallet.spec.ts addresses --wallet my-wallet      # generate more addresses
+bun tests/wallet.spec.ts list                              # show the wallets
+```
+
+There is no sign-in: `/` shows the node, its link opens the oldest wallet, and only a send
+asks for its passphrase. Anything on this machine can read balances and history, so never
+expose the port beyond it.
+
+The passphrase is also the BIP-39 passphrase: it can't be changed, and the seed alone
+can't recover the funds without it.
 
 ## 🚀 Compiles and hot-reloads for development
 
 ```bash
-bun run start:dev --port 8338
+bun run start:dev
 ```
 
-Open [http://localhost:8338](http://localhost:8338) with your browser to see the result.
+Open [https://localhost:8338](https://localhost:8338) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically
-optimize and load Inter, a custom Google Font.
-
-### Setup pnpm (optional)
-
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
-
-```bash
-public-hoist-pattern[]=*@heroui/*
-```
-
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are
-installed correctly.
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization)
+to automatically optimize and load Ubuntu and Inconsolata, custom Google Fonts.
 
 ## 📦 Compiles and minifies for production
 
 ```bash
 bun run build
+bun run start:prod
 ```
 
-## 🛑 Disclaimer
-
-This is a private project. If you encounter any issues, please fix them yourself. Once you've successfully
-resolved something, do let me know!
+The app only opens on `localhost` and `127.0.0.1`, in development and in production. It
+listens on `127.0.0.1`, at port 8338 in development and at the port of
+`NEXT_PUBLIC_BASE_URL` in production, and refuses any other host name.

@@ -44,4 +44,28 @@ declare namespace Descriptor {
     warnings?: string[]
     error?: Record<string, string | boolean | number | object>
   }
+
+  export type List = {
+    wallet_name: string
+    descriptors: {
+      desc: string
+      timestamp: number
+      /** Whether this descriptor is the active one for its output type and chain */
+      active: boolean
+      /** Whether this is the change chain */
+      internal?: boolean
+      /** The range of indexes the wallet watches, inclusive */
+      range?: [number, number]
+      /** The next index to generate addresses from. Older nodes only have this one. */
+      next?: number
+      /** Same as `next` */
+      next_index?: number
+    }[]
+  }
+
+  export type AddressInfo = {
+    address: string
+    /** Whether the wallet's descriptors cover this address */
+    ismine: boolean
+  }
 }

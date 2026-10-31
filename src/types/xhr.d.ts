@@ -1,11 +1,4 @@
-declare type IResponse<D = any> = {
-  statusCode: number
-  message: string
-  error?: any
-  data?: D
-}
-
-declare type IPagination<T = any> = {
+declare type Pagination<T = any> = {
   data: T[]
   count: number
   currentPage: number
@@ -18,6 +11,7 @@ declare type NextParams<T = Record<string, string>> = Readonly<{
   params: Promise<T>
 }>
 
-declare type NextSearchParams<T = Record<string, string | string[] | undefined>> = Readonly<{
-  searchParams: Promise<T>
-}>
+declare type NextSearchParams<T = Record<string, string | string[] | undefined>> =
+  Readonly<{
+    searchParams: Promise<T>
+  }>

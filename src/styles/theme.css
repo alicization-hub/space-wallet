@@ -1,9 +1,23 @@
 @theme {
-  --font-display: var(--font-ubuntu), 'sans-serif';
-  --font-number: var(--font-number), 'monospace';
+  --font-display: var(--font-ubuntu), "sans-serif";
+  --font-number: var(--font-number), "monospace";
 
   --color-background: #0a0a0a;
   --color-foreground: #fafafa;
+
+  /* Inverted scale: 50 is the darkest surface and 900 the brightest text, because the app is dark-only */
+  --color-foreground-50: #18181b;
+  --color-foreground-100: #27272a;
+  --color-foreground-200: #3f3f46;
+  --color-foreground-300: #52525b;
+  --color-foreground-400: #71717a;
+  --color-foreground-500: #a1a1aa;
+  --color-foreground-600: #d4d4d8;
+  --color-foreground-700: #e4e4e7;
+  --color-foreground-800: #f4f4f5;
+  --color-foreground-900: #fafafa;
+
+  --color-overlay: #000000;
 
   --color-space-50: #fafafa;
   --color-space-100: #efefef;

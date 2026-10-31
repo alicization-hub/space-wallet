@@ -1,0 +1,4 @@
+[install]
+# Refuse packages published in the last 3 days. Compromised npm releases are usually caught within
+# that time, and this project runs next to a wallet seed.
+minimumReleaseAge = 259200

@@ -1,7 +1,7 @@
-'use client'
+"use client"
 
-import { motion } from 'framer-motion'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { m } from "framer-motion"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 
 type Star = {
   x: number
@@ -21,7 +21,6 @@ type Star = {
 }
 
 export default function TwinklingStars() {
-  // __STATE's
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animationRef = useRef<number>(-1)
 
@@ -49,12 +48,11 @@ export default function TwinklingStars() {
     })
   }, [])
 
-  // __FUNCTION's
   const createAnimate = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return void 0
 
-    const ctx = canvas.getContext('2d')
+    const ctx = canvas.getContext("2d")
     if (!ctx) return void 0
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -70,10 +68,14 @@ export default function TwinklingStars() {
 
       const zoneOffset = star.zone * Math.PI * 0.5
       const twinkleEffect =
-        Math.sin(time + zoneOffset) * 0.3 + Math.sin(time * star.twinkleSpeed + star.phase) * 0.4
+        Math.sin(time + zoneOffset) * 0.3 +
+        Math.sin(time * star.twinkleSpeed + star.phase) * 0.4
       const opacity = Math.max(
         star.opacity.min,
-        Math.min(star.opacity.max, star.opacity.base + twinkleEffect * (star.opacity.max - star.opacity.min))
+        Math.min(
+          star.opacity.max,
+          star.opacity.base + twinkleEffect * (star.opacity.max - star.opacity.min)
+        )
       )
 
       ctx.beginPath()
@@ -92,7 +94,6 @@ export default function TwinklingStars() {
     animationRef.current = requestAnimationFrame(createAnimate)
   }, [])
 
-  // __EFFECT's
   useEffect(() => {
     const canvas = canvasRef.current
     if (canvas) {
@@ -106,13 +107,12 @@ export default function TwinklingStars() {
     }
   }, [createAnimate])
 
-  // __RENDER
   return (
-    <motion.canvas
+    <m.canvas
       ref={canvasRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 1, ease: 'easeInOut' }}
+      transition={{ duration: 1, ease: "easeInOut" }}
       className='absolute inset-0 z-1 size-full'
       style={{
         maskImage: `radial-gradient(circle at top, #0a0a0a, transparent)`

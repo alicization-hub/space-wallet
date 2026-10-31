@@ -1,6 +1,6 @@
-import { filter, reduce } from 'ramda'
+import { filter, reduce } from "ramda"
 
-import { COIN, DUST_THRESHOLD } from './scure'
+import { COIN, DUST_THRESHOLD } from "./constants"
 
 /**
  * Converts Bitcoin to Satoshis
@@ -9,8 +9,12 @@ import { COIN, DUST_THRESHOLD } from './scure'
  * @returns Amount in Satoshis
  */
 export function bitcoinToSats(bitcoin: number): number {
+  if (!Number.isFinite(bitcoin)) {
+    throw new Error("Bitcoin amount must be a number.")
+  }
+
   if (bitcoin < 0) {
-    throw new Error('Bitcoin amount cannot be negative.')
+    throw new Error("Bitcoin amount cannot be negative.")
   }
 
   return Math.round(bitcoin * COIN)
@@ -24,11 +28,11 @@ export function bitcoinToSats(bitcoin: number): number {
  */
 export function satsToBitcoin(satoshis: number): number {
   if (satoshis < 0) {
-    throw new Error('Satoshis amount cannot be negative.')
+    throw new Error("Satoshis amount cannot be negative.")
   }
 
   if (!Number.isInteger(satoshis)) {
-    throw new Error('Satoshis must be a whole number.')
+    throw new Error("Satoshis must be a whole number.")
   }
 
   return satoshis / COIN
@@ -39,12 +43,12 @@ export function satsToBitcoin(satoshis: number): number {
  *
  * @param address - Address
  */
-export function inferType(address: string): Transaction.PrepareInput<'server'>['type'] {
+export function inferType(address: string): Transaction.PrepareInput<"server">["type"] {
   // Bech32 P2WPKH addresses start with "bc1q"
-  if (address.startsWith('bc1q')) return 'wpkh'
+  if (address.startsWith("bc1q")) return "wpkh"
 
   // Bech32 P2TR addresses start with "bc1p"
-  if (address.startsWith('bc1p')) return 'tr'
+  if (address.startsWith("bc1p")) return "tr"
 
   throw new Error(`Unsupported address type: ${address}`)
 }
@@ -54,7 +58,7 @@ export function inferType(address: string): Transaction.PrepareInput<'server'>['
  * - P2WPKH input ~68 vBytes (signature + pubkey)
  * - P2TR input ~57.5 vBytes (Schnorr signature only)
  * - P2WPKH output ~31 vBytes (OP_0 + 20-byte hash)
- * - P2TR output ~43 vBytes (OP_1 + 32-byte x-only pubkey)
+ * - P2TR and P2WSH outputs ~43 vBytes (a 32-byte program)
  *
  * @param inputs - Array of UTXO inputs
  * @param outputs - Array of outputs
@@ -68,28 +72,30 @@ export function estimateVBytes<T extends string>(
   const inputVBytes = inputs.reduce((acc, { address }) => {
     // P2WPKH inputs have a virtual byte size of 68
     // P2TR inputs have a virtual byte size of 57.5
-    const vBytes = inferType(address) === 'wpkh' ? 68 : 57.5
+    const vBytes = inferType(address) === "wpkh" ? 68 : 57.5
     return acc + vBytes
   }, 0)
 
   // Calculate the total virtual bytes for the outputs
   const outputVBytes = outputs.reduce((acc, { address }) => {
     // P2WPKH outputs have a virtual byte size of 31
-    // P2TR outputs have a virtual byte size of 43
-    const vBytes = inferType(address) === 'wpkh' ? 31 : 43
+    // P2TR outputs, and P2WSH ones with their longer bc1q address, have a virtual byte size of 43
+    const vBytes = inferType(address) === "wpkh" && address.length <= 42 ? 31 : 43
     return acc + vBytes
   }, 0)
 
-  // The base size of a transaction is 10 vBytes
+  // The base size of a transaction is 10.5 vBytes
   // 4 bytes = version
   // 1 byte = varint input count (if < 252)
   // 1 byte = varint output count (if < 252)
   // 4 bytes = locktime
-  return Math.ceil(10 + inputVBytes + outputVBytes)
+  // 0.5 vBytes = SegWit marker and flag
+  return Math.ceil(10.5 + inputVBytes + outputVBytes)
 }
 
 /**
- * Estimates transaction details including fee, change amount, and checks for dust and insufficient fee.
+ * Estimates transaction details including fee, change amount, and checks for dust and insufficient
+ * fee.
  *
  * @param feeRate - Fee rate in satoshis per virtual byte
  * @param inputs - Array of UTXO inputs
@@ -101,7 +107,11 @@ export function calcEstimator<T extends string>(
   outputs: Transaction.PrepareOutput[]
 ) {
   // Calculate the total amount to be sent to recipients
-  const totalAmount = reduce((acc, o) => (o.isRecipient ? acc + bitcoinToSats(o.amount) : acc), 0, outputs)
+  const totalAmount = reduce(
+    (acc, o) => (o.isRecipient ? acc + bitcoinToSats(o.amount) : acc),
+    0,
+    outputs
+  )
 
   // Calculate the total input amount available from UTXOs
   const totalInput = reduce((acc, u) => acc + bitcoinToSats(u.amount), 0, inputs)

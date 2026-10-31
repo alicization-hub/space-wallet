@@ -1,8 +1,14 @@
 #!/bin/bash
 
+# The dump holds encrypted seeds and password hashes: only the owner may read it
+umask 077
+
+# Without this, $? below is gzip's status and a failed pg_dump looks like a successful backup
+set -o pipefail
+
 # --- Load environment variables from .env file
-if [ -f ".env.prod" ]; then
-    source .env.prod
+if [ -f ".env" ]; then
+    source .env
     echo "Loaded environment variables from .env"
 else
     echo "Error: .env file not found. Please ensure it's in the same directory as backup.sh and docker-compose.yml."

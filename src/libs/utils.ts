@@ -1,25 +1,26 @@
-import { clsx, type ClassValue } from 'clsx'
-import { customAlphabet } from 'nanoid'
-import { twMerge } from 'tailwind-merge'
-
-export { addToast as toast } from '@heroui/toast'
-export const nanoId = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+import { clsx, type ClassValue } from "clsx"
+import { twMerge } from "tailwind-merge"
 
 export function cls(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function shuffle<T = any>(inputs: T[]) {
-  const result = [...inputs]
-
-  for (let index = result.length - 1; index > 0; index--) {
-    const randomIndex = Math.floor(Math.random() * (index + 1))
-    const temporary = result[index]
-    result[index] = result[randomIndex]
-    result[randomIndex] = temporary
-  }
-
-  return result
+/**
+ * Creates a URL-friendly name: trims, lowercases, hyphenates, and drops everything else.
+ *
+ * @example
+ * ```ts
+ * slugify("  My Cold Wallet! ") // "my-cold-wallet"
+ * ```
+ */
+export function slugify(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "")
 }
 
 export function randomIntBetween(min: number, max: number) {
@@ -29,29 +30,53 @@ export function randomIntBetween(min: number, max: number) {
 export function numberToSpace(value: string, i?: number) {
   switch (i) {
     case 4:
-      return value.replace(/\s/g, '').replace(/(\d)(?=(\d{4})+$)/g, '$1 ')
+      return value.replace(/\s/g, "").replace(/(\d)(?=(\d{4})+$)/g, "$1 ")
 
     default:
-      return value.replace(/\s/g, '').replace(/(\d)(?=(\d{3})+$)/g, '$1 ')
+      return value.replace(/\s/g, "").replace(/(\d)(?=(\d{3})+$)/g, "$1 ")
   }
 }
 
-export function toExplorer(type: 'addr' | 'tx', value: string) {
-  let pathTo = ''
+export function formatPercent(ratio: number, fractionDigits: number = 1) {
+  return `${(ratio * 100).toFixed(fractionDigits)}%`
+}
+
+/**
+ * Starts from the largest unit that isn't zero.
+ *
+ * @example
+ * ```ts
+ * formatUptime(180) // "3m"
+ * formatUptime(64_980) // "18h 3m"
+ * formatUptime(237_780) // "2d 18h 3m"
+ * ```
+ */
+export function formatUptime(seconds: number) {
+  const days = Math.floor(seconds / 86_400)
+  const hours = Math.floor((seconds % 86_400) / 3_600)
+  const minutes = Math.floor((seconds % 3_600) / 60)
+
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`
+  if (hours > 0) return `${hours}h ${minutes}m`
+
+  return `${minutes}m`
+}
+
+export function toExplorer(type: "addr" | "tx", value: string) {
+  let pathTo = ""
 
   switch (type) {
-    case 'addr':
+    case "addr":
       pathTo = `addresses/btc/${value}`
       break
 
-    case 'tx':
+    case "tx":
       pathTo = `transactions/btc/${value}`
       break
   }
 
   if (pathTo) {
     return `https://www.blockchain.com/explorer/${pathTo}`
-    // window.open(`https://www.blockchain.com/explorer/${pathTo}`, '_blank', 'noopener,noreferrer')
   }
 }
 
@@ -64,7 +89,7 @@ export function abbreviateNumber(input: number, fractionDigits: number = 1) {
 
   if (tier === 0) return input.toLocaleString()
 
-  const suffix = ['', 'k', 'M', 'B', 'T', 'P', 'E'][tier]
+  const suffix = ["", "k", "M", "B", "T", "P", "E"][tier]
   const scale = Math.pow(10, tier * 3)
 
   return (input / scale).toFixed(fractionDigits) + suffix
@@ -75,7 +100,7 @@ export function createPagination<T = any>(
   count: number,
   page: number,
   take: number
-): IPagination<T> {
+): Pagination<T> {
   const lastPage = Math.ceil(count / take) || 1
 
   return {
@@ -86,8 +111,4 @@ export function createPagination<T = any>(
     prevPage: page - 1 < 1 ? null : page - 1,
     lastPage
   }
-}
-
-export async function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }

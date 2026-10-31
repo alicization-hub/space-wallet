@@ -1,38 +1,46 @@
-'use client'
+"use client"
 
-import { Button, useDisclosure } from '@heroui/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from "react"
 
-import { DrawerComponent } from '@/components/ui/drawer'
-import { LabelComponent } from '@/components/ui/input-label'
+import { Button } from "@/components/ui/button"
+import { DrawerComponent } from "@/components/ui/drawer"
+import { InputLabel } from "@/components/ui/input-label"
+import { useOverlayState } from "@/hooks"
 
-import { ListComponent } from './list'
+import { UtxoList } from "./list"
 
-type UTXO = Transaction.PrepareInput<'client'>
+type UTXO = Transaction.PrepareInput<"client">
 
-export function UtxoComponent({
+export function UtxoSelection({
   error,
   onChange
 }: Readonly<{
   error?: string
   onChange?: (utxos: UTXO[]) => void
 }>) {
-  // __STATE's
   const [state, setState] = useState<UTXO[]>([])
 
-  const totalValue = useMemo(() => state.reduce((acc, { amount }) => acc + amount, 0), [state])
-  const m = useDisclosure()
+  const totalValue = useMemo(
+    () => state.reduce((acc, { amount }) => acc + amount, 0),
+    [state]
+  )
+  const drawer = useOverlayState()
 
-  // __FUNCTION's
-  const handleSelected = useCallback((utxos: UTXO[]) => {
-    setState(utxos)
-    if (onChange) onChange(utxos)
-  }, [])
+  const handleSelected = useCallback(
+    (utxos: UTXO[]) => {
+      setState(utxos)
+      if (onChange) onChange(utxos)
+    },
+    [onChange]
+  )
 
-  // __RENDER
   return (
     <div className='flex flex-col gap-2'>
-      <LabelComponent title='Coin Control' description='Manually select UTXOs to spend' required />
+      <InputLabel
+        title='Coin Control'
+        description='Manually select UTXOs to spend'
+        isRequired
+      />
 
       <div className='ring-foreground-50 flex items-start justify-between gap-4 rounded-xs p-4 ring-1'>
         {state.length > 0 ? (
@@ -46,7 +54,7 @@ export function UtxoComponent({
               {state.map((utxo) => (
                 <span
                   className='bg-foreground/10 text-foreground-800 font-number rounded-2xl px-2 py-0.5 text-sm'
-                  key={utxo.txid}>
+                  key={`${utxo.txid}:${utxo.vout}`}>
                   {`${utxo.amount.toFixed(8)} BTC`}
                 </span>
               ))}
@@ -64,17 +72,16 @@ export function UtxoComponent({
         <Button
           className='ring-foreground-50 bg-foreground-50/25 rounded-xs ring-2'
           aria-label='Select UTXOs'
-          type='button'
           size='sm'
-          onPress={m.onOpen}>
+          onClick={drawer.open}>
           <span className='text-foreground-600 text-sm capitalize'>select UTXOs</span>
         </Button>
       </div>
 
       {error && <div className='-mt-1 text-xs text-red-500'>{error}</div>}
 
-      <DrawerComponent control={m} size='md'>
-        <ListComponent selected={state} onApply={handleSelected} onClose={m.onClose} />
+      <DrawerComponent control={drawer} label='Coin control' size='md'>
+        <UtxoList selected={state} onApply={handleSelected} onClose={drawer.close} />
       </DrawerComponent>
     </div>
   )

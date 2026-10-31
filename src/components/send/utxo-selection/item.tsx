@@ -1,11 +1,12 @@
-'use client'
+"use client"
 
-import { TickIcon } from '@/components/icons'
-import { cls, toExplorer, toShort } from '@/libs/utils'
+import { CheckIcon } from "@keyline-icons/react"
 
-type UTXO = Transaction.PrepareInput<'client'>
+import { cls, toExplorer, toShort } from "@/libs/utils"
 
-export function ItemComponent({
+type UTXO = Transaction.PrepareInput<"client">
+
+export function UtxoItem({
   utxo,
   isActive,
   onClick
@@ -14,14 +15,18 @@ export function ItemComponent({
   isActive?: boolean
   onClick?: () => void
 }>) {
-  // __RENDER
   return (
     <div className='ring-foreground-50 hover:ring-foreground-100 flex items-center gap-4 rounded-xs p-2 ring-1'>
       <button
-        className={cls('cursor-pointer p-2', isActive ? 'opacity-100' : 'opacity-20 hover:opacity-40')}
+        className={cls(
+          "cursor-pointer p-2",
+          isActive ? "opacity-100" : "opacity-20 hover:opacity-40"
+        )}
         type='button'
+        aria-label='Select UTXO'
+        aria-pressed={Boolean(isActive)}
         onClick={onClick}>
-        <TickIcon className='size-6' />
+        <CheckIcon className='size-6' />
       </button>
 
       <div className='flex grow flex-col select-none'>
@@ -30,7 +35,7 @@ export function ItemComponent({
             <span className='text-foreground-500 font-number text-lg font-light'>#</span>
             <a
               className='font-number text-foreground-600 cursor-pointer text-base font-bold tracking-wide hover:underline'
-              href={toExplorer('tx', utxo.txid)}
+              href={toExplorer("tx", utxo.txid)}
               target='_blank'
               rel='noopener noreferrer'>
               {toShort(utxo.txid, 4, -6)}
@@ -41,7 +46,7 @@ export function ItemComponent({
             <span className='text-foreground-500 font-number text-lg font-light'>@</span>
             <a
               className='font-number text-foreground-600 cursor-pointer text-base font-bold tracking-wide hover:underline'
-              href={toExplorer('addr', utxo.address)}
+              href={toExplorer("addr", utxo.address)}
               target='_blank'
               rel='noopener noreferrer'>
               {toShort(utxo.address)}
@@ -50,7 +55,9 @@ export function ItemComponent({
         </div>
 
         <div className='flex items-center gap-4'>
-          <span className='font-number text-lg font-bold'>{utxo.amount.toFixed(8)} BTC</span>
+          <span className='font-number text-lg font-bold'>
+            {utxo.amount.toFixed(8)} BTC
+          </span>
 
           <div className='flex flex-col items-center gap-2'>
             {!utxo.spendable && (
@@ -61,7 +68,9 @@ export function ItemComponent({
           </div>
         </div>
 
-        <div className='text-foreground-400 text-sm'>{utxo.confirmations} confirmations</div>
+        <div className='text-foreground-400 text-sm'>
+          {utxo.confirmations} confirmations
+        </div>
       </div>
     </div>
   )
