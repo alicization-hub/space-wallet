@@ -1,5 +1,3 @@
-import "server-only"
-
 import { fromUnixTime } from "date-fns"
 
 import { RPCClient, RPCError } from "@/libs/bitcoin/rpc"

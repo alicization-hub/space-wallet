@@ -85,7 +85,7 @@ const modal = useOverlayState()
 import { toast } from "@/components/ui/toast"
 
 toast({ title: "✅ Success", description: "Copied." })
-toast({ title: "⚠️ Failed", description: message, timeout: 9e3 })
+toast({ title: "🚫 Failed", description: message, timeout: 9e3 })
 toast({ title: "✅ Sent", description: message, timeout: 0 }) // stays until closed
 toast({ description: "Sending…", promise: send(), hasCloseButton: false }) // closes when it settles
 ```

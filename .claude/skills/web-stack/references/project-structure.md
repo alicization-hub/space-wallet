@@ -35,7 +35,7 @@ src/
 ├── components/           Shared UI, one folder per feature (send/, receive/, transaction/, wallet/, navbar/)
 │   └── ui/               The framer-motion kit (ui-components.md)
 ├── constants/            Enums, metadata, fonts, wordlists; env/
-├── drizzle/              db client, schema/*.schema.ts, migrations, types
+├── drizzle/              db client, schema/*.schema.ts, relations, table-columns, migrations, types
 ├── hooks/                Shared client hooks, re-exported from hooks/index.ts
 ├── libs/
 │   ├── bitcoin/          Pure Bitcoin code: keys, addresses, descriptors, signing, RPC client, units, telemetry

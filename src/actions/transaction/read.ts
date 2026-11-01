@@ -1,9 +1,9 @@
-import "server-only"
+"use server"
 
+import { toPagination } from "@/drizzle/utils"
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { logger } from "@/libs/logger"
-import { createPagination } from "@/libs/utils"
 
 import { withAccount } from "../account"
 import { formatTransaction } from "./format"
@@ -41,10 +41,10 @@ export const readTransactions = withAccount(async (account, input: QueryValidato
     // order.
     const sorted = formatted.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 
-    return createPagination(sorted, info.txcount, query.page, query.take)
+    return toPagination(sorted, info.txcount, query.page, query.take)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    logger(`⚠️ readTransactions failed: ${message}`)
+    logger(`🚫 readTransactions failed: ${message}`)
     return null
   }
 })

@@ -70,14 +70,14 @@ export async function promptNewPassphrase() {
 
     const parsed = passphraseValidator.safeParse(passphrase)
     if (!parsed.success) {
-      logger(`⚠️ ${parsed.error.issues[0].message}`)
+      logger(`🚫 ${parsed.error.issues[0].message}`)
       continue
     }
 
     const confirmation = await commandInput("🔑 Confirm passphrase")
     if (confirmation === passphrase) return passphrase
 
-    logger("⚠️ The passphrases do not match.")
+    logger("🚫 The passphrases do not match.")
   }
 }
 

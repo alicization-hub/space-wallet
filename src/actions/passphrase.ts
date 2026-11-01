@@ -1,5 +1,3 @@
-import "server-only"
-
 import { millisecondsToMinutes, minutesToMilliseconds } from "date-fns"
 
 import { verifyPassword } from "@/libs/password"

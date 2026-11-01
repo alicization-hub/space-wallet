@@ -1,6 +1,7 @@
+import { sql } from "drizzle-orm"
 import {
   boolean,
-  index,
+  check,
   integer,
   jsonb,
   pgTable,
@@ -13,16 +14,16 @@ import {
 import { sharedTimestampColumns } from "../utils"
 import { wallets } from "./wallets.schema"
 
-export const accounts = pgTable(
+export const accounts = pgTable.withRLS(
   "accounts",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     walletId: uuid("wallet_id")
       .notNull()
       .references(() => wallets.id, { onDelete: "restrict" }),
-    label: text("label").unique().notNull(),
-    purpose: integer("purpose").notNull().$type<Purpose>().default(84),
-    index: integer("index").notNull().default(0),
+    label: text("label").notNull(),
+    purpose: integer("purpose").notNull().$type<Purpose>(),
+    index: integer("index").notNull(),
     balance: jsonb("balance").notNull().$type<Account.Balance>().default({
       confirmed: 0,
       unconfirmed: 0,
@@ -31,14 +32,17 @@ export const accounts = pgTable(
       spendable: 0
     }),
     isActive: boolean("is_active").notNull().default(true),
-    startedAt: timestamp("started_at", { precision: 6, withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
     ...sharedTimestampColumns
   },
   (self) => [
     uniqueIndex("account_label_unique_index").on(self.label),
-    index("account_purpose_index").on(self.purpose),
-    index("account_index_index").on(self.index)
+    uniqueIndex("account_wallet_path_unique_index").on(
+      self.walletId,
+      self.purpose,
+      self.index
+    ),
+    check("account_purpose_check", sql`${self.purpose} in (84, 86)`),
+    check("account_index_check", sql`${self.index} >= 0`)
   ]
-).enableRLS()
+)

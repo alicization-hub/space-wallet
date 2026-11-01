@@ -94,21 +94,3 @@ export function abbreviateNumber(input: number, fractionDigits: number = 1) {
 
   return (input / scale).toFixed(fractionDigits) + suffix
 }
-
-export function createPagination<T = any>(
-  data: T[],
-  count: number,
-  page: number,
-  take: number
-): Pagination<T> {
-  const lastPage = Math.ceil(count / take) || 1
-
-  return {
-    data,
-    count,
-    currentPage: page,
-    nextPage: page + 1 > lastPage ? null : page + 1,
-    prevPage: page - 1 < 1 ? null : page - 1,
-    lastPage
-  }
-}

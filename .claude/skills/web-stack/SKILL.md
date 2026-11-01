@@ -18,10 +18,11 @@ behind it, Postgres for the encrypted seed and address book. **It holds real mon
 Bitcoin transactions can't be undone.** Build it as if a bug costs funds, because it can.
 
 Don't fall back on generic or older-version knowledge (Next.js 13–15 patterns,
-`middleware.ts`, Zod v3, lodash, JWT libraries, HeroUI / NextUI, Node.js-only scripts).
-Every library here has breaking changes from what most training data shows. When unsure
-about a Next.js API, read `node_modules/next/dist/docs/01-app/` first. If a general skill
-says HeroUI, Hugeicons, or es-toolkit, this file wins: the project uses none of them.
+`middleware.ts`, Zod v3, Drizzle 0.x, lodash, JWT libraries, HeroUI / NextUI, Node.js-only
+scripts). Every library here has breaking changes from what most training data shows. When
+unsure about a Next.js API, read `node_modules/next/dist/docs/01-app/` first. If a general
+skill says HeroUI, Hugeicons, or es-toolkit, this file wins: the project uses none of
+them.
 
 ## Mindset: Software Engineer, not Vibe Coder
 
@@ -53,7 +54,7 @@ Structure. Scale."
 | Styling      | Tailwind CSS v4                                                        | CSS-first `@theme` in `src/styles/theme.css`, `cls()` merge                |
 | UI library   | Own kit on framer-motion 14 (`components/ui/`)                         | `m.*` under `LazyMotion strict`. See [ui](references/ui-components.md)     |
 | Icons        | `@keyline-icons/react`                                                 | Named `XIcon` imports, colour from `text-*`                                |
-| Database     | Drizzle ORM 0.45 + `pg`                                                | `relations()`, `drizzle-kit`                                               |
+| Database     | Drizzle ORM v1 RC (`1.0.0-rc.5`, pinned) + `postgres`                  | `defineRelations`, `drizzle-kit`. See [database](references/database.md)   |
 | Bitcoin      | `@scure/*`, `@noble/*`, Bitcoin Core JSON-RPC                          | The node watches through xpubs and never holds a key                       |
 | Auth         | No sign-in. A send needs the wallet's passphrase (argon2)              | See [security](references/security.md)                                     |
 | Validation   | Zod v4                                                                 | env, Server Action input, forms                                            |

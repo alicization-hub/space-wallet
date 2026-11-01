@@ -1,10 +1,17 @@
+import { parseArgs } from "util"
+
 import { fromUnixTime } from "date-fns"
 import { and, eq, inArray } from "drizzle-orm"
+import { z } from "zod"
 
 import { db, schema } from "@/drizzle"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { bitcoinToSats } from "@/libs/bitcoin/unit"
 import { logger } from "@/libs/logger"
+
+const argsValidator = z.object({
+  account: z.uuid().nonempty()
+})
 
 async function formatTransaction(rpcClient: RPCClient, tx: NodeTransaction.List) {
   const raw = await rpcClient.getTransaction(tx.txid)
@@ -88,44 +95,71 @@ async function readTransactions(rpcClient: RPCClient, page: number, take: number
   return formatted.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
 }
 
+/**
+ * Marks an account's addresses as used when they appear in its 100 newest node transactions.
+ * Older transactions aren't read, and an address is never set back to unused. Addresses from
+ * other parties, and the empty or `coinbase` placeholders, match no row of this account.
+ *
+ * It reads the node and writes the database the env points at, so the call at the bottom of
+ * this file stays commented out until it's needed.
+ *
+ * Usage (from the repo root):
+ * ```bash
+ * bun tests/tx.spec.ts --account 019a2b3c-…
+ * ```
+ */
 async function main() {
-  logger("🔍 Fetch transactions...")
   const startedAt = new Date()
-  const [walletId, accountId] = [process.env.PRIV_SUB!, process.env.PRIV_UID!]
 
-  try {
-    const rpcClient = new RPCClient()
-    await rpcClient.setWallet(accountId)
+  const { values } = parseArgs({
+    options: {
+      account: { type: "string" }
+    }
+  })
 
-    // Example: Fetch Page 1 with 10 items
-    const page = 1
-    const take = 10
-
-    logger(`📄 Fetching page ${page} (limit ${take})...`)
-    const transactions = await readTransactions(rpcClient, page, take)
-
-    const addrs = new Set(
-      transactions.flatMap((tx) => [...tx.inputs, ...tx.outputs].map((r) => r.address))
+  const parsed = argsValidator.safeParse(values)
+  if (!parsed.success) {
+    logger(
+      `🚫 Invalid arguments: ${JSON.stringify(z.flattenError(parsed.error).fieldErrors)}`
     )
-    await db
-      .update(schema.addresses)
-      .set({
-        isUsed: true
-      })
-      .where(
-        and(
-          eq(schema.addresses.accountId, accountId),
-          eq(schema.addresses.isUsed, false),
-          inArray(schema.addresses.address, Array.from(addrs))
-        )
-      )
-
-    logger(`✅ Transactions fetched successfully`, startedAt)
-  } catch (error) {
-    logger(`⚠️ An error occurred: ${error}`, startedAt)
+    return
   }
 
-  process.exit()
+  const accountId = parsed.data.account
+  const page = 1
+  const take = 100
+
+  const rpcClient = new RPCClient()
+  await rpcClient.setWallet(accountId)
+
+  logger(`🔍 Fetching transactions (page: ${page}, limit: ${take})...`)
+  const transactions = await readTransactions(rpcClient, page, take)
+
+  const addrs = new Set(
+    transactions.flatMap((tx) => [...tx.inputs, ...tx.outputs].map((r) => r.address))
+  )
+  await db
+    .update(schema.addresses)
+    .set({
+      isUsed: true
+    })
+    .where(
+      and(
+        eq(schema.addresses.accountId, accountId),
+        eq(schema.addresses.isUsed, false),
+        inArray(schema.addresses.address, Array.from(addrs))
+      )
+    )
+
+  logger(`✅ Transactions fetched successfully`, startedAt)
 }
 
-main()
+// main()
+//   .catch((error) => {
+//     logger(`🚫 An error occurred: ${error}`)
+//     process.exitCode = 1
+//   })
+//   .finally(async () => {
+//     await db.$client.end()
+//     process.exit(0)
+//   })

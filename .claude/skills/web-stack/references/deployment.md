@@ -53,7 +53,9 @@ this:
 ## Backups
 
 `backup.sh` dumps Postgres through Docker Compose into `~/pg_backups`, readable only by
-the owner. A dump holds the encrypted seeds and the password hashes. To restore a wallet
-you also need the `CIPHER_*` values from `.env` (see [security.md](security.md#env)) and
-the passphrase, so keep the env backed up separately from the dump. The written-down seed
-plus the passphrase remain the real backup.
+the owner. It expects a `docker-compose.yml` next to it, which isn't in the repo. A dump
+holds the encrypted seeds and the password hashes. To load one into a new database, follow
+[database.md](database.md#re-creating-the-database). To restore a wallet you also need the
+`CIPHER_*` values from `.env` (see [security.md](security.md#env)) and the passphrase, so
+keep the env backed up separately from the dump. The written-down seed plus the passphrase
+remain the real backup.

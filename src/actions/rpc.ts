@@ -1,4 +1,4 @@
-import "server-only"
+"use server"
 
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"

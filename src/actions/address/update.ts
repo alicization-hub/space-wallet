@@ -1,4 +1,4 @@
-import "server-only"
+"use server"
 
 import { and, eq, inArray } from "drizzle-orm"
 

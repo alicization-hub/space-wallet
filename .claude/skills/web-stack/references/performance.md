@@ -19,8 +19,8 @@ Don't judge speed from `next dev`. Measure a production build
   ([why](nextjs.md#caching)).
 - One query per list: a join or `inArray`, never a query inside `.map()`. Index what you
   filter on.
-- The `pg` pool is created once in `src/drizzle/index.ts`. Never create clients per
-  request.
+- The `postgres` client, which holds the pool, is created once in `src/drizzle/index.ts`.
+  Never create clients per request.
 
 ## Polling
 

@@ -22,6 +22,7 @@
 
 # misc
 /certificates
+/docs/*.json
 .DS_Store
 *.pem
 *.mp4

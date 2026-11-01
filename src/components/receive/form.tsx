@@ -51,7 +51,7 @@ export function ReceiveForm({
         await handleChange(result.data.address)
       } else {
         toast({
-          title: "⚠️ No address to show",
+          title: "🚫 No address to show",
           description: result.message,
           timeout: 0
         })

@@ -2,9 +2,9 @@
 
 import { QrCodeIcon } from "@keyline-icons/react"
 
+import type { PublicAddress } from "@/actions/address/read"
 import { Button } from "@/components/ui/button"
 import { Chip } from "@/components/ui/chip"
-import type { PublicAddress } from "@/drizzle/types"
 import { toShort } from "@/libs/utils"
 
 export function AddressItem({
@@ -17,7 +17,7 @@ export function AddressItem({
   onClick?: () => void
 }>) {
   return (
-    <div className='border-b-space-50/5 flex justify-between gap-4 border-b-1 pb-4'>
+    <div className='border-b-space-50/5 flex justify-between gap-4 border-b pb-4'>
       <div className='flex flex-col gap-1'>
         <div className='flex items-center gap-1'>
           <span className='text-space-400 font-number text-lg font-light'>@</span>

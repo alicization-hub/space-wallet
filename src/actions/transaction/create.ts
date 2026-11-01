@@ -3,7 +3,8 @@
 import { and, asc, eq, inArray } from "drizzle-orm"
 import { pick } from "ramda"
 
-import { addressColumns, db, schema, walletColumns } from "@/drizzle"
+import { db, schema } from "@/drizzle"
+import { addressColumns, walletColumns } from "@/drizzle/table-columns"
 import { derivationPathBuilder } from "@/libs/bitcoin/derivation"
 import { RPCClient, RPCError } from "@/libs/bitcoin/rpc"
 import { AddressBuilder, createRootKey } from "@/libs/bitcoin/scure"
@@ -157,7 +158,7 @@ export const createTransaction = withAccount(
       )
       if (expectedChange !== change.address) {
         logger(
-          `⚠️ Change address ${change.index} of ${account.id} doesn't match the keys`
+          `🚫 Change address ${change.index} of ${account.id} doesn't match the keys`
         )
         return failure(
           "The change address doesn't match this wallet's keys, so nothing was sent."
@@ -194,7 +195,7 @@ export const createTransaction = withAccount(
     } catch (error) {
       // These come from the signing code and the node, never from the seed or the passphrase
       const message = error instanceof Error ? error.message : String(error)
-      logger(`⚠️ createTransaction failed: ${message}`)
+      logger(`🚫 createTransaction failed: ${message}`)
       return failure(message)
     } finally {
       rootKey?.wipePrivateData()

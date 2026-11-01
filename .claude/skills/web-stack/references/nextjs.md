@@ -37,7 +37,7 @@ nonce, so the browser would block it. So nothing is prerendered:
 - `app/layout.tsx` awaits `connection()` and sets `export const instant = false`.
 - **A page that reads the database starts with `await connection()`, and has its own
   `export const instant = false`** (see `(wallet)/index/page.tsx`). Without the first, the
-  build would connect to the real database: `pg` isn't held back the way `fetch` is.
+  build would connect to the real database: `postgres` isn't held back the way `fetch` is.
   Without the second, `next dev` reports "encountered runtime data during prerendering".
 
 - `partialPrefetching: false` in `next.config.ts`: a prerendered App Shell has no nonce
@@ -127,7 +127,7 @@ export default async function Account({
 export const readAddresses = withAccount(async (wallet, account, input: QueryValidator) => {
   const query = queryValidator.parse(input)
   …
-  return createPagination(results, total, query.page, query.take)
+  return toPagination(results, total, query.page, query.take)
 })
 ```
 
@@ -154,7 +154,7 @@ const handleClick = useCallback(
     startTransition(async () => {
       const result = await createTransaction(accountId, values)
       if (!result.success)
-        toast({ title: "⚠️ An error occurred", description: result.message })
+        toast({ title: "🚫 An error occurred", description: result.message })
     })
   },
   [accountId]

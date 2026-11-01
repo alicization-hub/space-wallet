@@ -126,8 +126,9 @@ Rules for these scripts:
   stays in the shell history.
 - **`requireTerminal()` before printing anything secret.** It refuses pipes on both ends,
   so a seed can't land in a file through `… | tee out.log`.
-- **Print a query error's cause, not its message.** Drizzle's message lists the
-  parameters, which can include `bio` and `passkey` (`describeError` in `wallet.spec.ts`).
+- **Print a query error's `cause.message`, nothing more.** Drizzle's message repeats the
+  statement, and the driver's `cause.parameters` holds every value it was given, `bio` and
+  `passkey` included (`describeError` in `wallet.spec.ts`).
 - **The node first, then the DB** (`provisionWallet`). A wallet in the DB is always fully
   set up, and a failure leaves only an unused watch-only Core wallet, which holds no keys.
   Running again is safe.
@@ -141,7 +142,10 @@ Never test against the real database or node, apart from reading the node's stat
 this outside the repo (the scratchpad, for instance):
 
 - **Postgres**: `@electric-sql/pglite` + `@electric-sql/pglite-socket` on a spare port,
-  with `src/drizzle/migrations/*.sql` applied.
+  with `src/drizzle/migrations/*/migration.sql` applied. For `drizzle-kit` itself, write a
+  config in the scratchpad holding only the throwaway URL and run it from there, where no
+  `.env` gets loaded. To see what a change does to the real database's shape, build a copy
+  from the old schema with `git show`.
 - **Bitcoin Core**: a small `Bun.serve` answering the JSON-RPC methods `RPCClient` calls,
   recording them, and serving seeded `listunspent` / `listtransactions`. **Check its
   answers against `help <method>` on the real node**, which only reads documentation: a

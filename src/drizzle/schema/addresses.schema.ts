@@ -1,6 +1,7 @@
+import { sql } from "drizzle-orm"
 import {
   boolean,
-  index,
+  check,
   integer,
   pgTable,
   text,
@@ -11,7 +12,7 @@ import {
 import { sharedTimestampColumns } from "../utils"
 import { accounts } from "./accounts.schema"
 
-export const addresses = pgTable(
+export const addresses = pgTable.withRLS(
   "addresses",
   {
     id: uuid("id").primaryKey().defaultRandom(),
@@ -20,15 +21,15 @@ export const addresses = pgTable(
       .references(() => accounts.id, { onDelete: "restrict" }),
     label: text("label"),
     type: text("type").notNull().$type<"receive" | "change">(),
-    index: integer("index").notNull().default(0),
-    address: text("address").unique().notNull(),
+    index: integer("index").notNull(),
+    address: text("address").notNull(),
     isUsed: boolean("is_used").notNull().default(false),
     ...sharedTimestampColumns
   },
   (self) => [
-    index("address_account_index").on(self.accountId),
-    index("address_type_index").on(self.type),
-    index("address_index_index").on(self.index),
-    uniqueIndex("address_address_unique_index").on(self.address)
+    uniqueIndex("address_address_unique_index").on(self.address),
+    uniqueIndex("address_path_unique_index").on(self.accountId, self.type, self.index),
+    check("address_type_check", sql`${self.type} in ('receive', 'change')`),
+    check("address_index_check", sql`${self.index} >= 0`)
   ]
-).enableRLS()
+)

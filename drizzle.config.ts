@@ -6,6 +6,8 @@ export default defineConfig({
   dialect: "postgresql",
   schema: "./src/drizzle/schema/*.schema.ts",
   out: "./src/drizzle/migrations",
+  // v1 manages every schema by default, and `push` offers to drop the ones it doesn't know
+  schemaFilter: ["public"],
   dbCredentials: {
     url: DATABASE_URL
   },

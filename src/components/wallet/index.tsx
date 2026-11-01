@@ -1,6 +1,6 @@
+import type { PublicAccount } from "@/actions/account/read"
 import { Receive } from "@/components/receive"
 import { Send } from "@/components/send"
-import type { PublicAccount } from "@/drizzle/types"
 import { satsToBitcoin } from "@/libs/bitcoin/unit"
 import { numberToSpace } from "@/libs/utils"
 

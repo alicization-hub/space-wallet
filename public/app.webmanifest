@@ -1,6 +1,6 @@
 {
-  "name": "Project Alicization - Bitcoin Wallet",
-  "short_name": "Wallet",
+  "name": "Private Web-Based Bitcoin Wallet",
+  "short_name": "Space",
   "description": "Quickly and easily generate Lorem Ipsum placeholder text. Select the number of characters, words, sentences or paragraphs, and hit generate!",
   "start_url": ".",
   "display": "standalone",

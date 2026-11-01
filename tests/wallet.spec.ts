@@ -65,8 +65,8 @@ async function main() {
 }
 
 /**
- * A failed query's own message lists its parameters, which can include `bio` and `passkey`. Only
- * the reason is shown.
+ * A failed query's own message repeats the statement, and the error holds the values it was given,
+ * which can include `bio` and `passkey`. Only the reason is shown.
  */
 function describeError(error: unknown) {
   if (error instanceof DrizzleQueryError) {
@@ -78,7 +78,7 @@ function describeError(error: unknown) {
 
 main()
   .catch((error) => {
-    logger(`❌ ${describeError(error)}`)
+    logger(`🚫 ${describeError(error)}`)
     process.exitCode = 1
   })
   .finally(async () => {

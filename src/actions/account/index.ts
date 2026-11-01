@@ -3,7 +3,8 @@ import "server-only"
 import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 
-import { accountColumns, db, schema } from "@/drizzle"
+import { db, schema } from "@/drizzle"
+import { accountColumns } from "@/drizzle/table-columns"
 import type { Account } from "@/drizzle/types"
 
 type AccountAction<T extends unknown[], R> = (account: Account, ...args: T) => Promise<R>

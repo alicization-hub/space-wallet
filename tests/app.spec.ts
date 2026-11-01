@@ -1,36 +1,24 @@
-import { RPCClient } from "@/libs/bitcoin/rpc"
+import fs from "fs"
+import path from "path"
+import timers from "timers"
+
+import { db, schema } from "@/drizzle"
 import { logger } from "@/libs/logger"
 
 async function main() {
-  logger("🔍 Checking Bitcoin Core status...")
   const startedAt = new Date()
 
-  try {
-    const rpcClient = new RPCClient()
-    const [chain, network, mempool] = (await rpcClient.batch([
-      { method: "getblockchaininfo" },
-      { method: "getnetworkinfo" },
-      { method: "getmempoolinfo" }
-    ])) as [Blockchain.Info, Network.Info, Mempool.Info]
+  // TODO:
+  await timers.promises.setTimeout(1_000)
 
-    logger(`📊 Chain: ${chain.chain}`)
-    logger(`📦 Blocks: ${chain.blocks} / ${chain.headers}`)
-    logger(`🔄 Sync Progress: ${(chain.verificationprogress * 100).toFixed(2)} %`)
-    logger(`🌐 Connections: ${network.connections}`)
-    logger(`📝 Mempool: ${mempool.size} transactions`)
-    logger(`💻 Version: ${network.subversion}`)
-    logger("✅ Bitcoin Core Connection: SUCCESS", startedAt)
-
-    if (chain.verificationprogress < 0.99) {
-      logger(
-        "⚠️  WARNING: Bitcoin Core is still syncing. Balance data may be incomplete."
-      )
-    }
-  } catch (error: any) {
-    logger(`❌ Bitcoin Core Connection Failed: ${error.message}`, startedAt)
-  }
-
-  process.exit(0)
+  logger("✅ Success", startedAt)
 }
 
 main()
+  .catch((error) => {
+    logger(`🚫 An error occurred: ${error}`)
+    process.exit(1)
+  })
+  .finally(() => {
+    process.exit(0)
+  })

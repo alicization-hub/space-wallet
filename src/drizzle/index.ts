@@ -1,33 +1,16 @@
-import { getTableColumns } from "drizzle-orm"
-import { drizzle } from "drizzle-orm/node-postgres"
-import { Pool } from "pg"
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
 
 import { DATABASE_URL } from "@/constants/env"
 
-import * as accounts from "./schema/accounts.schema"
-import * as addresses from "./schema/addresses.schema"
-import * as relations from "./schema/relations.schema"
-import * as wallets from "./schema/wallets.schema"
+import { relations, schema } from "./relations"
 
-/**
- * @link https://node-postgres.com/apis/pool
- */
-const pool = new Pool({ connectionString: DATABASE_URL, allowExitOnIdle: true })
-
-export const schema = Object.freeze({
-  ...wallets,
-  ...accounts,
-  ...addresses,
-  ...relations
-})
+const queryClient = postgres(DATABASE_URL, { idle_timeout: 30 })
 
 export const db = drizzle({
-  client: pool,
-  schema,
-  logger: false,
-  casing: "snake_case"
+  client: queryClient,
+  relations,
+  logger: false
 })
 
-export const walletColumns = getTableColumns(schema.wallets)
-export const accountColumns = getTableColumns(schema.accounts)
-export const addressColumns = getTableColumns(schema.addresses)
+export { schema }

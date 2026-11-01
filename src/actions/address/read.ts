@@ -3,15 +3,20 @@
 import { and, asc, count, eq, SQL } from "drizzle-orm"
 import { omit } from "ramda"
 
-import { addressColumns, db, schema } from "@/drizzle"
-import { withPagination } from "@/drizzle/utils"
+import { db, schema } from "@/drizzle"
+import { addressColumns } from "@/drizzle/table-columns"
+import { toPagination, withPagination } from "@/drizzle/utils"
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { logger } from "@/libs/logger"
-import { createPagination } from "@/libs/utils"
 
 import { withAccount } from "../account"
 import { queryValidator, type QueryValidator } from "./validator.zod"
+
+export type PublicAddress = Extract<
+  Awaited<ReturnType<typeof readAddress>>,
+  { success: true }
+>["data"]
 
 const UNCONFIRMED = "The node couldn't confirm the addresses of this account."
 
@@ -33,10 +38,10 @@ async function isWatched(accountId: string, addresses: string[]) {
 
     if (infos.every(({ ismine }) => ismine)) return true
 
-    logger(`⚠️ The address book of ${accountId} doesn't match what the node watches`)
+    logger(`🚫 The address book of ${accountId} doesn't match what the node watches`)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    logger(`⚠️ Checking the addresses of ${accountId} failed: ${message}`)
+    logger(`🚫 Checking the addresses of ${accountId} failed: ${message}`)
   }
 
   return false
@@ -116,6 +121,6 @@ export const readAddresses = withAccount(async (account, input: QueryValidator) 
 
   return {
     success: true as const,
-    data: createPagination(results, total, query.page, query.take)
+    data: toPagination(results, total, query.page, query.take)
   }
 })

@@ -50,8 +50,8 @@ export async function createWallet(options: OptionsValidator) {
   const phrase = Mnemonic.generate(options.words as MnemonicLength)
   const words = phrase.split(" ")
 
-  logger("⚠️ Write these words down, in order, and keep them offline.")
-  logger("⚠️ Anyone with them can take the funds. They will not be shown again.")
+  logger("🚫 Write these words down, in order, and keep them offline.")
+  logger("🚫 Anyone with them can take the funds. They will not be shown again.")
   console.info(
     `\n${words.map((word, index) => `${String(index + 1).padStart(2)}. ${word}`).join("\n")}\n`
   )
@@ -70,8 +70,8 @@ export async function createWallet(options: OptionsValidator) {
 
   clearScreen()
 
-  logger("⚠️ The passphrase is part of the key (BIP-39), not only a login.")
-  logger("⚠️ It can't be changed, and the seed alone can't recover the funds without it.")
+  logger("🚫 The passphrase is part of the key (BIP-39), not only a login.")
+  logger("🚫 It can't be changed, and the seed alone can't recover the funds without it.")
 
   const passphrase = await promptNewPassphrase()
 

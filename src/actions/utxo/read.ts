@@ -32,7 +32,7 @@ export const readUTXOs = withAccount(async (account) => {
     return { success: true as const, data: await readCachedUTXOs(account.id) }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    logger(`⚠️ readUTXOs failed: ${message}`)
+    logger(`🚫 readUTXOs failed: ${message}`)
 
     return {
       success: false as const,

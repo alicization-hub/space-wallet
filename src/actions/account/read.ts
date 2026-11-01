@@ -1,10 +1,16 @@
-import "server-only"
+"use server"
 
 import { and, asc, eq } from "drizzle-orm"
 import { omit, pick } from "ramda"
 import { z } from "zod"
 
-import { accountColumns, db, schema, walletColumns } from "@/drizzle"
+import { db, schema } from "@/drizzle"
+import { accountColumns, walletColumns } from "@/drizzle/table-columns"
+
+export type PublicAccount = Omit<
+  NonNullable<Awaited<ReturnType<typeof readAccount>>>,
+  "wallet"
+>
 
 /**
  * Before Core 30's `getwalletinfo` lost its balances, a sync could store `null` for them. The page has

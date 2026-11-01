@@ -10,6 +10,7 @@ import { logger } from "@/libs/logger"
 async function readBalance(accountId: string) {
   const rpcClient = new RPCClient()
   await rpcClient.setWallet(accountId)
+  await setTimeout(2_000)
   const [balances, utxos] = (await rpcClient.batch([
     {
       method: "getbalances"
@@ -34,27 +35,28 @@ async function readBalance(accountId: string) {
 async function main() {
   const startedAt = new Date()
 
-  try {
-    const accounts = await db.select().from(schema.accounts)
+  const accountIds = await db.select({ id: schema.accounts.id }).from(schema.accounts)
+  for await (const account of accountIds) {
+    const balance = await readBalance(account.id)
+    await db
+      .update(schema.accounts)
+      .set({
+        balance
+      })
+      .where(eq(schema.accounts.id, account.id))
 
-    for await (const account of accounts) {
-      const balance = await readBalance(account.id)
-      await db
-        .update(schema.accounts)
-        .set({
-          balance
-        })
-        .where(eq(schema.accounts.id, account.id))
-
-      await setTimeout(2e3)
-    }
-
-    logger(`✅ The balance has been successfully updated.`, startedAt)
-  } catch (error) {
-    logger(`⚠️ An error occurred: ${error}`, startedAt)
+    await setTimeout(2e3)
   }
 
-  process.exit()
+  logger(`✅ The balance has been successfully updated.`, startedAt)
 }
 
-main()
+// main()
+//   .catch((error) => {
+//     logger(`🚫 An error occurred: ${error}`)
+//     process.exitCode = 1
+//   })
+//   .finally(async () => {
+//     await db.$client.end()
+//     process.exit(0)
+//   })

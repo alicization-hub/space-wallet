@@ -4,9 +4,9 @@ Version-specific usage for everything except Next.js ([nextjs.md](nextjs.md)), D
 ([database.md](database.md)), and UI components ([ui-components.md](ui-components.md)).
 
 Install with `bun add <pkg>`. Ask before adding a dependency: in a wallet, every package
-is code that runs next to the seed. `bun audit` must stay at zero after a change. Crypto
-packages and Next.js are pinned to exact versions on purpose: upgrade them deliberately,
-one at a time.
+is code that runs next to the seed. `bun audit` must stay at zero after a change. Drizzle,
+crypto packages and Next.js are pinned to exact versions on purpose: upgrade them
+deliberately, one at a time.
 
 ## Bun
 

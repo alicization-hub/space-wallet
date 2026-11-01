@@ -87,7 +87,7 @@ export function SendConfirm({
         } else if (result.isUnknown) {
           // It stays up and the form closes, because sending again from other coins could pay twice
           toast({
-            title: "⚠️ It may have gone out",
+            title: "🚫 It may have gone out",
             description: result.message,
             timeout: 0
           })
@@ -98,7 +98,7 @@ export function SendConfirm({
         } else {
           toast({
             timeout: 9e3,
-            title: "⚠️ An error occurred",
+            title: "🚫 An error occurred",
             description: result.message
           })
         }

@@ -60,7 +60,7 @@ export async function readFees() {
     return { success: true as const, data: await readRecommendedFees() }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    logger(`⚠️ readFees failed: ${message}`)
+    logger(`🚫 readFees failed: ${message}`)
 
     return {
       success: false as const,

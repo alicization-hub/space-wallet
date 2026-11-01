@@ -36,7 +36,7 @@ export function Snippet({
       timeoutRef.current = setTimeout(() => setIsCopied(false), COPIED_FOR)
     } catch {
       toast({
-        title: "⚠️ Copy failed",
+        title: "🚫 Copy failed",
         description: "The browser blocked the clipboard."
       })
     }

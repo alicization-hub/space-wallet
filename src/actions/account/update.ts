@@ -57,7 +57,7 @@ export const syncAccount = withAccount(async (account) => {
     if (transactions) await markAddressesUsed(account.id, transactions.data)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    logger(`⚠️ syncAccount failed: ${message}`)
+    logger(`🚫 syncAccount failed: ${message}`)
   }
 
   refresh()
