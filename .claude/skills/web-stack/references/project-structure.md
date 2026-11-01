@@ -32,7 +32,7 @@ src/
 │   ├── (dashboard)/      `/`: the node dashboard. It must render while the node syncs
 │   ├── (wallet)/         The wallet ([uuid]/) and index/, which opens the oldest wallet or says there is none, behind the node warning
 │   └── layout.tsx, error.tsx, not-found.tsx    The root layout holds the navbar and the page column
-├── components/           Shared UI, one folder per feature (send/, receive/, transaction/, wallet/, navbar/)
+├── components/           Shared UI, one folder per feature (send/, receive/, transaction/, wallet/, layout/)
 │   └── ui/               The framer-motion kit (ui-components.md)
 ├── constants/            Enums, metadata, fonts, wordlists; env/
 ├── drizzle/              db client, schema/*.schema.ts, relations, table-columns, migrations, types
@@ -48,23 +48,14 @@ src/
 
 ## `actions/`
 
-Shared code, one folder per domain. What decides the file is who may call the code:
+Shared code, one folder per domain. What decides a file's directive is who may call the
+code. For example:
 
-| File                        | Directive      | What it is                                                   |
-| --------------------------- | -------------- | ------------------------------------------------------------ |
-| `account/index.ts`          | `server-only`  | `withAccount`, `readActiveAccount`                           |
-| `passphrase.ts`             | `server-only`  | `checkSend`: the rate-limited passphrase check               |
-| `rpc.ts`                    | `server-only`  | `readNodeStatus`, `readNodeInfo`                             |
-| `fee.ts`                    | `"use server"` | `readFees`                                                   |
-| `address/read.ts`           | `"use server"` | `readAddress`, `readAddresses`                               |
-| `utxo/read.ts`              | `"use server"` | `readUTXOs`                                                  |
-| `transaction/read.ts`       | `server-only`  | `readTransactions`, guarded, for the page and the sync       |
-| `transaction/create.ts`     | `"use server"` | `createTransaction`                                          |
-| `transaction/format.ts`     | `server-only`  | `formatTransaction`                                          |
-| `account/read.ts`           | `server-only`  | `readAccount`, `readAccounts`, `readFirstAccount`, for pages |
-| `account/update.ts`         | `"use server"` | `syncAccount`: keeps an open page up to date                 |
-| `address/update.ts`         | `server-only`  | `markAddressesUsed`: unguarded, callers check first          |
-| `<domain>/validator.zod.ts` | none           | Zod schemas, safe to import from client forms                |
+| File                        | Directive      | Who calls it                                          |
+| --------------------------- | -------------- | ----------------------------------------------------- |
+| `rpc.ts`                    | `server-only`  | Server code only: the layouts read the node's status  |
+| `fee.ts`                    | `"use server"` | A client component: the send form reads the fee rates |
+| `<domain>/validator.zod.ts` | none           | Both: forms and actions share its Zod schemas         |
 
 **A `"use server"` file makes every export a public URL.** If only server code calls a
 function, the file gets `import "server-only"` instead. Never add `"use server"` to a
@@ -79,7 +70,7 @@ Every page folder follows the same shape. Create only the files you need, but us
 names:
 
 ```
-app/(wallet)/<route>/
+app/<route>/
 ├── page.tsx              Server Component (plain SSR). Parses params, loads data with Promise.all, composes
 ├── layout.tsx            (optional) shared chrome for nested segments
 ├── actions/              Route-local Server Actions and cached readers
@@ -159,7 +150,7 @@ exceptions are names the framework fixes (`page.tsx`, `layout.tsx`, `route.ts`,
 PascalCase (`useEffectSync`, `NumberInput`).
 
 A folder's main component is `index.tsx` (`components/send/index.tsx`,
-`components/ui/modal/index.tsx`).
+`components/layout/navbar/index.tsx`).
 
 ## Barrels
 

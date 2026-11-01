@@ -138,7 +138,7 @@ Rules for these scripts:
 ## Testing without real funds
 
 Never test against the real database or node, apart from reading the node's status as
-`tests/app.spec.ts` does. There's no test runner, so to check a change end to end, build
+`tests/node.spec.ts` does. There's no test runner, so to check a change end to end, build
 this outside the repo (the scratchpad, for instance):
 
 - **Postgres**: `@electric-sql/pglite` + `@electric-sql/pglite-socket` on a spare port,

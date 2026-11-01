@@ -1,7 +1,7 @@
-"use server"
+import "server-only"
 
 import { and, asc, eq } from "drizzle-orm"
-import { omit, pick } from "ramda"
+import { omit, pick } from "es-toolkit"
 import { z } from "zod"
 
 import { db, schema } from "@/drizzle"
@@ -39,8 +39,8 @@ export async function readAccount(accountId: string) {
 
   const [account] = await db
     .select({
-      ...omit(["walletId"], accountColumns),
-      wallet: omit(["bio", "passkey"], walletColumns)
+      ...omit(accountColumns, ["walletId"]),
+      wallet: omit(walletColumns, ["bio", "passkey"])
     })
     .from(schema.accounts)
     .innerJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
@@ -60,7 +60,7 @@ export async function readAccount(accountId: string) {
  */
 export async function readAccounts(walletId: string) {
   return db
-    .select(pick(["id", "purpose", "index"], accountColumns))
+    .select(pick(accountColumns, ["id", "purpose", "index"]))
     .from(schema.accounts)
     .where(
       and(eq(schema.accounts.walletId, walletId), eq(schema.accounts.isActive, true))
@@ -75,7 +75,7 @@ export async function readAccounts(walletId: string) {
  */
 export async function readFirstAccount() {
   const [account] = await db
-    .select(pick(["id"], accountColumns))
+    .select(pick(accountColumns, ["id"]))
     .from(schema.accounts)
     .innerJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
     .where(and(eq(schema.accounts.isActive, true), eq(schema.wallets.isActive, true)))

@@ -94,14 +94,14 @@ between requests on the server. Follow `src/stores/main/`:
 - Keep classes as static strings, not `` `bg-${color}` ``: Tailwind only generates what it
   finds.
 
-## ramda
+## es-toolkit
 
-Arguments go keys first, then the object, the opposite of lodash:
+Arguments go object first, then the keys:
 
 ```ts
-import { omit, pick } from "ramda"
+import { omit, pick } from "es-toolkit"
 
-db.select(omit(["bio", "passkey"], walletColumns))
+db.select(omit(walletColumns, ["bio", "passkey"]))
 ```
 
 ## Crypto libraries
@@ -128,4 +128,4 @@ in the RPC client.
 ## nuqs
 
 `src/libs/validator.nuqs.ts` parses search params on the server. `NuqsAdapter` isn't
-mounted, so mount it in `providers.tsx` before using `useQueryState`.
+mounted, so mount it in `layout/provider.tsx` before using `useQueryState`.

@@ -1,7 +1,7 @@
 "use server"
 
+import { pick } from "es-toolkit"
 import { cacheLife, cacheTag } from "next/cache"
-import { pick } from "ramda"
 
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"
@@ -23,7 +23,7 @@ async function readCachedUTXOs(accountId: string) {
 
   const utxos = await rpcClient.listUnspent()
   return utxos.map((utxo) =>
-    pick(["txid", "vout", "address", "amount", "confirmations", "spendable"], utxo)
+    pick(utxo, ["txid", "vout", "address", "amount", "confirmations", "spendable"])
   )
 }
 

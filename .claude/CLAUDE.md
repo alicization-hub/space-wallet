@@ -13,8 +13,8 @@ Load the project `web-stack` skill (`.claude/skills/web-stack/SKILL.md`) before 
 editing, reviewing, or formatting any code, or running install, database, or wallet
 commands. It covers the stack, folder layout, coding style, the framer-motion UI kit, auth
 and security rules, and the Bitcoin wallet, with one reference file per topic under
-`references/`. Where a general skill or your own habits say HeroUI, Hugeicons, or
-es-toolkit, this project's skill wins.
+`references/`. Where a general skill or your own habits say HeroUI or Hugeicons, this
+project's skill wins.
 
 ## Project
 
@@ -38,7 +38,7 @@ auth, signing, or key handling as safety-critical.
   Core unless the owner asks. Point the env at throwaway services first: see
   [testing](skills/web-stack/references/bitcoin-wallet.md#testing-without-real-funds). The
   one thing the owner allows on the real node is reading its status, as
-  `tests/app.spec.ts` does.
+  `tests/node.spec.ts` does.
 - Never ask for, print, or log a seed phrase or a passphrase.
 
 ## Notes

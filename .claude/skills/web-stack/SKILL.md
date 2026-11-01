@@ -21,8 +21,7 @@ Don't fall back on generic or older-version knowledge (Next.js 13–15 patterns,
 `middleware.ts`, Zod v3, Drizzle 0.x, lodash, JWT libraries, HeroUI / NextUI, Node.js-only
 scripts). Every library here has breaking changes from what most training data shows. When
 unsure about a Next.js API, read `node_modules/next/dist/docs/01-app/` first. If a general
-skill says HeroUI, Hugeicons, or es-toolkit, this file wins: the project uses none of
-them.
+skill says HeroUI or Hugeicons, this file wins: the project uses neither.
 
 ## Mindset: Software Engineer, not Vibe Coder
 
@@ -60,7 +59,7 @@ Structure. Scale."
 | Validation   | Zod v4                                                                 | env, Server Action input, forms                                            |
 | Forms        | react-hook-form v7 + `@hookform/resolvers`                             | Zod resolver, shares the action's validator                                |
 | Client state | zustand v5                                                             | `src/stores/<name>/`, display data only                                    |
-| Utilities    | ramda, date-fns v4, uuid, clsx, tailwind-merge                         | `omit(keys, object)`: ramda takes the keys first                           |
+| Utilities    | es-toolkit, date-fns v4, uuid, clsx, tailwind-merge                    | `omit(object, keys)`: es-toolkit takes the object first                    |
 | Formatting   | Prettier 3.9 + `@ianvs/prettier-plugin-sort-imports` + tailwind plugin | `prettier.config.mjs` is the source of truth                               |
 
 ## Reference files — read the one that matches the task
@@ -71,7 +70,7 @@ Structure. Scale."
 | Writing or reviewing any code (naming, comments, ordering, types)        | [coding-style.md](references/coding-style.md)           |
 | Pages, layouts, caching, Server Actions, Route Handlers, `proxy`         | [nextjs.md](references/nextjs.md)                       |
 | Buttons, modals, drawers, toasts, any UI component, theme tokens, motion | [ui-components.md](references/ui-components.md)         |
-| Zod, react-hook-form, zustand, Tailwind, ramda, crypto library imports   | [libraries.md](references/libraries.md)                 |
+| Zod, react-hook-form, zustand, Tailwind, es-toolkit, crypto imports      | [libraries.md](references/libraries.md)                 |
 | Tables, queries, migrations                                              | [database.md](references/database.md)                   |
 | Guards, rate limits, CSP, other sites, env, anything security-related    | [security.md](references/security.md)                   |
 | Keys, addresses, descriptors, sending, RPC, the wallet scripts, testing  | [bitcoin-wallet.md](references/bitcoin-wallet.md)       |
@@ -95,7 +94,7 @@ Structure. Scale."
   [database.md](references/database.md).
 - `bun tests/wallet.spec.ts <create|recover|addresses|list>` — manage wallets. See
   [bitcoin-wallet.md](references/bitcoin-wallet.md#wallet-scripts).
-- `bun tests/app.spec.ts` — check the connection to Bitcoin Core.
+- `bun tests/node.spec.ts` — check the connection to Bitcoin Core.
 - `bun tests/balance.spec.ts` — copy every account's balance from the node to the DB.
 
 ## Project notes

@@ -1,7 +1,7 @@
 "use server"
 
 import { and, asc, count, eq, SQL } from "drizzle-orm"
-import { omit } from "ramda"
+import { omit } from "es-toolkit"
 
 import { db, schema } from "@/drizzle"
 import { addressColumns } from "@/drizzle/table-columns"
@@ -49,7 +49,7 @@ async function isWatched(accountId: string, addresses: string[]) {
 
 export const readAddress = withAccount(async (account) => {
   const [address] = await db
-    .select(omit(["accountId"], addressColumns))
+    .select(omit(addressColumns, ["accountId"]))
     .from(schema.addresses)
     .where(
       and(
@@ -91,7 +91,7 @@ export const readAddresses = withAccount(async (account, input: QueryValidator) 
   const { total, results } = await db.transaction(async (tx) => {
     const queryBuilder = tx
       .select({
-        ...omit(["accountId"], addressColumns)
+        ...omit(addressColumns, ["accountId"])
       })
       .from(schema.addresses)
       .where(and(...filters))

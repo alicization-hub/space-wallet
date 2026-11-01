@@ -7,7 +7,7 @@ add Radix, Base UI, or shadcn, and don't write HeroUI's API (`onPress`, `isDisab
 
 ## How the pieces fit
 
-- `components/providers.tsx` mounts `<LazyMotion features={…} strict>` and
+- `components/layout/provider.tsx` mounts `<LazyMotion features={…} strict>` and
   `<MotionConfig reducedMotion='user'>` around the whole app.
 - **Always use `m.*`, never `motion.*`.** `strict` throws on `motion.*`, which would pull
   the whole animation bundle into first load. Import as
@@ -23,10 +23,10 @@ add Radix, Base UI, or shadcn, and don't write HeroUI's API (`onPress`, `isDisab
 | File               | Exports                                       | Notes                                                           |
 | ------------------ | --------------------------------------------- | --------------------------------------------------------------- |
 | `button.tsx`       | `Button`                                      | See below                                                       |
-| `modal/index.tsx`  | `ModalComponent`                              | `control`, `label`, `size`, `placement`                         |
-| `drawer/index.tsx` | `DrawerComponent`, `DrawerHeader/Body/Footer` | Right-side panel. `control`, `label`, `size`                    |
+| `modal.tsx`        | `ModalComponent`                              | `control`, `label`, `size`, `placement`                         |
+| `drawer.tsx`       | `DrawerComponent`, `DrawerHeader/Body/Footer` | Right-side panel. `control`, `label`, `size`                    |
 | `overlay.tsx`      | `Overlay`                                     | What both share. Use it directly only for a new kind of overlay |
-| `toast.tsx`        | `toast()`, `ToastViewport`                    | The viewport is mounted once in `providers.tsx`                 |
+| `toast.tsx`        | `toast()`, `ToastViewport`                    | The viewport is mounted once in `layout/provider.tsx`           |
 | `snippet.tsx`      | `Snippet`                                     | A value with a copy button                                      |
 | `spinner.tsx`      | `Spinner`                                     | Dots. `size`: `sm`, `md`, `lg`                                  |
 | `chip.tsx`         | `Chip`                                        | `color`: `success`, `danger`, `secondary`                       |
@@ -127,17 +127,6 @@ Tokens live in `src/styles/theme.css`. The app is dark-only, with no `dark:` var
 - Corners are `rounded-xs` nearly everywhere.
 - The CSP blocks inline scripts but allows inline styles, so `style={{…}}` and
   framer-motion work.
-
-### The dashboard's look
-
-`/` has the wallet's look: `.mirror` cards, `rounded-xs`, Ubuntu and Inconsolata, the
-stars and the glow, amber for fees, the shared navbar, and the `max-w-space` column.
-
-- `docs/design/dashboard/` was its first design. The owner dropped that look on 2026-10-31
-  (sharp corners, Geist and JetBrains Mono, its own colours), so don't bring its tokens
-  back.
-- Its pieces live in `app/(dashboard)/components/`. Promote one if a second route needs
-  it.
 
 ## Screen width
 

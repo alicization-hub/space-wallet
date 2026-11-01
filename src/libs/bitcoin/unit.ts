@@ -1,5 +1,3 @@
-import { filter, reduce } from "ramda"
-
 import { COIN, DUST_THRESHOLD } from "./constants"
 
 /**
@@ -107,18 +105,17 @@ export function calcEstimator<T extends string>(
   outputs: Transaction.PrepareOutput[]
 ) {
   // Calculate the total amount to be sent to recipients
-  const totalAmount = reduce(
+  const totalAmount = outputs.reduce(
     (acc, o) => (o.isRecipient ? acc + bitcoinToSats(o.amount) : acc),
-    0,
-    outputs
+    0
   )
 
   // Calculate the total input amount available from UTXOs
-  const totalInput = reduce((acc, u) => acc + bitcoinToSats(u.amount), 0, inputs)
+  const totalInput = inputs.reduce((acc, u) => acc + bitcoinToSats(u.amount), 0)
 
   // If the remaining balance is less than or equal to the dust threshold, remove change outputs
   if (totalInput - totalAmount <= DUST_THRESHOLD) {
-    outputs = filter((o) => !o.isChange, outputs)
+    outputs = outputs.filter((o) => !o.isChange)
   }
 
   // Calculate the estimated total virtual bytes of the transaction

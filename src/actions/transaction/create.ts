@@ -1,7 +1,7 @@
 "use server"
 
 import { and, asc, eq, inArray } from "drizzle-orm"
-import { pick } from "ramda"
+import { pick } from "es-toolkit"
 
 import { db, schema } from "@/drizzle"
 import { addressColumns, walletColumns } from "@/drizzle/table-columns"
@@ -40,7 +40,7 @@ export const createTransaction = withAccount(
     const data = parsed.data
 
     const [wallet] = await db
-      .select(pick(["slug", "bio", "passkey"], walletColumns))
+      .select(pick(walletColumns, ["slug", "bio", "passkey"]))
       .from(schema.wallets)
       .where(eq(schema.wallets.id, account.walletId))
 
@@ -52,7 +52,7 @@ export const createTransaction = withAccount(
     // The change address, and the selected addresses as far as this account owns them
     const [addresses, change] = await db.transaction(async (tx) => {
       const addresses = await tx
-        .select(pick(["address", "index", "type"], addressColumns))
+        .select(pick(addressColumns, ["address", "index", "type"]))
         .from(schema.addresses)
         .where(
           and(
@@ -65,7 +65,7 @@ export const createTransaction = withAccount(
         )
 
       const [change] = await tx
-        .select(pick(["address", "index"], addressColumns))
+        .select(pick(addressColumns, ["address", "index"]))
         .from(schema.addresses)
         .where(
           and(
@@ -122,7 +122,7 @@ export const createTransaction = withAccount(
           .build()
 
         inputs.push({
-          ...pick(["txid", "vout", "address", "amount", "scriptPubKey"], utxo),
+          ...pick(utxo, ["txid", "vout", "address", "amount", "scriptPubKey"]),
           type: account.purpose === 84 ? "wpkh" : "tr",
           derivationPath
         })

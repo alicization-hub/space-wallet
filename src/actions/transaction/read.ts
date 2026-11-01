@@ -1,4 +1,4 @@
-"use server"
+import "server-only"
 
 import { toPagination } from "@/drizzle/utils"
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"

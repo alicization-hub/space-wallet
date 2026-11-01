@@ -87,8 +87,9 @@ included. Don't set `paramsInErrors` in `drizzle()`, which would put them in the
 
 ## Queries
 
-- Reference tables as `schema.wallets`, and pick columns with ramda over the sets exported
-  from `@/drizzle/table-columns` (`walletColumns`, `accountColumns`, `addressColumns`).
+- Reference tables as `schema.wallets`, and pick columns with es-toolkit over the sets
+  exported from `@/drizzle/table-columns` (`walletColumns`, `accountColumns`,
+  `addressColumns`).
 - Always scope by the owner: `eq(schema.accounts.walletId, wallet.id)`. An ID from the
   client is never enough on its own.
 - `withPagination(queryBuilder, page, take)` for lists.

@@ -2,7 +2,7 @@
 
 Everything runs on Bun, on the owner's own machine, next to a Bitcoin Core node and
 Postgres. The setup guide for WSL, Docker (for the services), Tor, and the node is
-`docs/SETUP.md`. The app itself doesn't run in a container.
+`docs/setup-guide.md`. The app itself doesn't run in a container.
 
 **The app only opens on `localhost` and `127.0.0.1`, in dev and in prod.** Don't add a
 setting to open it to a network, and don't bind it to anything else. Two things enforce
