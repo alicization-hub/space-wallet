@@ -15,6 +15,12 @@ else
     exit 1
 fi
 
+# The web server's role in DB_USER can't read the seeds, so a dump as it would fail
+if [ -z "$DB_OWNER" ]; then
+    echo "Error: DB_OWNER is missing from .env."
+    exit 1
+fi
+
 echo "Starting PostgreSQL backup..."
 
 DOCKER_SERVICE="postgres"
@@ -37,7 +43,7 @@ fi
 
 echo "Dumping and compressing database '${DB_NAME}' from service '${DOCKER_SERVICE}' to ${BACKUP_FILE}..."
 
-docker compose exec -T "$DOCKER_SERVICE" pg_dump -U "$DB_USER" -d "$DB_NAME" | gzip > "$BACKUP_FILE"
+docker compose exec -T "$DOCKER_SERVICE" pg_dump -U "$DB_OWNER" -d "$DB_NAME" | gzip > "$BACKUP_FILE"
 
 # Check the exit status of the pg_dump command
 if [ $? -eq 0 ]; then

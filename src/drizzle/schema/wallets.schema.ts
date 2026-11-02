@@ -1,6 +1,8 @@
-import { boolean, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+import { boolean, pgPolicy, pgTable, text, uniqueIndex, uuid } from "drizzle-orm/pg-core"
 
 import { sharedTimestampColumns } from "../utils"
+import { webRole } from "./roles.schema"
 
 export const wallets = pgTable.withRLS(
   "wallets",
@@ -15,6 +17,7 @@ export const wallets = pgTable.withRLS(
   },
   (self) => [
     uniqueIndex("wallet_slug_unique_index").on(self.slug),
-    uniqueIndex("wallet_name_unique_index").on(self.name)
+    uniqueIndex("wallet_name_unique_index").on(self.name),
+    pgPolicy("wallet_web_read", { for: "select", to: webRole, using: sql`true` })
   ]
 )

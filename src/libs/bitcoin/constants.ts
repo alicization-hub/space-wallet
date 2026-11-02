@@ -5,9 +5,14 @@
 
 /**
  * How long a page or the sync waits for the node, in milliseconds. Server Actions run one at a time,
- * so a sync stuck on a node that hung would hold up a send behind it.
+ * so a sync stuck on a node that hung would hold up everything behind it.
  */
 export const READ_TIMEOUT = 10_000
+
+/**
+ * How far the node must have verified the chain before its coins and balances can be believed.
+ */
+export const SYNCED_PROGRESS = 0.97
 
 /**
  * The amount of satoshis in one BTC.
@@ -27,8 +32,8 @@ export const GAP_LIMIT = 23
 export const DUST_THRESHOLD = 546
 
 /**
- * Highest fee rate a transaction may ask for, in sat/vB. It's far above the rates `readFees` offers,
- * so it only stops a bad value from burning funds.
+ * Highest fee rate a transaction may ask for, in sat/vB. It's far above what the node estimates, so
+ * it only stops a bad value from burning funds.
  */
 export const MAX_FEE_RATE = 500
 

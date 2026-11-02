@@ -235,6 +235,15 @@ declare namespace Network {
 }
 
 declare namespace Mempool {
+  export type FeeEstimate = {
+    /** Estimated fee rate in BTC/kvB, only when the node has enough data */
+    feerate?: number
+    /** Why there is no estimate */
+    errors?: string[]
+    /** The block number where the estimate was found */
+    blocks: number
+  }
+
   export type Info = {
     /** True if the mempool is fully loaded */
     loaded: boolean

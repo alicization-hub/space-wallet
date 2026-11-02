@@ -23,8 +23,8 @@ this:
   serve HTTPS.
 - `localhost` opens because it resolves to `127.0.0.1`. `[::1]` doesn't: nothing listens
   there.
-- HTTPS is required, not optional: the passphrase goes through it, and a site that rebinds
-  its name to this machine fails on the certificate.
+- HTTPS is required, not optional: a site that rebinds its name to this machine fails on
+  the certificate.
 - The certificate must list both names, or the browser warns on the missing one. Create it
   once:
 
@@ -44,17 +44,19 @@ this:
 - Don't hard-code `localhost` or an IP in links or API calls. Use relative URLs, so both
   names keep working.
 - **The loopback is the only lock on reading.** There is no sign-in, so a tunnel, a port
-  forward, or a bind to another address would publish the wallet's whole history. A send
-  still needs the passphrase. See [security.md](security.md#what-has-no-lock).
-- Postgres and Bitcoin Core RPC stay on loopback or a private network. RPC credentials go
-  in plain Basic auth over `RPC_PROTOCOL`, so use `https` if the node is on another
-  machine.
+  forward, or a bind to another address would publish the wallet's whole history. No send
+  can start from the app. See [security.md](security.md#what-has-no-lock).
+- Postgres and Bitcoin Core RPC stay on loopback or a private network. Publish Postgres as
+  `127.0.0.1:5432:5432`. RPC credentials go in plain Basic auth over `RPC_PROTOCOL`, so
+  use `https` if the node is on another machine.
+- `.env` holds only the web server's credentials ([security.md](security.md#credentials)).
 
 ## Backups
 
 `backup.sh` dumps Postgres through Docker Compose into `~/pg_backups`, readable only by
-the owner. It expects a `docker-compose.yml` next to it, which isn't in the repo. A dump
-holds the encrypted seeds and the password hashes. To load one into a new database, follow
+the owner. It logs in as `DB_OWNER`, because `web_space` can't read the seeds. It expects
+a `docker-compose.yml` next to it, which isn't in the repo. A dump holds the encrypted
+seeds and the password hashes. To load one into a new database, follow
 [database.md](database.md#re-creating-the-database). To restore a wallet you also need the
 `CIPHER_*` values from `.env` (see [security.md](security.md#env)) and the passphrase, so
 keep the env backed up separately from the dump. The written-down seed plus the passphrase

@@ -1,3 +1,5 @@
+import { DrizzleQueryError } from "drizzle-orm"
+
 /**
  * Stops a script unless both ends are a terminal, so a secret can't arrive through a pipe or a file,
  * and a printed seed can't land in one (`… | tee out.log`). Call it before printing anything secret.
@@ -91,4 +93,48 @@ export async function commandInput(
 export async function commandConfirm(label: string) {
   const answer = await commandInput(`${label} (y/N)`, { isHidden: false })
   return answer.trim().toLowerCase() === "y"
+}
+
+/**
+ * Replaces the web's credentials in the env with the terminal's: the owner role in Postgres, and
+ * `rpc_space_terminal` on the node. They're in no file, because anything running as this user can
+ * read every file this user can.
+ *
+ * `@/constants/env` reads the env once, when first imported, so call this before importing anything
+ * that uses it.
+ */
+export async function askTerminalCredentials() {
+  const { DB_OWNER } = process.env
+  if (!DB_OWNER)
+    throw new Error("DB_OWNER is missing from .env. See docs/setup-guide.md.")
+
+  const password = await commandInput("🔑 Terminal password")
+
+  process.env.DB_USER = DB_OWNER
+  process.env.DB_PASSWORD = password
+  process.env.RPC_USERNAME = "rpc_space_terminal"
+  process.env.RPC_PASSWORD = password
+}
+
+/**
+ * A failed query's own message repeats the statement, and the error holds the values it was given,
+ * which can include `bio` and `passkey`. Only the reason is shown.
+ */
+export function describeError(error: unknown) {
+  if (error instanceof DrizzleQueryError) {
+    return `The database refused the change: ${error.cause?.message}`
+  }
+
+  const message = error instanceof Error ? error.message : String(error)
+
+  // A script that reaches this has logged in to the node with the terminal password
+  return message === "HTTP 401 Unauthorized" ? "Wrong terminal password." : message
+}
+
+/**
+ * Removes control and formatting characters from text the DB or the node gave, so an escape sequence
+ * in it can't rewrite what's on the screen.
+ */
+export function toPrintable(text: string) {
+  return text.replace(/\p{C}/gu, "")
 }

@@ -5,7 +5,7 @@ description:
   Core node. Load before writing, editing, reviewing, or formatting any .ts/.tsx/.css
   file, before running install, database, or wallet commands, and before designing a
   feature, even when the request names no library (e.g. "add a fee option", "show address
-  labels", "fix the send form", "add a modal", "recover my wallet"). Covers the stack
+  labels", "fix the send script", "add a modal", "recover my wallet"). Covers the stack
   (Bun, Next.js 16 with Cache Components, React 19, a framer-motion UI kit instead of
   HeroUI, Tailwind v4, Drizzle ORM + Postgres, Zod v4, zustand), folder layout, coding
   style, security rules, Bitcoin signing and descriptors, and the wallet scripts.
@@ -55,9 +55,8 @@ Structure. Scale."
 | Icons        | `@keyline-icons/react`                                                 | Named `XIcon` imports, colour from `text-*`                                |
 | Database     | Drizzle ORM v1 RC (`1.0.0-rc.5`, pinned) + `postgres`                  | `defineRelations`, `drizzle-kit`. See [database](references/database.md)   |
 | Bitcoin      | `@scure/*`, `@noble/*`, Bitcoin Core JSON-RPC                          | The node watches through xpubs and never holds a key                       |
-| Auth         | No sign-in. A send needs the wallet's passphrase (argon2)              | See [security](references/security.md)                                     |
-| Validation   | Zod v4                                                                 | env, Server Action input, forms                                            |
-| Forms        | react-hook-form v7 + `@hookform/resolvers`                             | Zod resolver, shares the action's validator                                |
+| Auth         | No sign-in. Sends only from the terminal, with the passphrase (argon2) | See [security](references/security.md)                                     |
+| Validation   | Zod v4                                                                 | env, Server Action input, what a script is typed                           |
 | Client state | zustand v5                                                             | `src/stores/<name>/`, display data only                                    |
 | Utilities    | es-toolkit, date-fns v4, uuid, clsx, tailwind-merge                    | `omit(object, keys)`: es-toolkit takes the object first                    |
 | Formatting   | Prettier 3.9 + `@ianvs/prettier-plugin-sort-imports` + tailwind plugin | `prettier.config.mjs` is the source of truth                               |
@@ -70,9 +69,9 @@ Structure. Scale."
 | Writing or reviewing any code (naming, comments, ordering, types)        | [coding-style.md](references/coding-style.md)           |
 | Pages, layouts, caching, Server Actions, Route Handlers, `proxy`         | [nextjs.md](references/nextjs.md)                       |
 | Buttons, modals, drawers, toasts, any UI component, theme tokens, motion | [ui-components.md](references/ui-components.md)         |
-| Zod, react-hook-form, zustand, Tailwind, es-toolkit, crypto imports      | [libraries.md](references/libraries.md)                 |
-| Tables, queries, migrations                                              | [database.md](references/database.md)                   |
-| Guards, rate limits, CSP, other sites, env, anything security-related    | [security.md](references/security.md)                   |
+| Zod, zustand, Tailwind, es-toolkit, crypto library imports               | [libraries.md](references/libraries.md)                 |
+| Tables, queries, roles, migrations                                       | [database.md](references/database.md)                   |
+| Guards, credentials, CSP, other sites, env, anything security-related    | [security.md](references/security.md)                   |
 | Keys, addresses, descriptors, sending, RPC, the wallet scripts, testing  | [bitcoin-wallet.md](references/bitcoin-wallet.md)       |
 | Running prod, localhost only, HTTPS, certificates, backups               | [deployment.md](references/deployment.md)               |
 | Anything user-facing, or the sync that keeps a page fresh                | [performance.md](references/performance.md)             |
@@ -92,8 +91,10 @@ Structure. Scale."
   [deployment.md](references/deployment.md).
 - `bun run drizzle:generate` / `bun run drizzle:push` / `bun run drizzle:studio` — see
   [database.md](references/database.md).
-- `bun tests/wallet.spec.ts <create|recover|addresses|list>` — manage wallets. See
+- `bun tests/wallet.spec.ts <create|recover|addresses|load|list>` — manage wallets. See
   [bitcoin-wallet.md](references/bitcoin-wallet.md#wallet-scripts).
+- `bun tests/transfer.spec.ts` — send bitcoin. See
+  [bitcoin-wallet.md](references/bitcoin-wallet.md#sending-teststransferspects).
 - `bun tests/node.spec.ts` — check the connection to Bitcoin Core.
 - `bun tests/balance.spec.ts` — copy every account's balance from the node to the DB.
 
@@ -102,6 +103,12 @@ Structure. Scale."
 - **Wallets are managed from the terminal only.** Create and recover live in
   `tests/wallet.spec.ts`. Don't add a UI or a Server Action for them: a seed must never
   pass through a browser, an extension, or a network request.
+- **Bitcoin is sent from the terminal only,** with `tests/transfer.spec.ts`. Don't add a
+  form, a Server Action, or a table that starts or prepares a send. The send button only
+  explains the script.
+- **The web server has less access than the scripts.** Its Postgres role can't read `bio`
+  or `passkey`, and its RPC user can only read. See
+  [security.md](references/security.md#credentials).
 - **The app only opens on `localhost` and `127.0.0.1`,** in dev and prod. Don't add a way
   to open it to a network. See [deployment.md](references/deployment.md).
 - **There is no sign-in.** One person uses this app. `/` is the node dashboard, and its
@@ -124,6 +131,7 @@ Structure. Scale."
    `withAccount` if it takes an account, and it returns only what the UI needs.
 4. `bio` and `passkey` never reach a response, a log, or a cache key.
 5. Anything secret typed by the owner goes through `commandInput`, never an argument.
-6. Comments follow the block style, no leftovers.
-7. Prettier run; `bun run build` passes for non-trivial changes; `bun audit` is clean
+6. A new RPC call is in `rpcwhitelist`, and a new column has a grant for `web_space`.
+7. Comments follow the block style, no leftovers.
+8. Prettier run; `bun run build` passes for non-trivial changes; `bun audit` is clean
    after a dependency change. If you could not run one of these, say so.

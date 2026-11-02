@@ -456,7 +456,27 @@ mount มันเอง แล้ว WSL จะใช้ไฟล์ไม่�
 
 ### 4.4 ตั้งค่า bitcoin.conf
 
-สร้างไฟล์ด้วย `nano ~/.bitcoin/bitcoin.conf` แล้วตั้งรหัสของคุณเอง โดย `torpassword`
+Space ใช้ RPC user 2 ตัวที่มีสิทธิ์ต่างกัน และไม่เก็บรหัสจริงไว้ใน `bitcoin.conf`
+
+| User                 | ใครใช้                                           | รหัส                                                              |
+| -------------------- | ------------------------------------------------ | ----------------------------------------------------------------- |
+| `rpc_space`          | เว็บ และสคริปต์ที่แค่อ่าน                        | สุ่มด้วย `openssl rand -hex 32` แล้วเก็บใน `.env`                 |
+| `rpc_space_terminal` | `tests/transfer.spec.ts`, `tests/wallet.spec.ts` | Terminal password ตั้งเอง เก็บใน password manager ไม่อยู่ในไฟล์ใด |
+
+สร้างบรรทัด `rpcauth` ทีละ user โดยรันครั้งที่สองด้วย `rpc_space_terminal`
+รหัสที่พิมพ์จะไม่เข้า history ของ shell
+
+```bash
+python3 - rpc_space <<'PY'
+import getpass, hmac, secrets, sys
+password = getpass.getpass(f"Password for {sys.argv[1]}: ")
+salt = secrets.token_hex(16)
+digest = hmac.new(salt.encode(), password.encode(), "SHA256").hexdigest()
+print(f"rpcauth={sys.argv[1]}:{salt}${digest}")
+PY
+```
+
+สร้างไฟล์ด้วย `nano ~/.bitcoin/bitcoin.conf` แล้วใส่ค่าที่ได้ โดย `torpassword`
 คือรหัสผ่านตัวจริงที่สร้าง hash ในหัวข้อ 3.2
 
 ```ini
@@ -472,8 +492,12 @@ rpcallowip=127.0.0.1
 rpcallowip=::1
 rpcport=8332
 rpcthreads=16
-rpcuser=REPLACE_ME
-rpcpassword=REPLACE_ME
+rpcauth=rpc_space:REPLACE_ME
+rpcauth=rpc_space_terminal:REPLACE_ME
+rpcwhitelistdefault=1
+rpcwhitelist=rpc_space:getblockchaininfo,getnetworkinfo,getmempoolinfo,getpeerinfo,getnettotals,getnetworkhashps,getmempoolfeeratediagram,getblockhash,getblockheader,uptime,getrawtransaction,listwallets,getwalletinfo,getbalances,listunspent,listtransactions,getaddressinfo
+rpcwhitelist=rpc_space_terminal:getblockchaininfo,listwallets,loadwallet,createwallet,listdescriptors,getdescriptorinfo,importdescriptors,getaddressinfo,listunspent,listtransactions,estimatesmartfee,testmempoolaccept,sendrawtransaction
+rpcwhitelist=__cookie__:getblockchaininfo,getnetworkinfo,getpeerinfo,getmempoolinfo
 
 onlynet=onion
 proxy=127.0.0.1:9050
@@ -503,8 +527,19 @@ chmod 600 ~/.bitcoin/bitcoin.conf
 | `natpmp=0`                  | ปิดการเปิดพอร์ตอัตโนมัติ ซึ่งเปิดเป็นค่าเริ่มต้นตั้งแต่ Core 30           |
 | `bind=127.0.0.1:8334=onion` | รับ connection ขาเข้าผ่าน onion service เท่านั้น                          |
 | `rpcbind=127.0.0.1`         | เปิด RPC เฉพาะในเครื่อง                                                   |
+| `rpcauth`                   | เก็บแค่ hash ของรหัส ไม่เก็บรหัสจริงในไฟล์                                |
+| `rpcwhitelist`              | จำกัดคำสั่งของแต่ละ user โดยเว็บอ่านได้อย่างเดียว                         |
 | `txindex=1`                 | Space ต้องใช้เพื่ออ่านประวัติธุรกรรม                                      |
 | `dbcache=4096`              | เร่ง sync ครั้งแรก เมื่อ sync ครบลดเหลือ `1024` ได้ แล้วค่อย restart node |
+
+**ห้ามมี `rpcwhitelist` สองบรรทัดสำหรับ user เดียวกัน** เพราะ Core
+จะเก็บเฉพาะคำสั่งที่อยู่ในทั้งสองบรรทัด ถ้า Space เรียกคำสั่งใหม่ในอนาคต
+ต้องเพิ่มลงในบรรทัดเดิม ไม่อย่างนั้น log ของแอปจะขึ้น `HTTP 403 Forbidden` และ `debug.log`
+จะบอกชื่อคำสั่งนั้น
+
+บรรทัด `__cookie__` คือสิทธิ์ของ `bitcoin-cli` ในเครื่องนี้ ซึ่งอ่านสถานะได้ตามหัวข้อ 4.6
+แต่ส่งเงินหรืออ่าน wallet ไม่ได้ และ `bitcoin-cli stop` ก็ใช้ไม่ได้ ให้หยุด node ด้วย
+`systemctl` ตามหัวข้อ 4.8
 
 ### 4.5 ตั้งให้เริ่มพร้อม WSL
 
@@ -616,18 +651,63 @@ bitcoin-cli getpeerinfo | python3 -c 'import json,sys,collections; print(collect
 
 ### 4.7 ต่อกับ Space
 
-ตั้งค่าใน `.env` ของ Space ให้ตรงกับ `bitcoin.conf`
+`.env` ของ Space เก็บเฉพาะ credential ของเว็บ ส่วนสิทธิ์สูงอยู่ใน terminal password
+ซึ่งไม่อยู่ในไฟล์ใดเลย เพราะโปรแกรมที่รันในชื่อคุณอ่านไฟล์ของคุณได้ทุกไฟล์
 
-| ใน `.env`      | ค่า                       |
-| -------------- | ------------------------- |
-| `RPC_PROTOCOL` | `http`                    |
-| `RPC_HOST`     | `127.0.0.1`               |
-| `RPC_PORT`     | `8332`                    |
-| `RPC_USERNAME` | ค่าเดียวกับ `rpcuser`     |
-| `RPC_PASSWORD` | ค่าเดียวกับ `rpcpassword` |
+| ใน `.env`      | ค่า                                         |
+| -------------- | ------------------------------------------- |
+| `RPC_PROTOCOL` | `http`                                      |
+| `RPC_HOST`     | `127.0.0.1`                                 |
+| `RPC_PORT`     | `8332`                                      |
+| `RPC_USERNAME` | `rpc_space`                                 |
+| `RPC_PASSWORD` | รหัสของ `rpc_space` จากหัวข้อ 4.4           |
+| `DB_USER`      | `web_space`                                 |
+| `DB_PASSWORD`  | รหัสของ role `web_space` จากขั้นตอนด้านล่าง |
+| `DB_OWNER`     | role ที่เป็นเจ้าของตาราง (`POSTGRES_USER`)  |
+
+ตั้งค่า Postgres ตามลำดับนี้:
+
+1. ถ้า `docker-compose.yml` ของ Postgres publish port เป็น `5432:5432` ให้เปลี่ยนเป็น
+   `127.0.0.1:5432:5432` และถ้าไฟล์นั้นอ่าน `DB_USER` หรือ `DB_PASSWORD` จาก `.env`
+   ตัวเดียวกับ Space ให้แยกออกก่อน
+2. สร้างตารางและ role `web_space` ด้วย owner role รันใน PowerShell ที่โฟลเดอร์ของ Space
+
+   ```powershell
+   $env:DB_USER = "<owner role>"
+   $env:DB_PASSWORD = [Net.NetworkCredential]::new("", (Read-Host -AsSecureString "Owner password")).Password
+   bun run drizzle:migrate
+   Remove-Item Env:DB_USER, Env:DB_PASSWORD
+   ```
+
+3. ตั้งรหัสใน Ubuntu `\password` จะ hash ฝั่ง client รหัสจริงจึงไม่เข้า log ของ server
+   รหัสของ owner role ต้องเป็น terminal password ตัวเดียวกับ `rpc_space_terminal`
+
+   ```bash
+   docker exec -it postgresql psql -U <owner role> -d <db name>
+   ```
+
+   ```text
+   \password web_space
+   \password <owner role>
+   \q
+   ```
+
+ตรวจผล:
+
+| ตรวจอะไร                 | คำสั่ง                                                                                                                                  | ผลที่ถูกต้อง                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| เว็บอ่าน node ได้        | `bun tests/node.spec.ts` บน Windows                                                                                                     | แสดงสถานะ node                          |
+| Terminal password ใช้ได้ | `bun tests/wallet.spec.ts load` บน Windows                                                                                              | จบโดยไม่มี error                        |
+| `bitcoin-cli` อ่านได้    | `bitcoin-cli getblockchaininfo`                                                                                                         | ตอบปกติ                                 |
+| `bitcoin-cli` ถูกจำกัด   | `bitcoin-cli listwallets`                                                                                                               | `error: server returned HTTP error 403` |
+| เว็บถูกจำกัด             | `curl -s -o /dev/null -w '%{http_code}\n' -u rpc_space --data-binary '{"jsonrpc":"2.0","id":1,"method":"help"}' http://127.0.0.1:8332/` | ถาม password แล้วพิมพ์ `403`            |
 
 Space จะแสดงคำเตือนแทนหน้า wallet จนกว่า node จะ sync เกิน 97% ส่วนการสร้างและกู้ wallet
-ทำจาก terminal ตามหัวข้อ Wallets ใน `README.md`
+ทำจาก terminal ตามหัวข้อ Wallets ใน `README.md` และการส่งเงินทำจาก terminal ตามหัวข้อ
+Sending
+
+ถ้าหน้า wallet บอกว่า node ยืนยัน address ไม่ได้ และ log ขึ้น `HTTP 403 Forbidden` ให้รัน
+`bun tests/wallet.spec.ts load` เพราะเว็บโหลด wallet ของ node เองไม่ได้
 
 ### 4.8 การใช้งานประจำวัน
 

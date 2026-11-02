@@ -43,9 +43,9 @@ wallets ──< accounts ──< addresses
 | `addresses` | One row per derived address: `type` (`receive` / `change`), `index`, `address`, `isUsed`                                                                                         |
 
 - `accounts.label` is unique across wallets, so include the wallet's slug in it.
-- Row-level security is enabled with no policies (`pgTable.withRLS`), which blocks
-  everyone except the table owner and superusers. The app must connect as the owner: any
-  other role gets no rows and no error, so the app looks as if it has no wallets.
+- Row-level security is enabled (`pgTable.withRLS`), which blocks everyone except the
+  table owner, superusers, and what a policy allows. A role with no policy gets no rows
+  and no error, so the app would look as if it has no wallets.
 
 ## Schema rules
 
@@ -69,17 +69,44 @@ wallets ──< accounts ──< addresses
 - **Foreign keys are `onDelete: "restrict"`.** Deleting a row must never take a wallet's
   accounts or addresses with it.
 
+## Roles
+
+| Role                    | Who uses it                                             | What it can do                                                                                                      |
+| ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Owner (`DB_OWNER`)      | Scripts that send or set up wallets, migrations, backup | Everything. Its password is the terminal password, which is in no file                                              |
+| `web_space` (`DB_USER`) | The web server, and scripts that only read              | Read everything but `bio` and `passkey`. Write only `accounts.balance`, `addresses.is_used`, and their `updated_at` |
+
+- **Grants are in the `web-role` migration.** `drizzle-kit` doesn't manage them, and
+  `push` doesn't see them.
+- **Policies are in the schema files.** `push` plans a `DROP POLICY` for any policy the
+  schema doesn't have.
+- `address_web_mark_used` only lets `is_used` go from false to true, because flipping a
+  used address back would hand it out again.
+- **A new column needs a grant.** `select(accountColumns)` names every column, so it fails
+  with `permission denied` until a migration grants the new one. Never grant `bio` or
+  `passkey`.
+- `drizzle:migrate`, `push`, and `studio` need the owner, while `.env` holds `web_space`.
+  Set it in the shell first, which wins over the file:
+
+  ```powershell
+  $env:DB_USER = "<owner role>"
+  $env:DB_PASSWORD = [Net.NetworkCredential]::new("", (Read-Host -AsSecureString "Terminal password")).Password
+  bun run drizzle:migrate
+  Remove-Item Env:DB_USER, Env:DB_PASSWORD
+  ```
+
+- `web_space` gets its password from the owner, not from a migration: run
+  `\password web_space` in `psql`, which hashes it on the client.
+
 ## Secrets
 
-`wallets.bio` and `wallets.passkey` are the two most sensitive columns. Read them only
-where they're needed, and on purpose:
+`wallets.bio` and `wallets.passkey` are the two most sensitive columns. Only scripts read
+them, through the owner role. `web_space` gets `permission denied`:
 
 ```ts
-db.select(pick(["bio", "passkey"], walletColumns)) // createTransaction only
-db.select(omit(["bio", "passkey"], walletColumns)) // everything else
+db.select({ bio: schema.wallets.bio, passkey: schema.wallets.passkey }) // scripts only
+db.select(omit(walletColumns, ["bio", "passkey"])) // the web server
 ```
-
-Never `db.select()` a whole `wallets` row in code that returns to the client.
 
 Keep them out of logs too. Print a query error's `cause.message`, never its other fields:
 the driver's `cause.parameters` holds every value of the statement, `bio` and `passkey`
@@ -139,8 +166,8 @@ To do it again, the owner runs these steps, never an agent:
    select id from addresses where type not in ('receive', 'change') or index < 0;
    ```
 
-2. On an empty database, run `bun run drizzle:migrate` as the role the app connects with,
-   so that it owns the tables.
+2. On an empty database, run `bun run drizzle:migrate` as the owner role, so that it owns
+   the tables. On a new server, also set `web_space`'s password ([roles](#roles)).
 3. Copy only the rows, never a whole dump, which would bring back the old schema:
 
    ```sh

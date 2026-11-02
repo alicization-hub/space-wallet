@@ -3,17 +3,21 @@
 There is no sign-in: one person uses this app, on their own machine. **What protects the
 money is the passphrase.** The seed is encrypted with it, a send can't be signed without
 it, and it's never stored, so even someone with a copy of the database still has to crack
-argon2. Everything else here exists to keep the rest of the attack surface from undoing
+argon2. **Sending happens only in the terminal** (`tests/transfer.spec.ts`), so the
+passphrase and the signing stay out of the browser, HTTP, and the server that keeps
+running. Everything else here exists to keep the rest of the attack surface from undoing
 that.
 
 **Keep these true:**
 
-1. A seed never crosses a network. It's typed in a terminal, and decrypted only on the
-   server to sign.
-2. Nothing returns `bio` or `passkey` to a client.
-3. A send always needs its wallet's passphrase, through `checkSend`.
-4. The app only answers on this machine, and only its own pages can write to it.
-5. Bitcoin Core never holds a private key.
+1. A seed or a passphrase never crosses a network. They're typed in a terminal, through
+   `commandInput`, and the seed is decrypted only in a script that exits when it's done.
+2. Nothing in `src/` decrypts a seed, reads `bio` or `passkey`, or signs.
+3. No public endpoint starts, prepares, or changes a send.
+4. Where money goes comes from what the owner types or from the keys, never from the DB.
+5. What the owner approves is decoded from the signed bytes, not what was typed.
+6. The app only answers on this machine, and only its own pages can write to it.
+7. Bitcoin Core never holds a private key.
 
 ## What has no lock
 
@@ -55,9 +59,8 @@ cookie for the browser to hold back, so these do that job:
 | `proxy.ts`                           | Other host names, writes from outside the app, and the CSP |
 
 - `withAccount` checks that the ID is a UUID and that the account and its wallet are
-  active. **Check before calling the node.** A wallet name goes into the RPC URL, and
-  `loadwallet` can be triggered by name. `RPCClient.setWallet` only accepts a UUID.
-- `account` has no `bio` or `passkey`. Read those explicitly where they're needed.
+  active. **Check before calling the node.** A wallet name goes into the RPC URL.
+  `RPCClient.setWallet` only accepts a UUID.
 - Wallets aren't walled off from each other. Any account opens by its URL, and that's how
   switching wallets works. Only their passphrases are separate.
 - Every export of a `"use server"` file is a public endpoint for anything on this machine:
@@ -68,13 +71,30 @@ cookie for the browser to hold back, so these do that job:
   `.next/server/server-reference-manifest.json`, without printing the `encryptionKey` next
   to them. A `$$RSC_SERVER_CACHE_*` name there is an open endpoint.
 
+## Credentials
+
+The web server runs as the owner's OS user, so whatever runs in it can read every file the
+owner can. That's why the credentials that can read a seed or send are in no file:
+
+| Credential                                    | Used by                                                                                                       | Kept in                                      |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Postgres `web_space`, RPC `rpc_space`         | The web server, `node.spec.ts`, `balance.spec.ts`, `tx.spec.ts`, `wallet.spec.ts list`                        | `.env`                                       |
+| Postgres owner role, RPC `rpc_space_terminal` | `transfer.spec.ts`, the other `wallet.spec.ts` commands, `utils.spec.ts`, `drizzle:migrate`, `push`, `studio` | Nowhere: the terminal password, typed in use |
+
+- `web_space` can't read `bio` or `passkey` ([database.md](database.md#roles)), and
+  `rpc_space` can only read from the node
+  ([bitcoin-wallet.md](bitcoin-wallet.md#rpc-users)).
+- **Never put the terminal password in a file**, `.env.prod` included. Bun and Next.js
+  load `.env` into the web server.
+- This stops a leaked `.env`, a bug that lets a caller run SQL or RPC, and code that reads
+  more than it should by mistake: that fails at once with `permission denied` or HTTP 403.
+  It doesn't stop code running inside the web server: see
+  [known limitations](#known-limitations).
+
 ## Passphrases
 
-- **A passphrase check must go through `checkSend`**, so it's rate-limited: 5 attempts per
-  wallet per 15 minutes. It counts before verifying, so concurrent attempts can't slip
-  past, and each attempt costs 64 MiB of argon2. With no sign-in in front of it, this
-  limit is what stops guessing.
-- The limiter is in memory: it resets on restart and assumes one server process.
+- **Typed only in a terminal and checked only in scripts.** There's no rate limit: nothing
+  public can test a passphrase, and each attempt costs 64 MiB of argon2.
 - Strength rules (`passphraseValidator`) apply to new passphrases only. See
   [libraries.md](libraries.md#zod-v4).
 - The passphrase is also the BIP-39 passphrase, so it can never change without moving the
@@ -86,7 +106,8 @@ The seed is encrypted, so someone who can only write to the database can't take 
 directly. They could still swap an address, so nothing that decides where money goes
 relies on a row alone:
 
-- `createTransaction` derives the change address from the keys and refuses a mismatch.
+- `tests/transfers/sign.ts` derives each coin's address and the change address from the
+  keys, and refuses a mismatch. A row only gives a derivation path.
 - `readAddress` and `readAddresses` ask the node (`getaddressinfo`, `ismine`) before an
   address is shown for someone to pay. The node knows them from the descriptors.
 
@@ -104,7 +125,7 @@ render `style` attributes. `img-src` allows `data:` for the QR code.
 - A violation means a real problem, usually a prerendered page
   ([why](nextjs.md#rendering-every-page-per-request)) or a library calling `eval`.
 - Adding an external script, font, or API to the browser needs a CSP change. Think twice:
-  the policy is what stops an injected script from sending a passphrase away.
+  the policy is what stops an injected script from sending the wallet's data away.
 
 `next.config.ts` sets the rest for every response: `X-Frame-Options: DENY`, `nosniff`,
 `Referrer-Policy: no-referrer` (account IDs are in URLs), `Permissions-Policy`,
@@ -120,25 +141,28 @@ The app only opens on `localhost` and `127.0.0.1`: see [deployment.md](deploymen
   shape the seed encryption and **aren't stored with the ciphertext**. Changing them makes
   every wallet undecryptable, so back them up with the database. `tests/utils.spec.ts`
   holds the re-encryption loop, disabled by default.
-- For the same reason the scripts and the server must read the same values, or a script
-  saves a wallet the server can't decrypt.
+- For the same reason every script must read the same values, or one saves a wallet
+  another can't decrypt.
 - `CIPHER_SECURITY` is the log2 of the Argon2 memory in KiB. The schema refuses less than
   15 (32 MiB).
 - DB and RPC credentials have no default.
 - The app must have `NEXT_PUBLIC_BASE_URL` on `https://`. It only serves HTTPS.
 - `logging.serverFunctions` stays `false` in `next.config.ts`. In dev it would print every
-  Server Function's arguments, including typed passphrases.
+  Server Function's arguments.
 
 ## Known limitations
 
-- **Anything on this machine can read the wallet**, as above. It can also keep a wallet
-  from sending for a while, by using up its passphrase attempts.
-- **The passphrase reaches the server** to sign a send, over TLS, because signing happens
-  there. The server is trusted with the seed while signing.
-- **`readFees` calls mempool.space over clearnet** from the server, which reveals the
-  server's IP to it when the send form opens. Nothing about the wallet is sent.
+- **Anything on this machine can read the wallet**, as above.
+- **Code running inside the web server has all the owner's rights.** The owner chose not
+  to give the server its own Windows account. So it could change `tests/transfer.spec.ts`
+  for the next run, log keystrokes, read `bio` through `docker exec` (the socket inside
+  the container is `trust`), or change `bitcoin.conf` through `wsl.exe -u root`. Stopping
+  the web server before a send only helps against code that lives in its memory.
+- **`~/pg_backups` holds the ciphertext**, whatever the roles say.
 - **Explorer links go to blockchain.com**, which sees the address or transaction when
-  clicked.
+  clicked. When the node doesn't answer at a broadcast, `transfer.spec.ts` prints a
+  mempool.space link and doesn't open it: opening it tells that site the IP and the
+  transaction ID, unless it's through Tor Browser.
 
 ## Review checklist
 
@@ -148,7 +172,8 @@ The app only opens on `localhost` and `127.0.0.1`: see [deployment.md](deploymen
 - [ ] No secret in a return value, a log line, a cache key, an argument of a `"use cache"`
       function, or a URL.
 - [ ] No new `"use server"` on a helper.
-- [ ] A passphrase is only checked through `checkSend`.
+- [ ] Nothing in `src/` reads `bio` or `passkey`, decrypts a seed, or signs.
+- [ ] A new RPC call is in `rpcwhitelist`, and a new column has a grant.
 - [ ] An address that money goes to is checked against the keys or the node, not just the
       DB.
 - [ ] `bun audit` is clean, and the CSP still has no violations in the browser console.

@@ -48,11 +48,7 @@ export function Wallet({ account }: Readonly<{ account: PublicAccount }>) {
       </div>
 
       <div className='flex items-center justify-center gap-4'>
-        <Send
-          accountId={account.id}
-          purpose={account.purpose}
-          spendable={balance.spendable}
-        />
+        <Send />
         <Receive accountId={account.id} purpose={account.purpose} />
       </div>
     </section>

@@ -17,9 +17,7 @@ export default function Error({
         <h1 className='mb-4 text-9xl font-extrabold'>Oops!</h1>
         <h3 className='text-3xl font-bold text-white/75 capitalize'>unexpected error</h3>
         <p className='text-white/75'>
-          An error occurred, so your request may not have finished. If you were sending
-          bitcoin, the transaction may still have gone out: check your history before you
-          try again.
+          An error occurred, so your request may not have finished.
         </p>
         <code className='mirror text-foreground-500 mt-4 max-w-440 rounded-xs p-4'>
           {error?.message}

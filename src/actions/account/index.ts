@@ -42,8 +42,8 @@ export async function readActiveAccount(accountId: unknown) {
  *
  * @example
  * ```ts
- * export const readUTXOs = withAccount(async (account) => { … })
- * await readUTXOs(accountId)
+ * export const readAddress = withAccount(async (account) => { … })
+ * await readAddress(accountId)
  * ```
  */
 export function withAccount<T extends unknown[], R>(action: AccountAction<T, R>) {

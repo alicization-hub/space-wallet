@@ -54,7 +54,7 @@ const nextConfig: NextConfig = {
     incomingRequests: false,
 
     /**
-     * In dev, this would print every Server Function's arguments, including typed passphrases.
+     * In dev, this would print every Server Function's arguments.
      */
     serverFunctions: false
   },

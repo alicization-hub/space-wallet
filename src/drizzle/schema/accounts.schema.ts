@@ -4,6 +4,7 @@ import {
   check,
   integer,
   jsonb,
+  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -12,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core"
 
 import { sharedTimestampColumns } from "../utils"
+import { webRole } from "./roles.schema"
 import { wallets } from "./wallets.schema"
 
 export const accounts = pgTable.withRLS(
@@ -43,6 +45,13 @@ export const accounts = pgTable.withRLS(
       self.index
     ),
     check("account_purpose_check", sql`${self.purpose} in (84, 86)`),
-    check("account_index_check", sql`${self.index} >= 0`)
+    check("account_index_check", sql`${self.index} >= 0`),
+    pgPolicy("account_web_read", { for: "select", to: webRole, using: sql`true` }),
+    pgPolicy("account_web_update", {
+      for: "update",
+      to: webRole,
+      using: sql`true`,
+      withCheck: sql`true`
+    })
   ]
 )

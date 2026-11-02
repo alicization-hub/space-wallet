@@ -1,6 +1,6 @@
 import "server-only"
 
-import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
+import { READ_TIMEOUT, SYNCED_PROGRESS } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { formatPercent, formatUptime } from "@/libs/utils"
 
@@ -16,7 +16,7 @@ const rpcClient = new RPCClient(READ_TIMEOUT)
  */
 export async function readNodeStatus() {
   const chain = await rpcClient.getChain().catch(() => null)
-  return chain !== null && chain.verificationprogress > 0.97
+  return chain !== null && chain.verificationprogress > SYNCED_PROGRESS
 }
 
 /**

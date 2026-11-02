@@ -73,15 +73,17 @@ Handler.
 ```ts
 "use server"
 
-async function readCachedUTXOs(accountId: string) {
+async function readCachedX(accountId: string) {
   "use cache"
-  cacheTag(`utxos/${accountId}`)
+  cacheTag(`x/${accountId}`)
   cacheLife("seconds")
   …
 }
 
-export const readUTXOs = withAccount(async (wallet, account) => readCachedUTXOs(account.id))
+export const readX = withAccount(async (account) => readCachedX(account.id))
 ```
+
+Nothing in the app is cached this way today.
 
 - Cached functions are deterministic given their arguments. No `new Date()` comparisons,
   no `cookies()`, no writes. Read runtime values outside and pass them in.
@@ -142,23 +144,20 @@ export const readAddresses = withAccount(async (wallet, account, input: QueryVal
 - Return `{ success, message }` for expected failures: thrown messages are hidden in
   production.
 - Server Actions run one at a time per client, so a slow one holds up whatever comes after
-  it. That includes a send waiting behind a sync, so keep `syncAccount` small.
+  it. Keep `syncAccount` small.
 
 A Client Component calls one inside a transition, with no `try`/`catch`:
 
 ```tsx
 const [isPending, startTransition] = useTransition()
 
-const handleClick = useCallback(
-  (values: CreateValidator) => {
-    startTransition(async () => {
-      const result = await createTransaction(accountId, values)
-      if (!result.success)
-        toast({ title: "🚫 An error occurred", description: result.message })
-    })
-  },
-  [accountId]
-)
+const handleClick = useCallback(() => {
+  startTransition(async () => {
+    const result = await readAddress(accountId)
+    if (!result.success)
+      toast({ title: "🚫 An error occurred", description: result.message })
+  })
+}, [accountId])
 ```
 
 - `isPending` is the spinner, and it clears by itself.
@@ -189,11 +188,10 @@ page rendered fresh.
 - `refresh()` is enough, because what the page reads isn't cached. The history is read
   twice per tick, by the action and by the render, which a local node doesn't notice.
 - The wallet layout only hides the page behind the warning. One failed status check must
-  not throw away a half-filled send form, and `AccountSync` is what notices the node is
-  back.
+  not throw away an open overlay, and `AccountSync` is what notices the node is back.
 
 - Every read a page or the sync waits on uses `READ_TIMEOUT`. Server Actions run one at a
-  time, so a tick stuck on a hung node would hold up a send behind it.
+  time, so a tick stuck on a hung node would hold up everything behind it.
 
 ## Route Handlers
 

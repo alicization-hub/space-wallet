@@ -16,8 +16,7 @@ const FADE: Variants = {
 
 /**
  * Open overlays, newest last. Only the top one traps focus, and the page scrolls again when the
- * last one closes. The send form opens a drawer and a modal over its own modal, so there can be
- * several.
+ * last one closes. The receive form opens a drawer over its own modal, so there can be several.
  */
 const stack: object[] = []
 
@@ -35,8 +34,8 @@ function handleSubmit(event: SubmitEvent) {
  * The part every overlay shares: portal, backdrop, focus trap, scroll lock and enter/exit
  * animation. Use `ModalComponent` or `DrawerComponent` rather than this.
  *
- * Overlays close only from inside, on purpose: an outside click or Esc must not throw away a
- * half-filled send form.
+ * Overlays close only from inside, on purpose: an outside click or Esc must not throw away what's
+ * open.
  */
 export function Overlay({
   children,

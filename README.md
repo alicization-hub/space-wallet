@@ -15,7 +15,8 @@ Here are the initial features implemented, with more planned for future updates:
   `xpub` descriptors only for wallet accounts. Wallets are managed from the terminal, so a
   seed never passes through a browser.
 - **Transaction History**: View a clear and concise history of your Bitcoin transactions.
-- **Send/Receive Functionality**: Easily send and receive Bitcoin directly from wallet.
+- **Send/Receive Functionality**: Receive from the wallet page, and send from the
+  terminal, so the passphrase and the signing stay out of the browser.
 
 ---
 
@@ -95,7 +96,10 @@ bun install
 ```
 
 4. **Environment Variables**: Copy `.env.example` to `.env` and fill it in. The app
-   refuses to start without the database and Bitcoin Core RPC credentials.
+   refuses to start without the database and Bitcoin Core RPC credentials. `.env` holds
+   only what the web server needs: the terminal password, which unlocks the database's
+   owner role and the node's `rpc_space_terminal` user, is in no file. See
+   `docs/setup-guide.md`.
 
 5. **HTTPS Certificate**: `start:dev` and `start:prod` both read
    `certificates/localhost.pem` and `certificates/localhost-key.pem`. Create them once
@@ -118,15 +122,33 @@ never arguments.
 bun tests/wallet.spec.ts create --name "My Wallet"         # generate a new seed
 bun tests/wallet.spec.ts recover --name "Old Wallet"       # from an existing seed
 bun tests/wallet.spec.ts addresses --wallet my-wallet      # generate more addresses
+bun tests/wallet.spec.ts load                              # load the node's wallets
 bun tests/wallet.spec.ts list                              # show the wallets
 ```
 
-There is no sign-in: `/` shows the node, its link opens the oldest wallet, and only a send
-asks for its passphrase. Anything on this machine can read balances and history, so never
-expose the port beyond it.
+There is no sign-in: `/` shows the node, and its link opens the oldest wallet. Anything on
+this machine can read balances and history, so never expose the port beyond it.
 
 The passphrase is also the BIP-39 passphrase: it can't be changed, and the seed alone
 can't recover the funds without it.
+
+## 💸 Sending
+
+Bitcoin is sent only from the terminal, with one command that never changes and takes no
+arguments. The wallet page's send button only explains these steps.
+
+```bash
+bun tests/transfer.spec.ts
+```
+
+It asks for the terminal password, then the account, coins, recipient, amount, fee rate,
+and passphrase. It signs and tests the transaction, shows what the signed bytes really do,
+and sends only after you type the recipient's last 8 characters.
+
+If the node doesn't answer at the end, the script says so and stops, because the
+transaction may or may not have gone out. Search for its ID on
+[mempool.space](https://mempool.space) or another block explorer, and run the script again
+to check before sending anything else.
 
 ## 🚀 Compiles and hot-reloads for development
 

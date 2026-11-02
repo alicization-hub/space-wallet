@@ -45,27 +45,27 @@ export function InputLabel({
 
 ## Naming
 
-| Thing                     | Convention                          | Example                                         |
-| ------------------------- | ----------------------------------- | ----------------------------------------------- |
-| Components                | PascalCase function                 | `Button`, `Snippet`, `AccountSync`              |
-| Page / layout components  | PascalCase, named after the route   | `Index`, `Account`, `WalletLayout`              |
-| Hooks                     | `useX`                              | `useOverlayState`, `useCountdownTimer`          |
-| Server Actions            | verb + noun, camelCase              | `syncAccount`, `readUTXOs`, `createTransaction` |
-| Zod schemas / their types | `xValidator` / `XValidator`         | `createValidator` / `CreateValidator`           |
-| nuqs caches / their types | `queryValidator` / `QueryValidator` | `searchValidator` / `SearchValidator`           |
-| Constants                 | SCREAMING_SNAKE_CASE                | `APP_TOKEN`, `GAP_LIMIT`                        |
-| Booleans                  | `is` / `has` / `should` prefix      | `isSynced`, `hasCloseButton`                    |
-| Event handlers            | `handleX`                           | `handleCopy`, `handleClick`                     |
-| Cache tags                | `<entity>/<id>`, kebab-case entity  | `utxos/${accountId}`, `fees/recommended`        |
-| DB columns                | camelCase in TS, snake_case in SQL  | `isActive: boolean("is_active")`                |
+| Thing                     | Convention                          | Example                                |
+| ------------------------- | ----------------------------------- | -------------------------------------- |
+| Components                | PascalCase function                 | `Button`, `Snippet`, `AccountSync`     |
+| Page / layout components  | PascalCase, named after the route   | `Index`, `Account`, `WalletLayout`     |
+| Hooks                     | `useX`                              | `useOverlayState`, `useCountdownTimer` |
+| Server Actions            | verb + noun, camelCase              | `syncAccount`, `readAddress`           |
+| Zod schemas / their types | `xValidator` / `XValidator`         | `queryValidator` / `QueryValidator`    |
+| nuqs caches / their types | `queryValidator` / `QueryValidator` | `searchValidator` / `SearchValidator`  |
+| Constants                 | SCREAMING_SNAKE_CASE                | `APP_TOKEN`, `GAP_LIMIT`               |
+| Booleans                  | `is` / `has` / `should` prefix      | `isSynced`, `hasCloseButton`           |
+| Event handlers            | `handleX`                           | `handleCopy`, `handleClick`            |
+| Cache tags                | `<entity>/<id>`, kebab-case entity  | `accounts/${accountId}`                |
+| DB columns                | camelCase in TS, snake_case in SQL  | `isActive: boolean("is_active")`       |
 
 The same conventions as luminous. What that leaves to decide here:
 
 - `ModalComponent` and `DrawerComponent` are the only components with the suffix.
 - A component in a feature folder takes the feature's name where the bare word would be
-  vague or clash: `SendForm` and `ReceiveForm`, `AddressItem` and `UtxoItem`.
-- Reading is always `readX`. A `"use cache"` helper says so (`readCachedUTXOs`), and is
-  never exported.
+  vague or clash: `ReceiveForm`, `AddressItem`.
+- Reading is always `readX`. A `"use cache"` helper says so (`readCachedX`), and is never
+  exported.
 - No `I` prefix on types. The env validators keep `envSchema`, `dbSchema`, `rpcSchema` and
   `cipherSchema`, as in luminous.
 - Names from outside keep their spelling, whatever the table says: the node's JSON
@@ -112,7 +112,7 @@ Multi-line block form for anything that explains code, even a single sentence:
 ```
 
 Not `/** Reads an account. */` on one line. A short `//` inside a function body is fine
-for a step in a sequence, as `createTransaction` does.
+for a step in a sequence, as `provisionWallet` does.
 
 - Comment the **why** (constraints, trade-offs, non-obvious behaviour), not the what. In a
   wallet, the reason a check exists is what stops the next person from removing it.
@@ -149,22 +149,23 @@ for a step in a sequence, as `createTransaction` does.
 
 - Expected failures in Server Actions are **returned**, not thrown:
   `return { success: false, message }`. Next.js replaces thrown messages with a generic
-  one in production, so a thrown "Invalid passphrase" never reaches the user. A node that
-  doesn't answer is an expected failure, so `try`/`catch` belongs on the server side.
+  one in production, so a thrown reason never reaches the user. A node that doesn't answer
+  is an expected failure, so `try`/`catch` belongs on the server side.
+- Scripts are the opposite: **throw**, and let the one `.catch` in the `.spec.ts` entry
+  file print it through `describeError`.
 - **No `try`/`catch` around a Server Action in a Client Component.** Call it inside
   `startTransition` from `useTransition` and read `isPending` for the spinner (see
   [nextjs.md](nextjs.md#server-actions)). What can still throw is unexpected, and goes to
   `app/error.tsx` by itself.
-- `app/error.tsx` can appear in the middle of a send, so it must keep saying the money may
-  have gone out.
 - Logging on the server uses `logger()` from `@/libs/logger`. Never log a passphrase, a
   seed, `bio`, or `passkey`.
 
 ## Environment variables
 
 Read env only through `@/constants/env` (`ENV`, `DB`, `DATABASE_URL`, `RPC`, `CIPHER`),
-which are parsed by Zod in `constants/env/validator.zod.ts`. When adding a variable: add
-it to `.env.example`, add it to the Zod schema, export it from `constants/env/index.ts`. A
-credential gets no default: a missing value must stop the app. Never import
-`@/constants/env` or `@/constants` from a Client Component. Only `NEXT_PUBLIC_*` values
-reach the client.
+which are parsed by Zod in `constants/env/validator.zod.ts`. The one exception is
+`askTerminalCredentials`, which must change the env before that module is imported. When
+adding a variable: add it to `.env.example`, add it to the Zod schema, export it from
+`constants/env/index.ts`. A credential gets no default: a missing value must stop the app.
+Never import `@/constants/env` or `@/constants` from a Client Component. Only
+`NEXT_PUBLIC_*` values reach the client.

@@ -45,29 +45,12 @@ v4 differences from v3 (don't use the v3 forms):
 
 - `safeParse` in Server Actions (return the failure); `parse` for env and trusted internal
   data.
-- One schema serves both client (react-hook-form resolver) and server (action): import the
-  same validator.
 - **Import shared schemas from `@/libs/validator.zod`**, which runs
   `z.config({ jitless: true })`. Without it, Zod tries `new Function` in the browser, and
   the CSP reports a violation.
 - `passphraseInputValidator` is for unlocking an existing wallet: it only bounds the
   length. `passphraseValidator` holds the strength rules, for a new passphrase only. Old
   wallets may not meet today's rules, and the real check is the hash.
-
-## react-hook-form v7
-
-```tsx
-const {
-  register,
-  handleSubmit,
-  formState: { errors: error }
-} = useForm<CreateValidator>({ resolver: zodResolver(createValidator) })
-```
-
-- `register` for native inputs. Custom fields call `setValue` (see
-  [ui-components.md](ui-components.md#patterns)).
-- `@hookform/resolvers` v6 is compatible with Zod v4 through `@hookform/resolvers/zod`.
-- Check `result.success` on what the action returns, and show `result.message`.
 
 ## zustand v5 — client state
 

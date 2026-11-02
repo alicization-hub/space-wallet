@@ -11,8 +11,6 @@ Don't judge speed from `next dev`. Measure a production build
 
 - **Parallelize** independent reads with `Promise.all`, as `(wallet)/[uuid]/page.tsx`
   does.
-- **Argon2 is slow on purpose.** A passphrase check costs 64 MiB of it, and it's
-  rate-limited.
 - **Node calls are the expensive part.** `readTransactions` makes a `getrawtransaction`
   per transaction plus a batch for its parents. Keep pages small, and batch through
   `rpcClient.batch`. A page's own reads can't use `"use cache"`
@@ -28,8 +26,8 @@ A page has one timer: `useSyncInterval` calls its Server Action every 15 s while
 is visible, and the answer carries the page rendered fresh (see
 [nextjs.md](nextjs.md#keeping-a-page-up-to-date)).
 
-- Server Actions run one at a time per client, so a slow action delays the others, a send
-  included. Keep `syncAccount` small.
+- Server Actions run one at a time per client, so a slow action delays the others. Keep
+  `syncAccount` small.
 - Don't add a poll: put what the page needs in its Server Components, and the sync carries
   it. Every poll also hits the node.
 - **The dashboard never calls `getrawmempool true`.** That's hundreds of bytes per

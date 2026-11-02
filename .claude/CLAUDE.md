@@ -27,8 +27,9 @@ auth, signing, or key handling as safety-critical.
   container.
 - Wallets are created and recovered from the terminal with `tests/wallet.spec.ts`, never
   through the UI.
-- There is no sign-in. `/` is the node dashboard, its link opens the oldest wallet, and a
-  send still needs its wallet's passphrase.
+- Bitcoin is sent only from the terminal with `tests/transfer.spec.ts`. The web app can't
+  start, prepare, or sign a send: its send button only explains the script.
+- There is no sign-in. `/` is the node dashboard, and its link opens the oldest wallet.
 
 ## Hard rules
 
@@ -39,7 +40,7 @@ auth, signing, or key handling as safety-critical.
   [testing](skills/web-stack/references/bitcoin-wallet.md#testing-without-real-funds). The
   one thing the owner allows on the real node is reading its status, as
   `tests/node.spec.ts` does.
-- Never ask for, print, or log a seed phrase or a passphrase.
+- Never ask for, print, or log a seed phrase, a passphrase, or the terminal password.
 
 ## Notes
 

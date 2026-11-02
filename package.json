@@ -14,7 +14,6 @@
     "drizzle:studio": "bun --bun drizzle-kit studio --port 8337"
   },
   "dependencies": {
-    "@hookform/resolvers": "^6.0.2",
     "@keyline-icons/react": "^2.2.0",
     "@noble/ciphers": "2.4.0",
     "@noble/hashes": "2.4.0",
@@ -33,7 +32,6 @@
     "qrcode": "^1.5.4",
     "react": "19.3.1",
     "react-dom": "19.3.1",
-    "react-hook-form": "^7.91.0",
     "tailwind-merge": "^3.7.0",
     "uuid": "^14.0.3",
     "zod": "^4.6.7",

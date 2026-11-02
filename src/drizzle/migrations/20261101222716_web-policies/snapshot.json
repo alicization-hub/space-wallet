@@ -1,0 +1,188 @@
+{
+  "type": "diff",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "f997c22f-a399-4f5b-a86c-18799234be91",
+  "prevIds": [
+    "9014d537-1c9e-4ff7-814b-33cab1fc376b"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_policy",
+      "statementTarget": [
+        "table",
+        "public",
+        "accounts"
+      ],
+      "writes": [
+        "s|pol|public.accounts.account_web_read",
+        "n|pol|public.accounts.account_web_read",
+        "e|pol|public.accounts.account_web_read"
+      ],
+      "reads": [
+        "n|tbl|public.accounts",
+        "n|sch|public",
+        "n|role|web_space",
+        "e|rls|public.accounts"
+      ]
+    },
+    {
+      "statementType": "create_policy",
+      "statementTarget": [
+        "table",
+        "public",
+        "accounts"
+      ],
+      "writes": [
+        "s|pol|public.accounts.account_web_update",
+        "n|pol|public.accounts.account_web_update",
+        "e|pol|public.accounts.account_web_update"
+      ],
+      "reads": [
+        "n|tbl|public.accounts",
+        "n|sch|public",
+        "n|role|web_space",
+        "e|rls|public.accounts"
+      ]
+    },
+    {
+      "statementType": "create_policy",
+      "statementTarget": [
+        "table",
+        "public",
+        "addresses"
+      ],
+      "writes": [
+        "s|pol|public.addresses.address_web_read",
+        "n|pol|public.addresses.address_web_read",
+        "e|pol|public.addresses.address_web_read"
+      ],
+      "reads": [
+        "n|tbl|public.addresses",
+        "n|sch|public",
+        "n|role|web_space",
+        "e|rls|public.addresses"
+      ]
+    },
+    {
+      "statementType": "create_policy",
+      "statementTarget": [
+        "table",
+        "public",
+        "addresses"
+      ],
+      "writes": [
+        "s|pol|public.addresses.address_web_mark_used",
+        "n|pol|public.addresses.address_web_mark_used",
+        "e|pol|public.addresses.address_web_mark_used"
+      ],
+      "reads": [
+        "n|tbl|public.addresses",
+        "n|sch|public",
+        "n|role|web_space",
+        "e|rls|public.addresses"
+      ]
+    },
+    {
+      "statementType": "create_policy",
+      "statementTarget": [
+        "table",
+        "public",
+        "wallets"
+      ],
+      "writes": [
+        "s|pol|public.wallets.wallet_web_read",
+        "n|pol|public.wallets.wallet_web_read",
+        "e|pol|public.wallets.wallet_web_read"
+      ],
+      "reads": [
+        "n|tbl|public.wallets",
+        "n|sch|public",
+        "n|role|web_space",
+        "e|rls|public.wallets"
+      ]
+    }
+  ],
+  "deltas": [
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "account_web_read",
+        "as": "PERMISSIVE",
+        "for": "SELECT",
+        "roles": [
+          "web_space"
+        ],
+        "using": "true",
+        "withCheck": null,
+        "entityType": "policies"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "accounts",
+        "name": "account_web_update",
+        "as": "PERMISSIVE",
+        "for": "UPDATE",
+        "roles": [
+          "web_space"
+        ],
+        "using": "true",
+        "withCheck": "true",
+        "entityType": "policies"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "addresses",
+        "name": "address_web_read",
+        "as": "PERMISSIVE",
+        "for": "SELECT",
+        "roles": [
+          "web_space"
+        ],
+        "using": "true",
+        "withCheck": null,
+        "entityType": "policies"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "addresses",
+        "name": "address_web_mark_used",
+        "as": "PERMISSIVE",
+        "for": "UPDATE",
+        "roles": [
+          "web_space"
+        ],
+        "using": "not \"addresses\".\"is_used\"",
+        "withCheck": "\"addresses\".\"is_used\"",
+        "entityType": "policies"
+      }
+    },
+    {
+      "op": "create",
+      "row": {
+        "schema": "public",
+        "table": "wallets",
+        "name": "wallet_web_read",
+        "as": "PERMISSIVE",
+        "for": "SELECT",
+        "roles": [
+          "web_space"
+        ],
+        "using": "true",
+        "withCheck": null,
+        "entityType": "policies"
+      }
+    }
+  ]
+}

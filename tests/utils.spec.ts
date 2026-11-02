@@ -24,7 +24,8 @@ const argsValidator = z.object({
  * in the env, `Cipher.decrypt` throws before anything is saved.
  *
  * It overwrites `bio` and `passkey` in the database the env points at, so the call at the
- * bottom of this file stays commented out until it's needed.
+ * bottom of this file stays commented out until it's needed. It needs the owner role in the env, as
+ * `drizzle:migrate` does: `web_space` can't read either column.
  *
  * Usage (from the repo root):
  * ```bash

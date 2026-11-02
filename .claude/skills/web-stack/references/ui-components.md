@@ -20,19 +20,17 @@ add Radix, Base UI, or shadcn, and don't write HeroUI's API (`onPress`, `isDisab
 
 ## Components
 
-| File               | Exports                                       | Notes                                                           |
-| ------------------ | --------------------------------------------- | --------------------------------------------------------------- |
-| `button.tsx`       | `Button`                                      | See below                                                       |
-| `modal.tsx`        | `ModalComponent`                              | `control`, `label`, `size`, `placement`                         |
-| `drawer.tsx`       | `DrawerComponent`, `DrawerHeader/Body/Footer` | Right-side panel. `control`, `label`, `size`                    |
-| `overlay.tsx`      | `Overlay`                                     | What both share. Use it directly only for a new kind of overlay |
-| `toast.tsx`        | `toast()`, `ToastViewport`                    | The viewport is mounted once in `layout/provider.tsx`           |
-| `snippet.tsx`      | `Snippet`                                     | A value with a copy button                                      |
-| `spinner.tsx`      | `Spinner`                                     | Dots. `size`: `sm`, `md`, `lg`                                  |
-| `chip.tsx`         | `Chip`                                        | `color`: `success`, `danger`, `secondary`                       |
-| `pagination.tsx`   | `Pagination`                                  | Controlled: `page`, `total`, `onChange`                         |
-| `number-input.tsx` | `NumberInput`                                 | BTC amount. Digits and 8 decimals, reports `NaN` while empty    |
-| `input-label.tsx`  | `InputLabel`                                  | Title, description, required mark                               |
+| File             | Exports                                       | Notes                                                           |
+| ---------------- | --------------------------------------------- | --------------------------------------------------------------- |
+| `button.tsx`     | `Button`                                      | See below                                                       |
+| `modal.tsx`      | `ModalComponent`                              | `control`, `label`, `size`, `placement`                         |
+| `drawer.tsx`     | `DrawerComponent`, `DrawerHeader/Body/Footer` | Right-side panel. `control`, `label`, `size`                    |
+| `overlay.tsx`    | `Overlay`                                     | What both share. Use it directly only for a new kind of overlay |
+| `toast.tsx`      | `toast()`, `ToastViewport`                    | The viewport is mounted once in `layout/provider.tsx`           |
+| `snippet.tsx`    | `Snippet`                                     | A value with a copy button                                      |
+| `spinner.tsx`    | `Spinner`                                     | Dots. `size`: `sm`, `md`, `lg`                                  |
+| `chip.tsx`       | `Chip`                                        | `color`: `success`, `danger`, `secondary`                       |
+| `pagination.tsx` | `Pagination`                                  | Controlled: `page`, `total`, `onChange`                         |
 
 ### Button
 
@@ -61,20 +59,20 @@ const modal = useOverlayState()
 
 <Button onClick={modal.open}>…</Button>
 
-<ModalComponent control={modal} label='Send bitcoin' size='xl'>
-  <SendForm onClose={modal.close} />
+<ModalComponent control={modal} label='Receive address' size='xl'>
+  <ReceiveForm onClose={modal.close} />
 </ModalComponent>
 ```
 
 - `useOverlayState()` from `@/hooks` gives `isOpen`, `open`, `close`, all stable.
 - `label` becomes the dialog's `aria-label`. Always give a real one.
-- The content unmounts when closed, so a typed passphrase doesn't stay in the form. State
-  that must survive closing lives outside the overlay.
+- The content unmounts when closed. State that must survive closing lives outside the
+  overlay.
 - **Overlays close only from inside**: no outside click, no Esc. An accidental click must
-  not throw away a half-filled send form. Always render a close button.
-- They stack: the send form opens a drawer and a modal over its own modal. Only the top
-  one traps focus, focus returns to whatever opened it, and the page scrolls again when
-  the last one closes.
+  not throw away what's open. Always render a close button.
+- They stack: the receive form opens a drawer over its own modal. Only the top one traps
+  focus, focus returns to whatever opened it, and the page scrolls again when the last one
+  closes.
 - They render through a portal. React events still bubble to the parent in the React tree,
   so the overlay stops `submit` from reaching a form around it. Other events bubble as
   usual.
@@ -94,15 +92,8 @@ Toasts sit below the navbar on purpose, so a toast that stays can't cover it.
 
 ## Patterns
 
-- **Forms**: react-hook-form with the action's validator (`zodResolver(createValidator)`).
-  Inputs use the `.form-input` class or the same `ring-*` utilities. Passphrase inputs are
-  `type='password'` with `autoComplete='off'`.
-- **Values set from code**: `setValue` doesn't revalidate by itself, so an error stays
-  after the field is fixed. Pass `{ shouldValidate: isSubmitted }`, as `send/form.tsx`
-  does.
-- **Show every field's error.** A form that fails validation on a field with no visible
-  error looks like a dead button. Pass `error={error.amount?.message}` down to custom
-  fields.
+- **No passphrase field, ever.** A passphrase is typed only in a terminal.
+- **Inputs** use the `.form-input` class or the same `ring-*` utilities.
 - **Enter and exit animation**: wrap in `<AnimatePresence>`, and give the element a `key`
   and `initial` / `animate` / `exit`. Variants named `enter` and `exit` propagate from the
   overlay to the panel.

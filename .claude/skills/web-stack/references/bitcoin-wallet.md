@@ -9,7 +9,9 @@ terminal ──► tests/wallet.spec.ts ──► seed encrypted into wallets.bi
                                   ──► xpub descriptors imported into Bitcoin Core (one wallet per account)
                                   ──► addresses saved to Postgres
 
-browser  ──► createTransaction + passphrase ──► decrypt seed ──► sign here ──► testmempoolaccept ──► broadcast
+terminal ──► tests/transfer.spec.ts + passphrase ──► decrypt seed ──► sign ──► testmempoolaccept ──► approve ──► broadcast
+
+browser  ──► balances, addresses, history. It reads, and can't send
 ```
 
 ## Keys
@@ -34,8 +36,11 @@ A wallet always holds a seed. There are no watch-only wallets or hardware signer
   `disable_private_keys=true`. Core only ever sees xpub descriptors.
 - `RPCClient` (`libs/bitcoin/rpc.ts`) is the only way to the node. `setWallet` takes a
   UUID, because the name goes into the URL.
-- Core answers failed calls with HTTP 500 and the reason in the body. `call` surfaces that
-  reason, and `batch` reports per request.
+- Core answers failed calls with the reason in the body, on HTTP 200 for the JSON-RPC 2.0
+  that `RPCClient` sends. `call` surfaces that reason, and `batch` reports per request. A
+  user calling a method outside its whitelist gets HTTP 403 with no body.
+- Wallets are created with `load_on_startup=true`, because `rpc_space` can't load one
+  ([RPC users](#rpc-users)).
 - `importdescriptors` only answers once its rescan has finished, which can take hours.
   Pass a long `timeout` for it.
 - **The range moves on its own.** Core tops an active descriptor up to its keypool size
@@ -68,27 +73,62 @@ run the `addresses` script.
 `libs/bitcoin/descriptor.ts` gives the node the matching descriptors. **They must agree**:
 if you change one, compare them for both purposes and both chains.
 
-## Sending (`transaction/create.ts`)
+## RPC users
 
-The order matters, and each step exists for a reason:
+Each user gets only what it needs (`bitcoin.conf`, with `rpcwhitelistdefault=1`):
 
-1. `withAccount`: a valid, active account of an active wallet.
-2. Validate with `createValidator`. The fee rate is capped (`MAX_FEE_RATE`), UTXOs are
-   capped and unique.
-3. `checkSend`, rate-limited.
-4. Find an unused change address, or fail with the command to run.
-5. **Every selected UTXO must still be unspent, on an address of this account.** Never
-   skip one silently: that would build a different transaction from the one the user
-   confirmed.
-6. Decrypt and derive. **The change address must match the keys**, because the DB alone
-   could redirect the change.
-7. Sign (`createSignedTransaction`), wipe.
-8. **`tx.fee` must be under `MAX_FEE_SATS`**. This runs after signing, as the last check
-   on the real transaction.
-9. `testmempoolaccept`, then `sendrawtransaction`. If the node doesn't answer, the
-   transaction may still have gone out, so return `isUnknown` with its txid: sending again
-   from other coins would pay twice. The form closes and the message stays on screen. Only
-   an `RPCError` is a real refusal.
+| User                 | Who uses it                                | Calls                                                                                                                                                                                                                                                                                                       |
+| -------------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rpc_space`          | The web server, and scripts that only read | `getblockchaininfo`, `getnetworkinfo`, `getmempoolinfo`, `getpeerinfo`, `getnettotals`, `getnetworkhashps`, `getmempoolfeeratediagram`, `getblockhash`, `getblockheader`, `uptime`, `getrawtransaction`, `listwallets`, `getwalletinfo`, `getbalances`, `listunspent`, `listtransactions`, `getaddressinfo` |
+| `rpc_space_terminal` | `transfer.spec.ts` and `wallet.spec.ts`    | `getblockchaininfo`, `listwallets`, `loadwallet`, `createwallet`, `listdescriptors`, `getdescriptorinfo`, `importdescriptors`, `getaddressinfo`, `listunspent`, `listtransactions`, `estimatesmartfee`, `testmempoolaccept`, `sendrawtransaction`                                                           |
+| `__cookie__`         | `bitcoin-cli` in Ubuntu                    | `getblockchaininfo`, `getnetworkinfo`, `getpeerinfo`, `getmempoolinfo`                                                                                                                                                                                                                                      |
+
+- **A new RPC call must go in the list**, or it gets `HTTP 403 Forbidden`, and `debug.log`
+  says `RPC User rpc_space not allowed to call method <name>`. `docs/setup-guide.md` holds
+  the config to change.
+- **One `rpcwhitelist` line per user.** Two lines for one user keep only the methods in
+  both.
+- A batch with one forbidden call is refused whole, and `/wallet/<id>` is checked the same
+  way.
+- `rpc_space` can't call `loadwallet`, so `setWallet` fails with HTTP 403 for a wallet the
+  node hasn't loaded. The page still renders, and says the node couldn't confirm the
+  addresses. `bun tests/wallet.spec.ts load` fixes it.
+- `getaddressinfo` and `listtransactions` hand the account's xpub to `rpc_space`
+  (`parent_desc`, `parent_descs`). That reveals future addresses, not funds.
+
+## Sending (`tests/transfer.spec.ts`)
+
+`tests/transfers/run.ts` reads as the list of steps. The order matters, and each one
+exists for a reason:
+
+1. `requireTerminal`, then the terminal password. The node must be past `SYNCED_PROGRESS`.
+2. Choose an account. Input goes through the validators in `transfers/validator.zod.ts`.
+3. **Show unconfirmed sends first**, and ask before going on: sending again from other
+   coins could pay twice.
+4. Choose coins from `listunspent`. Recipient, amount in BTC with at most 8 decimals, fee
+   rate up to `MAX_FEE_RATE`.
+5. **Rows only give derivation paths.** Decrypt and derive. Each coin's address and the
+   change address must match the keys, and the node must watch the change.
+6. Sign (`createSignedTransaction`), wipe, before anything waits on a person. **`tx.fee`
+   must be under `MAX_FEE_SATS`**, checked after signing.
+7. **Decode the signed bytes.** They must spend exactly the chosen coins and pay exactly
+   the recipient and the change. The review shows what was decoded.
+8. `testmempoolaccept`. A wrong amount from the node fails here, on the signature.
+9. Type the recipient's last 8 characters. Anything else stops without sending.
+10. `sendrawtransaction`, once. An `RPCError` means nothing went out. **Any other failure
+    means what the node did is unknown**: print the transaction ID, the coins, and a
+    mempool.space link, and stop. The bytes are gone with the process. If it's sent again,
+    it must be from the same coins, which can't pay twice.
+
+Rules on top of the [script rules](#wallet-scripts):
+
+- **It writes nothing to the DB.** The app's sync marks used addresses and keeps balances.
+- **`toPrintable` on everything from the DB or the node before it's printed**, so an
+  escape sequence can't rewrite the review.
+- **Keep it plain.** One function per step, no class, no shared state, no options, no
+  retry. It's the code that holds the keys, so it has to be easy to read to the end.
+
+`components/send/index.tsx` lists these steps for the owner, so change both together.
 
 Taproot detail: `tapInternalKey` is the **untweaked** x-only key
 (`utils.pubSchnorr(privateKey)`). The key in `scriptPubKey` is already tweaked, and using
@@ -96,7 +136,7 @@ it makes the signer fail with "No taproot scripts signed".
 
 ## Units
 
-Amounts are BTC in the RPC and the send form, **satoshis** everywhere else
+Amounts are BTC in the RPC and what the owner types, **satoshis** everywhere else
 (`Account.Balance`, `Transaction.Schema`). Convert with `bitcoinToSats` / `satsToBitcoin`
 from `libs/bitcoin/unit.ts`. Compute in satoshis, because floats can't hold BTC exactly.
 `unit.ts` is safe in client components.
@@ -110,6 +150,7 @@ real terminal: it refuses a pipe. In Git Bash, prefix it with `winpty`.
 bun tests/wallet.spec.ts create --name "Cold Storage" [--words 12|24] [--account 0]
 bun tests/wallet.spec.ts recover --name "Old Wallet" [--started-at 2021-03-01] [--account 0]
 bun tests/wallet.spec.ts addresses --wallet cold-storage [--account 0]
+bun tests/wallet.spec.ts load
 bun tests/wallet.spec.ts list
 ```
 
@@ -118,17 +159,20 @@ bun tests/wallet.spec.ts list
 | `create`    | Generates a seed, shows it once, clears the screen and scrollback, asks back 4 words, sets a passphrase. `--started-at` isn't needed: it starts now |
 | `recover`   | Takes a seed and its original passphrase. Shows the first addresses to confirm. Rescans the whole chain unless given `--started-at`                 |
 | `addresses` | Generates the next batch for a wallet's accounts, on the node first, then in the DB                                                                 |
-| `list`      | Wallets and accounts, nothing secret                                                                                                                |
+| `load`      | Loads every active account's Core wallet, and keeps it loaded across restarts                                                                       |
+| `list`      | Wallets and accounts, nothing secret. The only command that doesn't ask for the terminal password                                                   |
 
 Rules for these scripts:
 
 - **Secrets only through `commandInput`**, hidden by default. Never as an argument, which
   stays in the shell history.
+- **`askTerminalCredentials` comes before anything that reads the env.** `@/constants/env`
+  reads it once, on first import, so the entry file imports the rest with `await import`.
 - **`requireTerminal()` before printing anything secret.** It refuses pipes on both ends,
   so a seed can't land in a file through `… | tee out.log`.
 - **Print a query error's `cause.message`, nothing more.** Drizzle's message repeats the
   statement, and the driver's `cause.parameters` holds every value it was given, `bio` and
-  `passkey` included (`describeError` in `wallet.spec.ts`).
+  `passkey` included (`describeError` in `cmd.spec.ts`).
 - **The node first, then the DB** (`provisionWallet`). A wallet in the DB is always fully
   set up, and a failure leaves only an unused watch-only Core wallet, which holds no keys.
   Running again is safe.
@@ -151,9 +195,9 @@ this outside the repo (the scratchpad, for instance):
   answers against `help <method>` on the real node**, which only reads documentation: a
   fake that still sent `getwalletinfo.balance` once hid a bug that real Core would have
   hit on the first page load. Keep Core's real behaviours, because a fake that's too kind
-  hides real bugs: HTTP 500 with the error in the body, ranges topped up to the keypool on
-  import, the "new range must include current range" refusal, `next_index` moved by a
-  rescan, `ismine` worked out from the imported descriptors, `-18` for an unloaded wallet.
+  hides real bugs: the error in the body, ranges topped up to the keypool on import, the
+  "new range must include current range" refusal, `next_index` moved by a rescan, `ismine`
+  worked out from the imported descriptors, `-18` for an unloaded wallet.
 - **Env**: export `DB_*`, `RPC_*`, `CIPHER_*`, and `NEXT_PUBLIC_BASE_URL` in the shell.
   Bun and Next.js let the environment win over `.env`. **Have the test abort unless
   `DATABASE_URL` and `RPC.port` point at the throwaway services.**
@@ -166,20 +210,31 @@ this outside the repo (the scratchpad, for instance):
 
 What's worth proving on any change that touches them:
 
-- Decode what was broadcast: the recipient's amount, the change address, the fee, and
-  every input's signature (`tx.preimageWitnessV0` / `preimageWitnessV1`) for both SegWit
-  and Taproot.
-- Replay a captured send, with the right passphrase in it, with no `Origin`,
-  `Origin: null`, and another site's, on the page and on a path like `/anything.json`.
-  Each must be refused with nothing reaching the node.
+- Decode what was broadcast: the recipient's amount, the change address, and the fee, for
+  both SegWit and Taproot, with real Core judging the signatures.
+- Each of these ends with nothing broadcast: a wrong passphrase, approval, or terminal
+  password, a row that doesn't match the keys, a coin spent meanwhile, a wrong amount from
+  the node, a fee over either limit, and a pipe on stdin.
+- A broadcast the node refuses, and one it never answers, whether or not it got the
+  transaction. `sendrawtransaction` must be asked once.
+- Replay a call to a Server Action with no `Origin`, `Origin: null`, and another site's,
+  on the page and on a path like `/anything.json`. Each must be refused with nothing
+  reaching the node.
+- What a build exposes: the manifest must list only `readAddress`, `readAddresses`,
+  `syncAccount`, and `syncNode`, and `.next/server` must not hold
+  `Invalid mnemonic phrase`.
 
 **Real Core without real funds.** `bitcoind -regtest` with its own datadir and ports, no
 peers, takes the app's signed transactions through `testmempoolaccept`, which runs the
 real script checks. The app only speaks mainnet address formats, but scripts and
 signatures are the same on any chain: convert `bc1` ↔ `bcrt1` at the edges and `xpub` →
-`tpub` in the descriptors, and mine to the converted addresses. This has run against Core
-31.2 for SegWit and Taproot, and the owner considers it enough for now: no real send is
-needed.
+`tpub` in the descriptors, and mine to the converted addresses. A small proxy in front of
+Core can do that for a whole script, and fail on purpose at the broadcast. Signed bytes
+pass through it untouched. This has run against Core 31.2 for SegWit and Taproot, and the
+owner considers it enough for now: no real send is needed.
+
+Set up the same users as the real node, so a call outside a whitelist fails here too. For
+the roles, use a throwaway `postgres:17-alpine` container: PGlite has no real logins.
 
 A fake node can't prove what only real Core does, like policy rules or an actual rescan.
 For a change in that area, use regtest.

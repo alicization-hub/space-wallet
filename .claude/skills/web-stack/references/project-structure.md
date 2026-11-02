@@ -16,7 +16,7 @@ imports only inside the same feature folder.
 
 `tests/` holds one-off and maintenance scripts run with bun from the repo root. Name them
 `<topic>.spec.ts`. A script too big for one file keeps its entry there and its parts in
-`tests/<topic>s/` (`tests/wallet.spec.ts` + `tests/wallets/*.ts`). They may import from
+`tests/<topic>s/` (`tests/wallet.spec.ts` and `tests/wallets/*.ts`). They may import from
 `@/…`, and must end the DB connection (`db.$client.end()`) so the process exits.
 
 Scripts can't import anything with `import "server-only"`, because that package throws
@@ -39,7 +39,7 @@ src/
 ├── hooks/                Shared client hooks, re-exported from hooks/index.ts
 ├── libs/
 │   ├── bitcoin/          Pure Bitcoin code: keys, addresses, descriptors, signing, RPC client, units, telemetry
-│   └── cipher.ts, password.ts, rate-limit.ts, logger.ts, utils.ts, validator.zod.ts
+│   └── cipher.ts, password.ts, logger.ts, utils.ts, validator.zod.ts
 ├── proxy.ts              Refuses other host names and sets the Content-Security-Policy, nothing else
 ├── stores/<name>/        zustand store: state.ts (createXStore) + index.tsx (Provider + hook)
 ├── styles/               globals.css, theme.css (@theme tokens)
@@ -51,11 +51,11 @@ src/
 Shared code, one folder per domain. What decides a file's directive is who may call the
 code. For example:
 
-| File                        | Directive      | Who calls it                                          |
-| --------------------------- | -------------- | ----------------------------------------------------- |
-| `rpc.ts`                    | `server-only`  | Server code only: the layouts read the node's status  |
-| `fee.ts`                    | `"use server"` | A client component: the send form reads the fee rates |
-| `<domain>/validator.zod.ts` | none           | Both: forms and actions share its Zod schemas         |
+| File                        | Directive      | Who calls it                                         |
+| --------------------------- | -------------- | ---------------------------------------------------- |
+| `rpc.ts`                    | `server-only`  | Server code only: the layouts read the node's status |
+| `account/update.ts`         | `"use server"` | A client component: the page's sync                  |
+| `<domain>/validator.zod.ts` | none           | Both: client code and actions share its Zod schemas  |
 
 **A `"use server"` file makes every export a public URL.** If only server code calls a
 function, the file gets `import "server-only"` instead. Never add `"use server"` to a
@@ -115,11 +115,10 @@ Start local. Promote to the shared folder when a second route needs it: move it,
 copy it.
 
 **Exception: the account page's code.** `@/components/send/`, `receive/`, `transaction/`,
-and `wallet/`, and `@/actions/transaction/`, `utxo/`, `address/`, and `fee.ts`, stay
-shared, though only `[uuid]` uses them. Don't merge them into one route `read.ts`:
-`transaction/read.ts` is `server-only` while `utxo/read.ts` is `"use server"` with
-`"use cache"`, so a single file would make the first public and expose the second. A new
-route follows the layout above.
+and `wallet/`, and `@/actions/transaction/` and `address/`, stay shared, though only
+`[uuid]` uses them. Don't merge them into one route `read.ts`: `transaction/read.ts` is
+`server-only` while `address/read.ts` is `"use server"`, so a single file would make the
+first public. A new route follows the layout above.
 
 A constant one file uses stays at the top of that file (`PURPOSE_LABELS`, a component's
 `SIZES`). When a second file needs it, it moves to `@/constants`, or to the validator that
@@ -127,14 +126,14 @@ owns it (`LATEST_TRANSACTIONS`).
 
 Shared actions are grouped by domain and split into CRUD files, each only when the domain
 needs it: `read.ts`, `create.ts`, `update.ts`, `delete.ts`. A domain with one job is one
-file named for it (`fee.ts`, `passphrase.ts`, `rpc.ts`), and what doesn't fit CRUD gets
-its own kebab-case file in the domain folder (`transaction/format.ts`).
+file named for it (`rpc.ts`), and what doesn't fit CRUD gets its own kebab-case file in
+the domain folder (`transaction/format.ts`).
 
 ## File naming
 
 | Kind              | Convention                         | Example                                    |
 | ----------------- | ---------------------------------- | ------------------------------------------ |
-| Files and folders | kebab-case                         | `number-input.tsx`, `address-selection/`   |
+| Files and folders | kebab-case                         | `node-warning.tsx`, `address-selection/`   |
 | Hook files        | kebab-case with `use-` prefix      | `use-countdown.ts`, `use-overlay-state.ts` |
 | Validators        | `validator.<lib>.ts`               | `validator.zod.ts`, `validator.nuqs.ts`    |
 | Drizzle schema    | `<domain>.schema.ts`               | `wallets.schema.ts`                        |
@@ -143,11 +142,11 @@ its own kebab-case file in the domain folder (`transaction/format.ts`).
 | Global types      | `src/types/*.d.ts`, `declare type` | `AuthToken`, `NextParams`                  |
 
 **Every file and folder name is kebab-case**: components, hooks, stores, utils, and
-scripts alike (`number-input.tsx`, `use-effect-sync.ts`, `wallet.spec.ts`). The only
+scripts alike (`node-warning.tsx`, `use-effect-sync.ts`, `wallet.spec.ts`). The only
 exceptions are names the framework fixes (`page.tsx`, `layout.tsx`, `route.ts`,
 `next.config.ts`, …) and the dotted suffixes in the table above (`.zod`, `.nuqs`,
 `.schema`, `.spec`). This is about file names only: exported identifiers stay camelCase /
-PascalCase (`useEffectSync`, `NumberInput`).
+PascalCase (`useEffectSync`, `NodeWarning`).
 
 A folder's main component is `index.tsx` (`components/send/index.tsx`,
 `components/layout/navbar/index.tsx`).

@@ -1,15 +1,10 @@
 import { parseArgs } from "util"
 
-import { DrizzleQueryError } from "drizzle-orm"
-
-import { db } from "@/drizzle"
 import { logger } from "@/libs/logger"
 
-import { extendAddresses } from "./wallets/addresses"
-import { createWallet } from "./wallets/create"
-import { listWallets } from "./wallets/list"
-import { recoverWallet } from "./wallets/recover"
-import { optionsValidator } from "./wallets/shared"
+import { askTerminalCredentials, describeError, requireTerminal } from "./cmd.spec"
+
+const COMMANDS = ["create", "recover", "addresses", "load", "list"]
 
 const USAGE = `
 Usage: bun tests/wallet.spec.ts <command> [options]
@@ -22,6 +17,8 @@ Usage: bun tests/wallet.spec.ts <command> [options]
 
   addresses --wallet <name> [--account <n>]
             Generates the next batch of addresses for a wallet's accounts.
+
+  load      Loads the node's wallets, and keeps them loaded across restarts.
 
   list      Shows the wallets and their accounts.
 
@@ -44,36 +41,24 @@ async function main() {
     }
   })
 
-  const options = optionsValidator.parse(values)
+  const command = positionals[0]
 
-  switch (positionals[0]) {
-    case "create":
-      return createWallet(options)
-
-    case "recover":
-      return recoverWallet(options)
-
-    case "addresses":
-      return extendAddresses(options)
-
-    case "list":
-      return listWallets()
-
-    default:
-      console.info(USAGE)
-  }
-}
-
-/**
- * A failed query's own message repeats the statement, and the error holds the values it was given,
- * which can include `bio` and `passkey`. Only the reason is shown.
- */
-function describeError(error: unknown) {
-  if (error instanceof DrizzleQueryError) {
-    return `The database refused the change: ${error.cause?.message}`
+  if (!COMMANDS.includes(command)) {
+    console.info(USAGE)
+    return
   }
 
-  return error instanceof Error ? error.message : String(error)
+  // `list` shows nothing secret, so the web's credentials are enough for it
+  if (command !== "list") {
+    requireTerminal()
+    await askTerminalCredentials()
+  }
+
+  // Imported here, not at the top: see askTerminalCredentials
+  const { db } = await import("@/drizzle")
+  const { runWallet } = await import("./wallets/run")
+
+  await runWallet(command, values).finally(() => db.$client.end())
 }
 
 main()
@@ -81,7 +66,6 @@ main()
     logger(`🚫 ${describeError(error)}`)
     process.exitCode = 1
   })
-  .finally(async () => {
-    await db.$client.end()
+  .finally(() => {
     process.exit()
   })

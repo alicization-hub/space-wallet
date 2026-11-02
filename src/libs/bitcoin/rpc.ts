@@ -80,7 +80,7 @@ export class RPCClient {
       timeout
     )
 
-    // Bitcoin Core answers failed calls with HTTP 500 and the reason in the body, so read that first
+    // Bitcoin Core answers failed calls with the reason in the body, whatever the status, so read that first
     const payload = await res.json().catch(() => null)
     if (payload?.error) {
       throw new RPCError(`Bitcoin Core RPC Error: ${payload.error.message}`)
@@ -173,6 +173,16 @@ export class RPCClient {
     return this.call<Mempool.FeeratePoint[]>("getmempoolfeeratediagram")
   }
 
+  /**
+   * The fee rate the node estimates for a transaction to confirm within a number of blocks. A node
+   * that has only just synced has no data yet, and answers without `feerate`.
+   *
+   * @param blocks How many blocks to confirm within.
+   */
+  public async estimateSmartFee(blocks: number) {
+    return this.call<Mempool.FeeEstimate>("estimatesmartfee", [blocks])
+  }
+
   public async getBlockHash(height: number) {
     return this.call<string>("getblockhash", [height])
   }
@@ -189,6 +199,9 @@ export class RPCClient {
   }
 
   /**
+   * Points the client at a wallet, and loads it if the node hasn't. The web server's RPC user can't
+   * load one, so for it this fails with HTTP 403 until `bun tests/wallet.spec.ts load` has run.
+   *
    * @param walletName Bitcoin Core wallet name, Optional. Wallets are named after `accounts.id`.
    */
   public async setWallet(walletName?: string) {
@@ -222,7 +235,7 @@ export class RPCClient {
       "", // passphrase
       false, // avoid_reuse: it would hide coins on reused addresses from the balance
       true, // descriptors
-      false // load_on_startup
+      true // load_on_startup: the web server can only read, so it can't load a wallet itself
     ])
   }
 

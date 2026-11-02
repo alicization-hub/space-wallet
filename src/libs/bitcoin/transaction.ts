@@ -87,7 +87,7 @@ export async function createSignedTransaction(
   // Finalize the transaction and compute its txid and hash
   tx.finalize()
 
-  // The last check before the transaction can leave the server
+  // The last check on the real transaction, before anyone can broadcast it
   if (tx.fee > BigInt(MAX_FEE_SATS)) {
     throw new Error(
       `The transaction fee (${tx.fee} sats) exceeds the safety limit of ${MAX_FEE_SATS} sats.`
