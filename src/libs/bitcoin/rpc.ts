@@ -51,6 +51,9 @@ export class RPCClient {
         "Authorization": `Basic ${auth}`
       },
       body: JSON.stringify(body),
+      // A new connection for every call. Core closes one after 30 s idle, and a call sent on it just
+      // then fails with ECONNRESET: at the broadcast, that would read as an unknown result.
+      keepalive: false,
       signal: AbortSignal.timeout(timeout),
       // Bun's own idle timeout (5 minutes) would otherwise end a long rescan before `signal` does
       timeout: false

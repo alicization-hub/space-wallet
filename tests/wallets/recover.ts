@@ -25,7 +25,10 @@ export async function recoverWallet(options: OptionsValidator) {
   const { name, slug } = await requireFreeName(options.name)
 
   logger("⌨️ The seed is not shown while you type.")
-  const input = await commandInput("🌱 Seed phrase")
+  const input = await commandInput({
+    label: "Seed phrase",
+    description: "All the words, in order, separated by spaces."
+  })
   const phrase = input.trim().toLowerCase().split(/\s+/).join(" ")
 
   if (!Mnemonic.validate(phrase)) {
@@ -33,9 +36,17 @@ export async function recoverWallet(options: OptionsValidator) {
   }
 
   const passphrase = passphraseInputValidator.parse(
-    await commandInput("🔑 The wallet's passphrase")
+    await commandInput({
+      label: "Passphrase",
+      description:
+        "The wallet's original passphrase: a different one opens an empty wallet."
+    })
   )
-  if ((await commandInput("🔑 Confirm passphrase")) !== passphrase) {
+  const confirmation = await commandInput({
+    label: "Confirm passphrase",
+    description: "Type it again."
+  })
+  if (confirmation !== passphrase) {
     throw new Error("The passphrases do not match. Nothing was saved.")
   }
 
@@ -49,7 +60,11 @@ export async function recoverWallet(options: OptionsValidator) {
     logger(`📬 First ${plan.purpose} address: ${plan.createAddress(0, false)}`)
   }
 
-  if (!(await commandConfirm("Do these match the wallet you are recovering?"))) {
+  const isMatch = await commandConfirm({
+    label: "Do these match the wallet you are recovering?",
+    description: "Compare them with the first addresses of the wallet you had."
+  })
+  if (!isMatch) {
     throw new Error("Nothing was saved. Check the seed phrase and the passphrase.")
   }
 

@@ -81,7 +81,13 @@ async function unlockWallet(walletId: string) {
     .from(schema.wallets)
     .where(eq(schema.wallets.id, walletId))
 
-  const passphrase = passphraseInputValidator.parse(await commandInput("🔑 Passphrase"))
+  const passphrase = passphraseInputValidator.parse(
+    await commandInput({
+      label: "Passphrase",
+      description:
+        "The wallet's passphrase. The transaction is signed and tested here, and nothing is sent yet."
+    })
+  )
   if (!(await verifyPassword(passphrase, wallet.passkey))) {
     throw new Error("Invalid passphrase.")
   }

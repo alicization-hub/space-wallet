@@ -2,13 +2,13 @@ import { and, asc, eq } from "drizzle-orm"
 import { z } from "zod"
 
 import { db, schema } from "@/drizzle"
-import { SYNCED_PROGRESS } from "@/libs/bitcoin/constants"
+import { MAX_FEE_RATE, SYNCED_PROGRESS } from "@/libs/bitcoin/constants"
 import type { RPCClient } from "@/libs/bitcoin/rpc"
 import { toSatsPerVByte } from "@/libs/bitcoin/telemetry"
 import { bitcoinToSats, satsToBitcoin } from "@/libs/bitcoin/unit"
-import { logger } from "@/libs/logger"
+import { COLOR, logger } from "@/libs/logger"
 
-import { commandConfirm, commandInput, toPrintable } from "../cmd.spec"
+import { commandConfirm, commandInput, toPrintable, type Question } from "../cmd.spec"
 import {
   amountValidator,
   choiceValidator,
@@ -32,15 +32,22 @@ export type TransferAccount = Awaited<ReturnType<typeof chooseAccount>>
 /**
  * Asks until the answer is valid. Ctrl+C is the way out.
  */
-async function ask<T>(label: string, validator: z.ZodType<T, string>) {
+async function ask<T>(question: Question, validator: z.ZodType<T, string>) {
   while (true) {
-    const answer = await commandInput(label, { isHidden: false })
+    const answer = await commandInput({ ...question, isHidden: false })
 
     const parsed = validator.safeParse(answer)
     if (parsed.success) return parsed.data
 
-    logger(`🚫 ${parsed.error.issues[0].message}`)
+    logger(`🚫 ${COLOR.FG.Red}${parsed.error.issues[0].message}`)
   }
+}
+
+/**
+ * Keys the rows from 1, so the first column of `console.table` is the number to type.
+ */
+function toChoices<T>(rows: T[]) {
+  return Object.fromEntries(rows.map((row, index) => [index + 1, row]))
 }
 
 /**
@@ -87,11 +94,21 @@ export async function chooseAccount() {
     throw new Error("No wallet yet. Create one with: bun tests/wallet.spec.ts create")
   }
 
-  accounts.forEach(({ label }, index) => {
-    console.info(`${index + 1}. ${toPrintable(label)}`)
-  })
+  console.table(
+    toChoices(
+      accounts.map(({ label, purpose }) => ({
+        Account: toPrintable(label),
+        Type: purpose === 84 ? "SegWit" : "Taproot"
+      }))
+    )
+  )
 
-  return accounts[(await ask("Account", choiceValidator(accounts.length))) - 1]
+  const choice = await ask(
+    { label: "Account", description: "Type the number of the account to send from." },
+    choiceValidator(accounts.length)
+  )
+
+  return accounts[choice - 1]
 }
 
 /**
@@ -106,16 +123,23 @@ export async function confirmPending(rpcClient: RPCClient) {
 
   if (pending.length === 0) return
 
-  logger("🚫 These sends aren't confirmed yet:")
-  for (const { txid, amount, address } of pending) {
-    console.info(
-      `   ${toPrintable(txid)}  ${Math.abs(amount).toFixed(8)} BTC  ${toPrintable(address)}`
+  logger(`🚫 ${COLOR.FG.Red}These sends aren't confirmed yet:`)
+  console.table(
+    toChoices(
+      pending.map(({ txid, amount, address }) => ({
+        Transaction: toPrintable(txid),
+        Amount: `${Math.abs(amount).toFixed(8)} BTC`,
+        Address: toPrintable(address)
+      }))
     )
-  }
+  )
 
-  if (!(await commandConfirm("Send another one anyway?"))) {
-    throw new Error("Nothing was sent.")
-  }
+  const isConfirmed = await commandConfirm({
+    label: "Send another one anyway?",
+    description: "Sending again from other coins while these are out could pay twice."
+  })
+
+  if (!isConfirmed) throw new Error("Nothing was sent.")
 }
 
 export async function chooseCoins(rpcClient: RPCClient) {
@@ -123,23 +147,37 @@ export async function chooseCoins(rpcClient: RPCClient) {
 
   if (utxos.length === 0) throw new Error("This account has no confirmed coins.")
 
-  utxos.forEach(({ amount, address, confirmations }, index) => {
-    console.info(
-      `${index + 1}. ${amount.toFixed(8)} BTC  ${toPrintable(address)}  ${confirmations} confirmations`
+  console.table(
+    toChoices(
+      utxos.map(({ amount, address, confirmations }) => ({
+        Amount: `${amount.toFixed(8)} BTC`,
+        Address: toPrintable(address),
+        Confirmations: confirmations
+      }))
     )
-  })
+  )
 
-  const choices = await ask("Coins, such as 1,3", coinsValidator(utxos.length))
+  const choices = await ask(
+    { label: "Coins", description: "Type their numbers, such as 1,3." },
+    coinsValidator(utxos.length)
+  )
 
   return choices.map((choice) => utxos[choice - 1])
 }
 
 export async function askRecipient(rpcClient: RPCClient) {
-  const recipient = await ask("Recipient", recipientValidator)
-  console.info(`   ${toGroups(recipient)}`)
+  const recipient = await ask(
+    {
+      label: "Recipient",
+      description:
+        "Paste the address, then compare every group below with where you got it."
+    },
+    recipientValidator
+  )
+  console.info(`   ${COLOR.BRIGHT}${toGroups(recipient)}${COLOR.RESET}`)
 
   const { ismine } = await rpcClient.getAddressInfo(recipient)
-  if (ismine) logger("🚫 This address belongs to this account.")
+  if (ismine) logger(`🚫 ${COLOR.FG.Red}This address belongs to this account.`)
 
   return recipient
 }
@@ -149,10 +187,12 @@ export async function askRecipient(rpcClient: RPCClient) {
  */
 export async function askAmount(coins: Unspent.List[]) {
   const total = coins.reduce((sum, { amount }) => sum + bitcoinToSats(amount), 0)
-  console.info(`   The coins hold ${satsToBitcoin(total).toFixed(8)} BTC`)
 
   return ask(
-    "Amount in BTC",
+    {
+      label: "Amount",
+      description: `In BTC, with at most 8 decimals. The coins hold ${satsToBitcoin(total).toFixed(8)} BTC, and the fee comes out of what's left.`
+    },
     amountValidator.refine((amount) => amount < total, {
       error: "The coins must hold more than the amount, to pay the fee."
     })
@@ -167,12 +207,20 @@ export async function askFeeRate(rpcClient: RPCClient) {
     FEE_TARGETS.map((blocks) => rpcClient.estimateSmartFee(blocks))
   )
 
-  estimates.forEach(({ feerate }, index) => {
-    const estimate = feerate
-      ? `${toSatsPerVByte(feerate).toFixed(2)} sat/vB`
-      : "no estimate yet"
-    console.info(`   Within ${FEE_TARGETS[index]} blocks: ${estimate}`)
-  })
+  console.table(
+    Object.fromEntries(
+      estimates.map(({ feerate }, index) => [
+        `Within ${FEE_TARGETS[index]} blocks`,
+        { "sat/vB": feerate ? toSatsPerVByte(feerate).toFixed(2) : "no estimate yet" }
+      ])
+    )
+  )
 
-  return ask("Fee rate in sat/vB", feeRateValidator)
+  return ask(
+    {
+      label: "Fee rate",
+      description: `In sat/vB, from 1 to ${MAX_FEE_RATE}. The table shows what the node estimates.`
+    },
+    feeRateValidator
+  )
 }

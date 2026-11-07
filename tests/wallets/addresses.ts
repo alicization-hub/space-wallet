@@ -31,7 +31,12 @@ export async function extendAddresses(options: OptionsValidator) {
 
   if (!wallet) throw new Error(`No wallet with the name "${options.wallet}".`)
 
-  const passphrase = passphraseInputValidator.parse(await commandInput("🔑 Passphrase"))
+  const passphrase = passphraseInputValidator.parse(
+    await commandInput({
+      label: "Passphrase",
+      description: "The wallet's passphrase, to derive the new addresses."
+    })
+  )
   if (!(await verifyPassword(passphrase, wallet.passkey))) {
     throw new Error("Invalid passphrase.")
   }

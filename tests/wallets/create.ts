@@ -56,11 +56,19 @@ export async function createWallet(options: OptionsValidator) {
     `\n${words.map((word, index) => `${String(index + 1).padStart(2)}. ${word}`).join("\n")}\n`
   )
 
-  await commandInput("Press Enter once you have written them down")
+  await commandInput({
+    label: "Written down?",
+    description:
+      "Press Enter once you have written them down. The screen is cleared next."
+  })
   clearScreen()
 
   for (const position of pickPositions(words.length)) {
-    const answer = await commandInput(`Word #${position + 1}`, { isHidden: false })
+    const answer = await commandInput({
+      label: `Word #${position + 1}`,
+      description: "Type this word from what you wrote down, to check it.",
+      isHidden: false
+    })
     if (answer.trim().toLowerCase() !== words[position]) {
       throw new Error(
         "That word doesn't match. Nothing was saved. Run the command again for a new seed."

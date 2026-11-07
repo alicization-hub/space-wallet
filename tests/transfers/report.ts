@@ -1,6 +1,6 @@
 import { RPCError, type RPCClient } from "@/libs/bitcoin/rpc"
 import { satsToBitcoin } from "@/libs/bitcoin/unit"
-import { logger } from "@/libs/logger"
+import { COLOR, logger } from "@/libs/logger"
 
 import { commandInput, toPrintable } from "../cmd.spec"
 import { toGroups } from "./ask"
@@ -26,7 +26,7 @@ export function showReview(transfer: Transfer) {
   const { recipient, amount, fee, feeRate, change } = transfer
 
   console.info(`
-Check this against where you got the address:
+${COLOR.BRIGHT}${COLOR.FG.Yellow}Check this against where you got the address:${COLOR.RESET}
 
   Recipient  ${toGroups(recipient)}
   Amount     ${toBitcoin(amount)}
@@ -37,10 +37,11 @@ Check this against where you got the address:
 }
 
 export async function isApproved({ recipient }: Transfer) {
-  const answer = await commandInput(
-    `Type the last ${APPROVAL_LENGTH} characters of the recipient to send`,
-    { isHidden: false }
-  )
+  const answer = await commandInput({
+    label: "Approve",
+    description: `Type the last ${APPROVAL_LENGTH} characters of the recipient to send. Anything else stops without sending.`,
+    isHidden: false
+  })
 
   return answer.trim() === recipient.slice(-APPROVAL_LENGTH)
 }

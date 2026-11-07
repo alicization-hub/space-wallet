@@ -1,5 +1,16 @@
 import { DrizzleQueryError } from "drizzle-orm"
 
+import { COLOR, logger } from "@/libs/logger"
+
+export type Question = {
+  /** What is asked, in a few words */
+  label: string
+  /** What to type, or why it's asked */
+  description?: string
+  /** Don't echo what is typed. On by default, so a secret can't be shown by mistake. */
+  isHidden?: boolean
+}
+
 /**
  * Stops a script unless both ends are a terminal, so a secret can't arrive through a pipe or a file,
  * and a printed seed can't land in one (`… | tee out.log`). Call it before printing anything secret.
@@ -13,23 +24,34 @@ export function requireTerminal() {
 }
 
 /**
- * Reads a line from the terminal. Scripts ask for secrets here instead of taking them as arguments,
- * because an argument stays in the shell history and shows up in the process list.
+ * Asks a question in the terminal and reads a line. Scripts ask for secrets here instead of taking
+ * them as arguments, because an argument stays in the shell history and shows up in the process list.
  *
- * @param label - The prompt
- * @param options.isHidden - Don't echo what is typed. On by default, so a secret can't be shown by
- * mistake.
+ * @example
+ * ```text
+ * [SPACE] - Nov 8, 2026, 10:00:00 AM 📝 Amount
+ *    In BTC, with at most 8 decimals.
+ * input: 0.01
+ * ```
+ *
  * @returns What was typed
  * @throws When this isn't running in a terminal
  */
-export async function commandInput(
-  label: string,
-  { isHidden = true }: { isHidden?: boolean } = {}
-): Promise<string> {
+export async function commandInput({
+  label,
+  description,
+  isHidden = true
+}: Question): Promise<string> {
   requireTerminal()
 
+  logger(`${isHidden ? "🔑" : "📝"} ${label}`)
+  if (description) {
+    logger(`${COLOR.FG.Gray}${description}${COLOR.RESET}`)
+  }
+
   return new Promise((resolve) => {
-    process.stdout.write(`${label}: `)
+    const hint = isHidden ? " (hidden)" : ""
+    process.stdout.write(`${COLOR.FG.Yellow}Input${hint}:${COLOR.RESET} `)
 
     // Settings stdin to raw mode
     process.stdin.setRawMode(true)
@@ -90,8 +112,12 @@ export async function commandInput(
 /**
  * Asks a yes/no question. Anything but `y` is a no.
  */
-export async function commandConfirm(label: string) {
-  const answer = await commandInput(`${label} (y/N)`, { isHidden: false })
+export async function commandConfirm({ label, description }: Question) {
+  const answer = await commandInput({
+    label: `${label} (y/N)`,
+    description,
+    isHidden: false
+  })
   return answer.trim().toLowerCase() === "y"
 }
 
@@ -108,7 +134,10 @@ export async function askTerminalCredentials() {
   if (!DB_OWNER)
     throw new Error("DB_OWNER is missing from .env. See docs/setup-guide.md.")
 
-  const password = await commandInput("🔑 Terminal password")
+  const password = await commandInput({
+    label: "Terminal password",
+    description: "Opens the database and the node for this run."
+  })
 
   process.env.DB_USER = DB_OWNER
   process.env.DB_PASSWORD = password

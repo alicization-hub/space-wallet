@@ -66,7 +66,10 @@ export function createSeedPlan(
  */
 export async function promptNewPassphrase() {
   while (true) {
-    const passphrase = await commandInput("🔑 New passphrase")
+    const passphrase = await commandInput({
+      label: "New passphrase",
+      description: "Encrypts the seed, and is part of the key. Every send asks for it."
+    })
 
     const parsed = passphraseValidator.safeParse(passphrase)
     if (!parsed.success) {
@@ -74,7 +77,10 @@ export async function promptNewPassphrase() {
       continue
     }
 
-    const confirmation = await commandInput("🔑 Confirm passphrase")
+    const confirmation = await commandInput({
+      label: "Confirm passphrase",
+      description: "Type it again."
+    })
     if (confirmation === passphrase) return passphrase
 
     logger("🚫 The passphrases do not match.")

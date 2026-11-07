@@ -58,7 +58,10 @@ async function main() {
 
   logger(`📝 Wallet: ${wallet.name}`)
 
-  const passkey = await commandInput("🔑 Enter passkey")
+  const passkey = await commandInput({
+    label: "Passphrase",
+    description: "The wallet's passphrase, to renew its encryption."
+  })
   const isValid = await verifyPassword(passkey, wallet.passkey)
   if (!isValid) {
     throw new Error("Invalid passphrase.")
