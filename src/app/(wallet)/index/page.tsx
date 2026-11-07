@@ -14,7 +14,7 @@ export default async function Index() {
   await connection()
 
   const account = await readFirstAccount()
-  if (account) redirect(`/${account.id}`)
+  if (account) redirect(`/account?vid=${account.id}`)
 
   return (
     <div className='mx-auto flex max-w-md flex-col gap-8 py-24'>

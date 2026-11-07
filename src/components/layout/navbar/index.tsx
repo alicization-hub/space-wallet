@@ -7,26 +7,35 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 
+import type { MenuWallet } from "@/actions/account/read"
 import type { NodeInfo } from "@/actions/rpc"
 
 import { NavbarGlass } from "./glass"
+import { WalletMenu } from "./wallet-menu"
 
-export function Navbar({ node }: Readonly<{ node: NodeInfo | null }>) {
+export function Navbar({
+  node,
+  wallets
+}: Readonly<{ node: NodeInfo | null; wallets: MenuWallet[] | null }>) {
   return (
     <nav className='fixed inset-x-0 top-0 z-10'>
       <NavbarGlass />
 
       <div className='max-w-space mx-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-1 p-4 select-none'>
-        <Link className='flex items-center gap-2.5' href='/'>
-          <Image
-            alt='Bitcoin Icon'
-            src='/static/images/bitcoin.png'
-            width={22}
-            height={22}
-            preload
-          />
-          <div className='text-lg capitalize'>bitcoin wallet</div>
-        </Link>
+        <div className='flex items-center gap-x-4'>
+          <Link className='flex items-center gap-2.5' href='/'>
+            <Image
+              alt='Bitcoin Icon'
+              src='/static/images/bitcoin.png'
+              width={22}
+              height={22}
+              preload
+            />
+            <div className='text-lg capitalize'>bitcoin wallet</div>
+          </Link>
+
+          <WalletMenu wallets={wallets} />
+        </div>
 
         {node !== null ? (
           <div className='flex flex-wrap gap-x-6 gap-y-1'>

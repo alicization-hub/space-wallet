@@ -1,8 +1,8 @@
 import { Chip } from "@/components/ui/chip"
-import { cls } from "@/libs/utils"
+import { cls, formatBytesText } from "@/libs/utils"
 
 import type { NodeTelemetry } from "../actions/read"
-import { formatBytesText, formatInteger, NO_VALUE } from "../utils"
+import { formatInteger, NO_VALUE } from "../utils"
 
 type Peer = NodeTelemetry["peers"][number]
 

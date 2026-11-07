@@ -91,12 +91,11 @@ Structure. Scale."
   [deployment.md](references/deployment.md).
 - `bun run drizzle:generate` / `bun run drizzle:push` / `bun run drizzle:studio` — see
   [database.md](references/database.md).
-- `bun tests/wallet.spec.ts <create|recover|addresses|load|list>` — manage wallets. See
-  [bitcoin-wallet.md](references/bitcoin-wallet.md#wallet-scripts).
+- `bun tests/wallet.spec.ts <create|recover|addresses|load|list|balance>` — manage
+  wallets. See [bitcoin-wallet.md](references/bitcoin-wallet.md#wallet-scripts).
 - `bun tests/transfer.spec.ts` — send bitcoin. See
   [bitcoin-wallet.md](references/bitcoin-wallet.md#sending-teststransferspects).
 - `bun tests/node.spec.ts` — check the connection to Bitcoin Core.
-- `bun tests/balance.spec.ts` — copy every account's balance from the node to the DB.
 
 ## Project notes
 
@@ -113,8 +112,9 @@ Structure. Scale."
   to open it to a network. See [deployment.md](references/deployment.md).
 - **There is no sign-in.** One person uses this app. `/` is the node dashboard, and its
   link goes to `/index`, which opens the oldest wallet or says how to create one when
-  there are none. Switching wallets is opening another account's URL; the UI for it is
-  still to come. Don't add a session back without asking.
+  there are none. An account opens at `/account?vid=<accounts.id>`, and the navbar's menu
+  (`components/layout/navbar/wallet-menu.tsx`) lists every wallet and account to switch
+  between. Don't add a session back without asking.
 - **No automated tests.** Don't write unit/integration tests or add a test runner. The
   `tests/` folder is the **scripts** folder (it keeps that name). To check a change end to
   end, use throwaway services outside the repo

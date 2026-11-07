@@ -99,21 +99,15 @@ page renders per request, and the server waits for all of it.
 ```tsx
 export const instant = false
 
-export default async function Account({
-  params
-}: Readonly<{ params: Promise<{ uuid: string }> }>) {
-    await connection()
+export default async function Account({ searchParams }: NextSearchParams) {
+  await connection()
 
-  const { uuid } = await params
-  const result = await readAccount(uuid)
+  const { vid } = await queryValidator.parse(searchParams)
+  const result = await readAccount(vid)
   if (!result) notFound()
 
-  const { wallet, ...account } = result
-  const [accounts, transactions] = await Promise.all([
-    readAccounts(wallet.id),
-    readTransactions(account.id, LATEST_TRANSACTIONS)
-  ])
-
+  const account = omit(result, ["wallet"])
+  const transactions = await readTransactions(account.id, LATEST_TRANSACTIONS)
 
   return …
 }
@@ -208,6 +202,6 @@ if (!account) return new Response(null, { status: 404 })
 
 - `loading.tsx`: not used.
 - `error.tsx`: must be `"use client"`; `reset()` retries.
-- `not-found.tsx`: call `notFound()` when an ID doesn't exist. Any single path segment
-  matches `(wallet)/[uuid]`, so an unknown URL lands there and gets the not-found UI.
+- `not-found.tsx`: call `notFound()` when an ID doesn't exist, as `(wallet)/account` does
+  for a `vid` it can't open. An unknown path gets the same UI from Next.js itself.
 - Metadata lives in `constants/metadata.ts`. `robots` is `noindex` (private app).

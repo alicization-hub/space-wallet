@@ -6,6 +6,7 @@ import { z } from "zod"
 
 import { db, schema } from "@/drizzle"
 import { accountColumns, walletColumns } from "@/drizzle/table-columns"
+import { logger } from "@/libs/logger"
 
 export type PublicAccount = Omit<
   NonNullable<Awaited<ReturnType<typeof readAccount>>>,
@@ -56,16 +57,69 @@ export async function readAccount(accountId: string) {
 }
 
 /**
- * Lists the active accounts of a wallet, for the account tabs.
+ * Lists every active wallet with its active accounts, for the navbar's menu. The navbar is a client
+ * component on every page, so only what the menu prints leaves here.
+ *
+ * A database that can't be read must not take the node dashboard down with it, so the failure is
+ * logged and the menu says so.
+ *
+ * @returns The wallets, oldest first, or `null` when the database can't be read
  */
-export async function readAccounts(walletId: string) {
-  return db
-    .select(pick(accountColumns, ["id", "purpose", "index"]))
-    .from(schema.accounts)
-    .where(
-      and(eq(schema.accounts.walletId, walletId), eq(schema.accounts.isActive, true))
-    )
-    .orderBy(asc(schema.accounts.purpose), asc(schema.accounts.index))
+export async function readWalletMenu() {
+  try {
+    const rows = await db
+      .select({
+        walletId: schema.wallets.id,
+        walletName: schema.wallets.name,
+        id: schema.accounts.id,
+        label: schema.accounts.label,
+        purpose: schema.accounts.purpose,
+        balance: schema.accounts.balance
+      })
+      .from(schema.accounts)
+      .innerJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
+      .where(and(eq(schema.accounts.isActive, true), eq(schema.wallets.isActive, true)))
+      .orderBy(
+        asc(schema.wallets.createdAt),
+        asc(schema.accounts.purpose),
+        asc(schema.accounts.index)
+      )
+
+    const wallets = new Map<string, MenuWallet>()
+    for (const row of rows) {
+      const wallet = wallets.get(row.walletId) ?? {
+        id: row.walletId,
+        name: row.walletName,
+        accounts: []
+      }
+
+      wallet.accounts.push({
+        id: row.id,
+        label: row.label,
+        purpose: row.purpose,
+        total: withoutNulls(row.balance).total
+      })
+      wallets.set(row.walletId, wallet)
+    }
+
+    return [...wallets.values()]
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger(`🚫 readWalletMenu failed: ${message}`)
+
+    return null
+  }
+}
+
+export type MenuWallet = {
+  id: string
+  name: string
+  accounts: {
+    id: string
+    label: string
+    purpose: Purpose
+    total: number
+  }[]
 }
 
 /**

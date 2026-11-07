@@ -31,6 +31,15 @@ add Radix, Base UI, or shadcn, and don't write HeroUI's API (`onPress`, `isDisab
 | `spinner.tsx`    | `Spinner`                                     | Dots. `size`: `sm`, `md`, `lg`                                  |
 | `chip.tsx`       | `Chip`                                        | `color`: `success`, `danger`, `secondary`                       |
 | `pagination.tsx` | `Pagination`                                  | Controlled: `page`, `total`, `onChange`                         |
+| `menu.tsx`       | `Menu`, `MenuGroup/SubGroup/Item/Empty`       | Dropdown, click only. See below                                 |
+
+### Menu
+
+`Menu > MenuGroup > MenuSubGroup > MenuItem`. It opens on click only, never on hover, and
+so does each `MenuSubGroup`, whose items open in a panel to its right (one at a time).
+Unlike an overlay it closes on an outside click and on Esc, because it holds nothing that
+can be lost, and choosing a `MenuItem` (a `Link`) closes it too. It's a disclosure, not
+ARIA's `menu` role: its items are links that Tab reaches.
 
 ### Button
 
@@ -129,6 +138,11 @@ page is hidden rather than left out because its sync keeps the navbar's data fre
 
 The navbar is `fixed`, 60px tall, and `NavbarGlass` fades in its background once the page
 has scrolled past 100px. The toasts start at 64px, below it.
+
+`WalletMenu` (`navbar/wallet-menu.tsx`) lists every wallet and its accounts from
+`readWalletMenu`, which the root layout reads. Its button is `MenuSparklesIcon`, except on
+`/account`, where it's a powerline breadcrumb (icon / wallet / account) in the colours of
+oh-my-posh's paradox theme: the `posh-*` tokens and the `.powerline` class.
 
 ## Icons
 

@@ -1,7 +1,8 @@
 import { SignalHigh } from "@keyline-icons/react/two-tone"
 
+import { formatBytes } from "@/libs/utils"
+
 import type { NodeTelemetry } from "../actions/read"
-import { formatBytes } from "../utils"
 import { MetricCard } from "./metric-card"
 import { Panel } from "./panel"
 import { PeerTable } from "./peer-table"

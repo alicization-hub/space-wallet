@@ -1,17 +1,10 @@
 import { PackageIcon } from "@keyline-icons/react/duotone"
 
 import { Chip } from "@/components/ui/chip"
+import { formatBytes, formatDifficulty, formatHashrate } from "@/libs/utils"
 
 import type { NodeTelemetry } from "../actions/read"
-import {
-  formatBlockTime,
-  formatBytes,
-  formatChange,
-  formatDifficulty,
-  formatHashrate,
-  formatInteger,
-  NO_VALUE
-} from "../utils"
+import { formatBlockTime, formatChange, formatInteger, NO_VALUE } from "../utils"
 import { MetricCard } from "./metric-card"
 import { Panel } from "./panel"
 

@@ -553,17 +553,26 @@ node
    #!/bin/sh
    # Attach <Local Disk>\bitcoin-node.vhdx to WSL. Only Windows can attach it, so call wsl.exe through interop.
    M=/mnt/wsl/btcnode
-   mountpoint -q "$M" && exit 0
-   WSL_UTF8=1 /mnt/c/Windows/System32/wsl.exe --mount --vhd '<Local Disk>\bitcoin-node.vhdx' --name btcnode </dev/null
-   i=0
-   while [ "$i" -lt 30 ]; do
-     mountpoint -q "$M" && exit 0
-     sleep 1
-     i=$((i + 1))
-   done
-   echo "VHDX did not appear at $M" >&2
-   exit 1
+   if ! mountpoint -q "$M"; then
+     WSL_UTF8=1 /mnt/c/Windows/System32/wsl.exe --mount --vhd '<Local Disk>\bitcoin-node.vhdx' --name btcnode </dev/null
+     i=0
+     while ! mountpoint -q "$M"; do
+       i=$((i + 1))
+       if [ "$i" -gt 30 ]; then
+         echo "VHDX did not appear at $M" >&2
+         exit 1
+       fi
+       sleep 1
+     done
+   fi
+   # WSL gives its disks an 8 MiB readahead. LevelDB reads small records through mmap, so each
+   # miss pulled megabytes it never used: 128 KiB cut the node's reads from ~1.4 GB/s to ~20 MB/s.
+   dev=$(basename "$(findmnt -no SOURCE "$M")")
+   echo 128 > "/sys/block/$dev/queue/read_ahead_kb"
    ```
+
+   บรรทัดท้ายลด readahead ของดิสก์จาก 8 MB ที่ WSL ตั้งไว้เหลือ 128 KB ถ้าไม่ลด node
+   จะอ่านดิสก์เกินจริงหลายสิบเท่าระหว่าง sync (วัดได้ราว 1.4 GB/s เทียบกับไม่ถึง 150 MB/s)
 
    ```bash
    sudo chmod 755 /usr/local/sbin/btcnode-mount

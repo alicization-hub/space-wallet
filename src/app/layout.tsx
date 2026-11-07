@@ -1,5 +1,6 @@
 import { connection } from "next/server"
 
+import { readWalletMenu } from "@/actions/account/read"
 import { readNodeInfo } from "@/actions/rpc"
 import { Navbar } from "@/components/layout/navbar"
 import { AppProviders } from "@/components/layout/provider"
@@ -23,7 +24,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }>) {
   await connection()
-  const node = await readNodeInfo()
+  const [node, wallets] = await Promise.all([readNodeInfo(), readWalletMenu()])
 
   return (
     <html lang='en-US' style={{ colorScheme: "dark" }}>
@@ -32,7 +33,7 @@ export default async function RootLayout({
         style={{ backgroundColor: "#0a0a0a" }}>
         <AppProviders>
           <main className='app-wrapper min-h-svh'>
-            <Navbar node={node} />
+            <Navbar node={node} wallets={wallets} />
             <ScreenNotice />
             <div className='app-router max-w-space mx-auto hidden lg:block'>
               {children}

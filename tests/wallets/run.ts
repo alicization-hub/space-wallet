@@ -1,4 +1,5 @@
 import { extendAddresses } from "./addresses"
+import { showBalance } from "./balance"
 import { createWallet } from "./create"
 import { listWallets } from "./list"
 import { loadWallets } from "./load"
@@ -23,5 +24,8 @@ export async function runWallet(command: string, values: unknown) {
 
     case "list":
       return listWallets()
+
+    case "balance":
+      return showBalance()
   }
 }

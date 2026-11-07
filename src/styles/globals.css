@@ -38,6 +38,30 @@
     @apply bg-space-50/5 ring-space-50/10 ring-1;
   }
 
+  /* A powerline segment: each one ends in an arrow and the next is notched to take it, so they meet without a gap */
+  .powerline {
+    @apply -ml-2.5 flex items-center pr-4 pl-5;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 0.625rem) 0,
+      100% 50%,
+      calc(100% - 0.625rem) 100%,
+      0 100%,
+      0.625rem 50%
+    );
+  }
+
+  .powerline:first-child {
+    @apply ml-0 pl-2.5;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 0.625rem) 0,
+      100% 50%,
+      calc(100% - 0.625rem) 100%,
+      0 100%
+    );
+  }
+
   .is-required::after {
     @apply pl-1 text-sm text-red-500;
     content: "*";

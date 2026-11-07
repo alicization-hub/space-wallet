@@ -19,6 +19,12 @@
 
   --color-overlay: #000000;
 
+  /* The navbar's breadcrumb takes these from oh-my-posh's paradox theme: root, session, path, and the text on them */
+  --color-posh-root: #ffe9aa;
+  --color-posh-session: #ffffff;
+  --color-posh-path: #91ddff;
+  --color-posh-ink: #100e23;
+
   --color-space-50: #fafafa;
   --color-space-100: #efefef;
   --color-space-200: #dcdcdc;

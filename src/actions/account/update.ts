@@ -4,39 +4,15 @@ import { eq } from "drizzle-orm"
 import { refresh } from "next/cache"
 
 import { db, schema } from "@/drizzle"
+import { readNodeBalance } from "@/libs/bitcoin/balance"
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"
-import { bitcoinToSats } from "@/libs/bitcoin/unit"
 import { logger } from "@/libs/logger"
 
 import { withAccount } from "."
 import { markAddressesUsed } from "../address/update"
 import { readTransactions } from "../transaction/read"
 import { LATEST_TRANSACTIONS } from "../transaction/validator.zod"
-
-async function readNodeBalance(accountId: string): Promise<Account.Balance> {
-  const rpcClient = new RPCClient(READ_TIMEOUT)
-  await rpcClient.setWallet(accountId)
-  const [balances, utxos] = (await rpcClient.batch([
-    {
-      method: "getbalances"
-    },
-    {
-      method: "listunspent",
-      params: [1, 1e6, [], true]
-    }
-  ])) as [NodeWallet.Balances, Unspent.List[]]
-
-  return {
-    confirmed: utxos.reduce((acc, utxo) => acc + bitcoinToSats(utxo.amount), 0),
-    unconfirmed: bitcoinToSats(balances.mine.untrusted_pending),
-    immature: bitcoinToSats(balances.mine.immature),
-    total: bitcoinToSats(balances.mine.trusted),
-    spendable: utxos
-      .filter((utxo) => utxo.confirmations > 1)
-      .reduce((acc, utxo) => acc + bitcoinToSats(utxo.amount), 0)
-  }
-}
 
 /**
  * Brings an account up to date with Bitcoin Core and sends the page back rendered fresh, which is how
@@ -47,7 +23,10 @@ async function readNodeBalance(accountId: string): Promise<Account.Balance> {
 export const syncAccount = withAccount(async (account) => {
   try {
     // The balance goes first, so that trouble with the history can't hold it up
-    const balance = await readNodeBalance(account.id)
+    const rpcClient = new RPCClient(READ_TIMEOUT)
+    await rpcClient.setWallet(account.id)
+
+    const balance = await readNodeBalance(rpcClient)
     await db
       .update(schema.accounts)
       .set({ balance })

@@ -30,7 +30,7 @@ src/
 ├── actions/              Shared Server Actions and readers, by domain (see below)
 ├── app/
 │   ├── (dashboard)/      `/`: the node dashboard. It must render while the node syncs
-│   ├── (wallet)/         The wallet ([uuid]/) and index/, which opens the oldest wallet or says there is none, behind the node warning
+│   ├── (wallet)/         The wallet (account/, opened as /account?vid=<accounts.id>) and index/, which opens the oldest wallet or says there is none, behind the node warning
 │   └── layout.tsx, error.tsx, not-found.tsx    The root layout holds the navbar and the page column
 ├── components/           Shared UI, one folder per feature (send/, receive/, transaction/, wallet/, layout/)
 │   └── ui/               The framer-motion kit (ui-components.md)
@@ -84,7 +84,8 @@ app/<route>/
 └── validator.zod.ts      Form / action input schema: formValidator / FormValidator
 ```
 
-Dynamic segments nest the same structure: `app/(wallet)/[uuid]/page.tsx`. Scaffold with
+Dynamic segments nest the same structure (`app/<route>/[id]/page.tsx`), though the account
+page takes its ID as a search param instead (`(wallet)/account/validator.nuqs.ts`). Scaffold with
 `bun .claude/skills/web-stack/scripts/new-route.ts <segment>`, which makes these under
 `(wallet)`, then delete what the route doesn't need. `(dashboard)` is a route in this
 shape.
@@ -116,7 +117,7 @@ copy it.
 
 **Exception: the account page's code.** `@/components/send/`, `receive/`, `transaction/`,
 and `wallet/`, and `@/actions/transaction/` and `address/`, stay shared, though only
-`[uuid]` uses them. Don't merge them into one route `read.ts`: `transaction/read.ts` is
+`account/` uses them. Don't merge them into one route `read.ts`: `transaction/read.ts` is
 `server-only` while `address/read.ts` is `"use server"`, so a single file would make the
 first public. A new route follows the layout above.
 

@@ -9,8 +9,7 @@ Don't judge speed from `next dev`. Measure a production build
 
 ## Server
 
-- **Parallelize** independent reads with `Promise.all`, as `(wallet)/[uuid]/page.tsx`
-  does.
+- **Parallelize** independent reads with `Promise.all`, as the root layout does.
 - **Node calls are the expensive part.** `readTransactions` makes a `getrawtransaction`
   per transaction plus a batch for its parents. Keep pages small, and batch through
   `rpcClient.batch`. A page's own reads can't use `"use cache"`

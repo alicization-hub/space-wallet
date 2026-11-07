@@ -1,7 +1,6 @@
-import { cls, formatPercent } from "@/libs/utils"
+import { cls, formatBytesText, formatPercent } from "@/libs/utils"
 
 import type { NodeTelemetry } from "../actions/read"
-import { formatBytesText } from "../utils"
 
 /**
  * Amber is the wallet's colour for fees, brighter as the fee rate climbs. The colour belongs to the

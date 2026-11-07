@@ -152,6 +152,7 @@ bun tests/wallet.spec.ts recover --name "Old Wallet" [--started-at 2021-03-01] [
 bun tests/wallet.spec.ts addresses --wallet cold-storage [--account 0]
 bun tests/wallet.spec.ts load
 bun tests/wallet.spec.ts list
+bun tests/wallet.spec.ts balance
 ```
 
 | Command     | What it does                                                                                                                                        |
@@ -160,7 +161,8 @@ bun tests/wallet.spec.ts list
 | `recover`   | Takes a seed and its original passphrase. Shows the first addresses to confirm. Rescans the whole chain unless given `--started-at`                 |
 | `addresses` | Generates the next batch for a wallet's accounts, on the node first, then in the DB                                                                 |
 | `load`      | Loads every active account's Core wallet, and keeps it loaded across restarts                                                                       |
-| `list`      | Wallets and accounts, nothing secret. The only command that doesn't ask for the terminal password                                                   |
+| `list`      | Wallets and accounts, nothing secret. Doesn't ask for the terminal password                                                                         |
+| `balance`   | Asks for an account, saves its balance from the node to the DB, and prints it in BTC and sats. Doesn't ask for the terminal password                |
 
 Rules for these scripts:
 
