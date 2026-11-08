@@ -5,6 +5,7 @@ import { listWallets } from "./list"
 import { loadWallets } from "./load"
 import { recoverWallet } from "./recover"
 import { optionsValidator } from "./shared"
+import { markUsedAddresses } from "./used"
 
 export async function runWallet(command: string, values: unknown) {
   const options = optionsValidator.parse(values)
@@ -27,5 +28,8 @@ export async function runWallet(command: string, values: unknown) {
 
     case "balance":
       return showBalance()
+
+    case "used":
+      return markUsedAddresses()
   }
 }

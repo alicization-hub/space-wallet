@@ -2,7 +2,6 @@ import { eq } from "drizzle-orm"
 
 import { db, schema } from "@/drizzle"
 import { readNodeBalance } from "@/libs/bitcoin/balance"
-import { SYNCED_PROGRESS } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { satsToBitcoin } from "@/libs/bitcoin/unit"
 import { COLOR, logger } from "@/libs/logger"
@@ -10,6 +9,7 @@ import { numberToSpace } from "@/libs/utils"
 
 import { toPrintable } from "../cmd.spec"
 import { chooseAccount } from "../transfers/ask"
+import { warnIfSyncing } from "./shared"
 
 /**
  * @example
@@ -30,7 +30,6 @@ export async function showBalance() {
   const startedAt = new Date()
 
   const rpcClient = new RPCClient()
-  const { verificationprogress } = await rpcClient.getChain()
   await rpcClient.setWallet(account.id)
 
   const balance = await readNodeBalance(rpcClient)
@@ -47,9 +46,5 @@ export async function showBalance() {
   logger(`💸 Spendable: ${formatAmount(balance.spendable)}`)
   logger("✅ The balance is saved.", startedAt)
 
-  if (verificationprogress <= SYNCED_PROGRESS) {
-    logger(
-      `🚫 WARNING: Bitcoin Core is still syncing (${(verificationprogress * 100).toFixed(1)}%). Balance data may be incomplete.`
-    )
-  }
+  await warnIfSyncing(rpcClient)
 }

@@ -7,7 +7,7 @@ import { z } from "zod"
 
 import { db, schema } from "@/drizzle"
 import type { AddressInsertValues } from "@/drizzle/types"
-import { GAP_LIMIT } from "@/libs/bitcoin/constants"
+import { GAP_LIMIT, SYNCED_PROGRESS } from "@/libs/bitcoin/constants"
 import { createDescriptors } from "@/libs/bitcoin/descriptor"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { AddressBuilder } from "@/libs/bitcoin/scure"
@@ -204,6 +204,19 @@ export async function watchAddresses(
       throw new Error("Bitcoin Core doesn't watch the addresses these keys derive.")
     }
   }
+}
+
+/**
+ * Says so when the node is still syncing. What it has read so far is right, but it hasn't seen the
+ * whole chain yet.
+ */
+export async function warnIfSyncing(rpcClient: RPCClient) {
+  const { verificationprogress } = await rpcClient.getChain()
+  if (verificationprogress > SYNCED_PROGRESS) return
+
+  logger(
+    `🚫 WARNING: Bitcoin Core is still syncing (${(verificationprogress * 100).toFixed(1)}%). Balance and history may be incomplete.`
+  )
 }
 
 /**

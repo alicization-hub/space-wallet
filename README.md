@@ -125,6 +125,7 @@ bun tests/wallet.spec.ts addresses --wallet my-wallet      # generate more addre
 bun tests/wallet.spec.ts load                              # load the node's wallets
 bun tests/wallet.spec.ts list                              # show the wallets
 bun tests/wallet.spec.ts balance                           # show and save an account's balance
+bun tests/wallet.spec.ts used                              # mark the addresses in its history used
 ```
 
 There is no sign-in: `/` shows the node, and its link opens the oldest wallet. Anything on

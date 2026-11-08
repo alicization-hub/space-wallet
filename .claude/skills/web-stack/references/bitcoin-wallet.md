@@ -153,16 +153,18 @@ bun tests/wallet.spec.ts addresses --wallet cold-storage [--account 0]
 bun tests/wallet.spec.ts load
 bun tests/wallet.spec.ts list
 bun tests/wallet.spec.ts balance
+bun tests/wallet.spec.ts used
 ```
 
-| Command     | What it does                                                                                                                                        |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `create`    | Generates a seed, shows it once, clears the screen and scrollback, asks back 4 words, sets a passphrase. `--started-at` isn't needed: it starts now |
-| `recover`   | Takes a seed and its original passphrase. Shows the first addresses to confirm. Rescans the whole chain unless given `--started-at`                 |
-| `addresses` | Generates the next batch for a wallet's accounts, on the node first, then in the DB                                                                 |
-| `load`      | Loads every active account's Core wallet, and keeps it loaded across restarts                                                                       |
-| `list`      | Wallets and accounts, nothing secret. Doesn't ask for the terminal password                                                                         |
-| `balance`   | Asks for an account, saves its balance from the node to the DB, and prints it in BTC and sats. Doesn't ask for the terminal password                |
+| Command     | What it does                                                                                                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create`    | Generates a seed, shows it once, clears the screen and scrollback, asks back 4 words, sets a passphrase. `--started-at` isn't needed: it starts now                                   |
+| `recover`   | Takes a seed and its original passphrase. Shows the first addresses to confirm. Rescans the whole chain unless given `--started-at`                                                   |
+| `addresses` | Generates the next batch for a wallet's accounts, on the node first, then in the DB                                                                                                   |
+| `load`      | Loads every active account's Core wallet, and keeps it loaded across restarts                                                                                                         |
+| `list`      | Wallets and accounts, nothing secret. Doesn't ask for the terminal password                                                                                                           |
+| `balance`   | Asks for an account, saves its balance from the node to the DB, and prints it in BTC and sats. Doesn't ask for the terminal password                                                  |
+| `used`      | Asks for an account, reads its whole history from the node 10 transactions at a time, and marks the addresses its confirmed ones touch as used. Doesn't ask for the terminal password |
 
 Rules for these scripts:
 

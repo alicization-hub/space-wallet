@@ -4,13 +4,13 @@ import { eq } from "drizzle-orm"
 import { refresh } from "next/cache"
 
 import { db, schema } from "@/drizzle"
+import { markAddressesUsed } from "@/drizzle/addresses"
 import { readNodeBalance } from "@/libs/bitcoin/balance"
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { logger } from "@/libs/logger"
 
 import { withAccount } from "."
-import { markAddressesUsed } from "../address/update"
 import { readTransactions } from "../transaction/read"
 import { LATEST_TRANSACTIONS } from "../transaction/validator.zod"
 

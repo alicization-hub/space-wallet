@@ -91,7 +91,7 @@ Structure. Scale."
   [deployment.md](references/deployment.md).
 - `bun run drizzle:generate` / `bun run drizzle:push` / `bun run drizzle:studio` — see
   [database.md](references/database.md).
-- `bun tests/wallet.spec.ts <create|recover|addresses|load|list|balance>` — manage
+- `bun tests/wallet.spec.ts <create|recover|addresses|load|list|balance|used>` — manage
   wallets. See [bitcoin-wallet.md](references/bitcoin-wallet.md#wallet-scripts).
 - `bun tests/transfer.spec.ts` — send bitcoin. See
   [bitcoin-wallet.md](references/bitcoin-wallet.md#sending-teststransferspects).

@@ -4,7 +4,12 @@ import { logger } from "@/libs/logger"
 
 import { askTerminalCredentials, describeError, requireTerminal } from "./cmd.spec"
 
-const COMMANDS = ["create", "recover", "addresses", "load", "list", "balance"]
+const COMMANDS = ["create", "recover", "addresses", "load", "list", "balance", "used"]
+
+/**
+ * The commands the web's credentials are enough for.
+ */
+const WEB_COMMANDS = ["list", "balance", "used"]
 
 const USAGE = `
 Usage: bun tests/wallet.spec.ts <command> [options]
@@ -23,6 +28,8 @@ Usage: bun tests/wallet.spec.ts <command> [options]
   list      Shows the wallets and their accounts.
 
   balance   Asks for an account, shows its balance, and saves it to the database.
+
+  used      Asks for an account, and marks the addresses in its whole history as used.
 
 Seeds and passphrases are always asked for in the terminal, never taken as arguments.
 `
@@ -50,8 +57,8 @@ async function main() {
     return
   }
 
-  // `list` and `balance` touch nothing secret, so the web's credentials are enough for them
-  if (command !== "list" && command !== "balance") {
+  // These touch nothing secret, so the web's credentials are enough for them
+  if (!WEB_COMMANDS.includes(command)) {
     requireTerminal()
     await askTerminalCredentials()
   }

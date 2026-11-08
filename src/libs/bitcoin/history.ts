@@ -1,7 +1,7 @@
 import { fromUnixTime } from "date-fns"
 
-import { RPCClient, RPCError } from "@/libs/bitcoin/rpc"
-import { bitcoinToSats } from "@/libs/bitcoin/unit"
+import { RPCClient, RPCError } from "./rpc"
+import { bitcoinToSats } from "./unit"
 
 async function readDetails(rpcClient: RPCClient, tx: NodeTransaction.List) {
   const raw = await rpcClient.getTransaction(tx.txid)

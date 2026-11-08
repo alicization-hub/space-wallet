@@ -2,11 +2,11 @@ import "server-only"
 
 import { toPagination } from "@/drizzle/utils"
 import { READ_TIMEOUT } from "@/libs/bitcoin/constants"
+import { formatTransaction } from "@/libs/bitcoin/history"
 import { RPCClient } from "@/libs/bitcoin/rpc"
 import { logger } from "@/libs/logger"
 
 import { withAccount } from "../account"
-import { formatTransaction } from "./format"
 import { queryValidator, type QueryValidator } from "./validator.zod"
 
 export type Transaction = Awaited<ReturnType<typeof formatTransaction>>

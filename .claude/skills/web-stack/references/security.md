@@ -78,7 +78,7 @@ owner can. That's why the credentials that can read a seed or send are in no fil
 
 | Credential                                    | Used by                                                                                                       | Kept in                                      |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| Postgres `web_space`, RPC `rpc_space`         | The web server, `node.spec.ts`, `tx.spec.ts`, `wallet.spec.ts list` and `balance`                             | `.env`                                       |
+| Postgres `web_space`, RPC `rpc_space`         | The web server, `node.spec.ts`, `wallet.spec.ts list`, `balance` and `used`                                   | `.env`                                       |
 | Postgres owner role, RPC `rpc_space_terminal` | `transfer.spec.ts`, the other `wallet.spec.ts` commands, `utils.spec.ts`, `drizzle:migrate`, `push`, `studio` | Nowhere: the terminal password, typed in use |
 
 - `web_space` can't read `bio` or `passkey` ([database.md](database.md#roles)), and

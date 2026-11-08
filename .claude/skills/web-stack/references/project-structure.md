@@ -85,10 +85,10 @@ app/<route>/
 ```
 
 Dynamic segments nest the same structure (`app/<route>/[id]/page.tsx`), though the account
-page takes its ID as a search param instead (`(wallet)/account/validator.nuqs.ts`). Scaffold with
-`bun .claude/skills/web-stack/scripts/new-route.ts <segment>`, which makes these under
-`(wallet)`, then delete what the route doesn't need. `(dashboard)` is a route in this
-shape.
+page takes its ID as a search param instead (`(wallet)/account/validator.nuqs.ts`).
+Scaffold with `bun .claude/skills/web-stack/scripts/new-route.ts <segment>`, which makes
+these under `(wallet)`, then delete what the route doesn't need. `(dashboard)` is a route
+in this shape.
 
 A route's `actions/` is as public as `@/actions/`, so the rules above still apply:
 
@@ -128,7 +128,7 @@ owns it (`LATEST_TRANSACTIONS`).
 Shared actions are grouped by domain and split into CRUD files, each only when the domain
 needs it: `read.ts`, `create.ts`, `update.ts`, `delete.ts`. A domain with one job is one
 file named for it (`rpc.ts`), and what doesn't fit CRUD gets its own kebab-case file in
-the domain folder (`transaction/format.ts`).
+the domain folder.
 
 ## File naming
 
