@@ -1,18 +1,18 @@
 # คู่มือติดตั้ง WSL, Docker, Tor และ Bitcoin Node
 
 คู่มือนี้ติดตั้งทุกอย่างที่ Space ต้องใช้บนเครื่อง Windows ให้ทำตามลำดับหัวข้อ
-เพราะแต่ละส่วนต้องใช้ส่วนก่อนหน้า ผลลัพธ์สุดท้ายคือ Bitcoin Core ที่รันใน WSL
-และเชื่อมต่อผ่าน Tor เท่านั้น
+เพราะแต่ละส่วนต้องใช้ส่วนก่อนหน้า ผลลัพธ์สุดท้ายคือ Bitcoin Core บน Windows
+ที่เชื่อมต่อผ่าน Tor ใน WSL เท่านั้น
 
-| ส่วน         | หน้าที่                              | เริ่มทำงานเมื่อ                                             |
-| ------------ | ------------------------------------ | ----------------------------------------------------------- |
-| WSL          | ระบบ Linux ที่ทุกส่วนรันอยู่         | เข้า `wsl -d Ubuntu` ครั้งแรก                               |
-| Docker       | รัน Postgres และ Redis               | พร้อม WSL แต่ container ต้องสั่ง `docker compose up -d` เอง |
-| Tor          | ทางออกเครือข่ายของ node              | พร้อม WSL                                                   |
-| Bitcoin Node | Bitcoin Core ที่ Space เรียกผ่าน RPC | พร้อม WSL                                                   |
+| ส่วน         | อยู่ที่ | หน้าที่                               | เริ่มทำงานเมื่อ                                             |
+| ------------ | ------- | ------------------------------------- | ----------------------------------------------------------- |
+| WSL          | Windows | ระบบ Linux ที่ Docker และ Tor รันอยู่ | เข้า `wsl -d Ubuntu` ครั้งแรก                               |
+| Docker       | WSL     | รัน Postgres และ Redis                | พร้อม WSL แต่ container ต้องสั่ง `docker compose up -d` เอง |
+| Tor          | WSL     | ทางออกเครือข่ายของ node               | พร้อม WSL                                                   |
+| Bitcoin Node | Windows | Bitcoin Core ที่ Space เรียกผ่าน RPC  | เปิด Bitcoin Core จาก Start menu หลังเปิด WSL แล้ว          |
 
 แต่ละชุดคำสั่งบอกไว้ว่าต้องรันใน **PowerShell** (ฝั่ง Windows) หรือ **Ubuntu** (ใน WSL)
-ตัวเลขและค่าตัวอย่างอ้างอิงเครื่องจริง ณ วันที่ 31 ตุลาคม 2026
+ตัวเลขและค่าตัวอย่างอ้างอิงเครื่องจริง ณ วันที่ 10 พฤศจิกายน 2026
 
 ---
 
@@ -68,7 +68,7 @@ Linux ให้พิมพ์จบแล้วกด Enter
 
 ### 1.4 เปิด systemd
 
-Docker, Tor และ `bitcoind` ต้องใช้ systemd เพื่อเริ่มเองพร้อม WSL
+Docker และ Tor ต้องใช้ systemd เพื่อเริ่มเองพร้อม WSL
 
 1. เปิดไฟล์ตั้งค่าใน Ubuntu
 
@@ -98,15 +98,16 @@ Docker, Tor และ `bitcoind` ต้องใช้ systemd เพื่อ�
 ### 1.5 จำกัด RAM และ CPU (ถ้าต้องการ)
 
 สร้างไฟล์ `%USERPROFILE%\.wslconfig` ฝั่ง Windows ค่าด้านล่างคือค่าที่เครื่องนี้ใช้
-จากนั้นสั่ง `wsl --shutdown` เพื่อให้มีผล ถ้าจำกัด RAM ต้องเหลือพอสำหรับ `dbcache` ของ
-node ด้วย
+จากนั้นสั่ง `wsl --shutdown` เพื่อให้มีผล WSL รันแค่ Docker และ Tor จึงไม่ต้องให้ RAM มาก
 
 ```ini
 [wsl2]
 telemetry=false
-memory=8GB
-processors=4
+memory=2GB
+processors=2
 ```
+
+อย่าย้าย node เข้ามารันใน WSL เหตุผลอยู่ต้นหัวข้อ 4
 
 ### 1.6 อัปเดต Linux
 
@@ -134,7 +135,8 @@ sudo apt upgrade -y
 
 - WSL ไม่เริ่มเองตอนเปิดเครื่อง จะเริ่มเมื่อเข้า `wsl -d Ubuntu` ครั้งแรก
 - เมื่อปิด terminal สุดท้าย WSL จะดับเองภายในราว 16 วินาที และ service ทุกตัวจะหยุดตาม
-  รวมถึง Docker, Tor และ `bitcoind`
+  ทั้ง Docker และ Tor ซึ่งทำให้ Space ต่อ Postgres ไม่ได้ และ node บน Windows หา peer
+  ไม่ได้ ระหว่างใช้งานจึงต้องเปิด terminal ของ WSL ค้างไว้
 
 ### 1.9 แก้ปัญหา
 
@@ -325,101 +327,52 @@ Bitcoin Core ใช้ ControlPort เพื่อสั่งให้ Tor ส�
    ```
 
 Tor ฟังบน `127.0.0.1` สองพอร์ต คือ `9050` สำหรับ SOCKS proxy และ `9051` สำหรับ ControlPort
+Bitcoin Core บน Windows ต่อพอร์ตเหล่านี้ผ่าน `127.0.0.1` ได้เลย เพราะ WSL ส่งต่อ localhost
+จาก Windows ให้เอง
 
 ---
 
 ## 4. Bitcoin Node
 
-ส่วนนี้ติดตั้ง **Bitcoin Core 31.2** ใน WSL โดยเก็บข้อมูลไว้ในไฟล์ VHDX บน `<Local Disk>`
-และให้ P2P วิ่งผ่าน Tor เท่านั้น
+ส่วนนี้ติดตั้ง **Bitcoin Core 31.2** บน Windows โดยเก็บข้อมูลไว้บน `<Local Disk>` และให้
+P2P วิ่งผ่าน Tor ใน WSL เท่านั้น
 
-`<Local Disk>` คือไดรฟ์ Windows ที่ใช้เก็บ VHDX เช่น `D:`
+`<Local Disk>` คือไดรฟ์ Windows ที่ใช้เก็บข้อมูล node เช่น `D:`
 ให้แทนด้วยไดรฟ์ของคุณทุกจุดก่อนรันคำสั่ง
 
-| รายการ           | ค่า                                                              |
-| ---------------- | ---------------------------------------------------------------- |
-| ไฟล์ดิสก์        | `<Local Disk>\bitcoin-node.vhdx`                                 |
-| จุด mount ใน WSL | `/mnt/wsl/btcnode`                                               |
-| โฟลเดอร์ข้อมูล   | `/mnt/wsl/btcnode/bitcoin` โดยมี `~/.bitcoin` เป็น symlink ชี้ไป |
-| Config           | `~/.bitcoin/bitcoin.conf`                                        |
-| Log              | `~/.bitcoin/debug.log`                                           |
-| RPC              | `127.0.0.1:8332` เรียกได้ทั้งจาก WSL และ Windows                 |
+| รายการ         | ค่า                                                  |
+| -------------- | ---------------------------------------------------- |
+| โปรแกรม        | `C:\Program Files\Bitcoin\bitcoin-qt.exe`            |
+| `bitcoin-cli`  | `C:\Program Files\Bitcoin\daemon\bitcoin-cli.exe`    |
+| โฟลเดอร์ข้อมูล | `<Local Disk>\Bitcoin Node`                          |
+| Config         | `<Local Disk>\Bitcoin Node\bitcoin.conf`             |
+| Log            | `<Local Disk>\Bitcoin Node\debug.log`                |
+| RPC            | `127.0.0.1:8332`                                     |
+| Tor            | `127.0.0.1:9050` และ `127.0.0.1:9051` ซึ่งอยู่ใน WSL |
 
 > **อย่าใช้ Bitcoin Knots 29.4.1 ขึ้นไป:**
 > [release notes](https://github.com/bitcoinknots/bitcoin/releases/tag/v29.4.1.knots20260508)
 > ระบุว่าเปลี่ยน proof-of-work เป็น BLAKE2b แบบ backward-incompatible ทำให้ node
 > แยกไปอยู่คนละ chain กับ Bitcoin Core
 
-### 4.1 สร้าง VHDX
+> **ทำไมไม่รัน node ใน WSL:** เคยลองแล้วเมื่อพฤศจิกายน 2026 node ทำให้หน่วยความจำของ WSL
+> ตึงจน kernel จองหน่วยความจำให้ vsock ไม่ได้ WSL Relay ซึ่งพา `127.0.0.1` จาก Windows
+> เข้า WSL จึงรับ connection ไม่ได้เป็นช่วง ๆ และ Space ขึ้น
+> `CONNECT_TIMEOUT 127.0.0.1:5432` บ่อยมาก ให้ WSL มีแค่ Docker และ Tor
 
-1. เปิด PowerShell แบบ **Run as administrator** แล้วคำนวณขนาดที่ 95% ของ `<Local Disk>`
+### 4.1 ดาวน์โหลดและตรวจ
 
-   ```powershell
-   [math]::Floor((Get-Volume -FilePath <Local Disk>\).Size * 0.95 / 1MB)
-   ```
+ดาวน์โหลดผ่าน Tor และตรวจลายเซ็นใน Ubuntu แล้วตรวจ Authenticode ใน PowerShell
 
-2. สร้างไฟล์ด้วยตัวเลขที่ได้ ตัวอย่างนี้ใช้ค่าของไดรฟ์ 2 TB ไฟล์จะเริ่มที่ราว 4 MB
-   และโตตามการใช้งานจริง
-
-   ```powershell
-   'create vdisk file="<Local Disk>\bitcoin-node.vhdx" maximum=1812326 type=expandable' | diskpart
-   ```
-
-3. เปิด PowerShell **แบบปกติ ไม่ใช่ Admin**
-   แล้วคัดลอกไฟล์เพื่อเปลี่ยนเจ้าของเป็นบัญชีของคุณ ถ้าข้ามขั้นนี้ เจ้าของจะเป็น
-   `Administrators` และ WSL จะ mount ไม่ได้
-
-   ```powershell
-   Copy-Item <Local Disk>\bitcoin-node.vhdx <Local Disk>\bitcoin-node.new.vhdx
-   Remove-Item <Local Disk>\bitcoin-node.vhdx
-   Rename-Item <Local Disk>\bitcoin-node.new.vhdx bitcoin-node.vhdx
-   (Get-Acl <Local Disk>\bitcoin-node.vhdx).Owner
-   ```
-
-บรรทัดสุดท้ายต้องแสดงชื่อบัญชีของคุณ อย่าดับเบิลคลิกไฟล์นี้ใน Windows เพราะ Windows จะ
-mount มันเอง แล้ว WSL จะใช้ไฟล์ไม่ได้จนกว่าจะ eject
-
-### 4.2 Format และเตรียมโฟลเดอร์
-
-1. ต่อ VHDX เข้ากับ WSL ใน PowerShell
-
-   ```powershell
-   wsl --mount --vhd <Local Disk>\bitcoin-node.vhdx --bare
-   ```
-
-2. หา disk ใหม่ใน Ubuntu โดยดูจากขนาดที่ตั้งไว้ แล้ว format โดยแทน `sdX` ด้วยชื่อที่เจอ
-   **ตรวจให้แน่ใจก่อนรัน เพราะคำสั่งนี้ล้างข้อมูลทั้ง disk**
-
-   ```bash
-   lsblk
-   sudo mkfs.ext4 -m 0 -T largefile -L btcnode /dev/sdX
-   ```
-
-3. ถอดออกแล้วต่อใหม่แบบมีชื่อใน PowerShell
-
-   ```powershell
-   wsl --unmount <Local Disk>\bitcoin-node.vhdx
-   wsl --mount --vhd <Local Disk>\bitcoin-node.vhdx --name btcnode
-   ```
-
-4. สร้างโฟลเดอร์ข้อมูลและ symlink ใน Ubuntu
-
-   ```bash
-   sudo install -d -m 700 -o "$USER" -g "$USER" /mnt/wsl/btcnode/bitcoin
-   ln -s /mnt/wsl/btcnode/bitcoin ~/.bitcoin
-   ```
-
-### 4.3 ติดตั้ง Bitcoin Core
-
-ทุกคำสั่งรันใน Ubuntu
-
-1. ดาวน์โหลดผ่าน Tor ถ้าช้ามากให้รันซ้ำ ชื่อผู้ใช้สุ่มทำให้ Tor เปลี่ยน circuit และ `-C -`
-   จะโหลดต่อจากเดิม ตอนติดตั้งจริงความเร็วต่างกันตั้งแต่ราว 22 KB/s ถึง 716 KB/s
+1. ดาวน์โหลดลงโฟลเดอร์ Downloads ของ Windows โดยแทน `<Windows user>` ด้วยชื่อโฟลเดอร์ใน
+   `C:\Users` ถ้าช้ามากให้รันซ้ำ ชื่อผู้ใช้สุ่มทำให้ Tor เปลี่ยน circuit และ `-C -`
+   จะโหลดต่อจากเดิม
 
    ```bash
    V=31.2
-   mkdir -p ~/.cache/core-$V && cd ~/.cache/core-$V
-   for f in bitcoin-$V-x86_64-linux-gnu.tar.gz SHA256SUMS SHA256SUMS.asc; do
+   D=/mnt/c/Users/<Windows user>/Downloads/bitcoin-core-$V
+   mkdir -p "$D" && cd "$D"
+   for f in bitcoin-$V-win64-setup.exe SHA256SUMS SHA256SUMS.asc; do
      curl --socks5-hostname "c$RANDOM:x@127.0.0.1:9050" -fLO -C - "https://bitcoincore.org/bin/bitcoin-core-$V/$f"
    done
    ```
@@ -435,24 +388,40 @@ mount มันเอง แล้ว WSL จะใช้ไฟล์ไม่�
    trust เป็นเรื่องปกติ
 
    ```bash
-   export GNUPGHOME="$PWD/gnupg"; mkdir -m 700 "$GNUPGHOME"
+   export GNUPGHOME="$HOME/.cache/gnupg-core-$V"; mkdir -m 700 -p "$GNUPGHOME"
    curl -fsSL 'https://api.github.com/repositories/355107265/contents/builder-keys' \
      | grep download_url | grep -oE 'https://[a-zA-Z0-9./_-]+' \
      | while read -r u; do curl -fsSL "$u" | gpg --batch --quiet --import; done
    gpg --batch --verify SHA256SUMS.asc SHA256SUMS 2>&1 | grep -E 'Good signature|BAD signature'
+   rm -rf "$GNUPGHOME"; unset GNUPGHOME
    ```
 
-4. ติดตั้งเมื่อผ่านทั้งสองข้อ แล้วลบไฟล์ดาวน์โหลดทิ้งได้
+4. ตรวจลายเซ็นของ Windows ใน PowerShell ต้องได้ `Valid` และผู้เซ็นคือ
+   `Bitcoin Core Code Signing LLC`
 
-   ```bash
-   tar -xzf bitcoin-$V-x86_64-linux-gnu.tar.gz
-   sudo install -m 0755 bitcoin-$V/bin/* /usr/local/bin/
-   sudo install -d /usr/local/libexec
-   sudo install -m 0755 bitcoin-$V/libexec/* /usr/local/libexec/
-   bitcoind --version | head -1
-   cd ~ && rm -rf ~/.cache/core-$V
-   unset GNUPGHOME
+   ```powershell
+   Get-AuthenticodeSignature "$env:USERPROFILE\Downloads\bitcoin-core-31.2\bitcoin-31.2-win64-setup.exe" | Format-List Status, SignerCertificate
    ```
+
+### 4.2 ติดตั้ง
+
+ติดตั้งเมื่อผ่านการตรวจทั้งหมดในหัวข้อ 4.1 แล้ว โดยดับเบิลคลิกตัวติดตั้งตามปกติ
+หรือติดตั้งแบบไม่ถามอะไรจาก PowerShell ซึ่งจะขึ้นหน้าต่าง UAC ให้กดยืนยัน
+
+```powershell
+Start-Process "$env:USERPROFILE\Downloads\bitcoin-core-31.2\bitcoin-31.2-win64-setup.exe" -ArgumentList '/S' -Verb RunAs -Wait
+```
+
+### 4.3 เตรียมโฟลเดอร์ข้อมูล
+
+สร้างโฟลเดอร์ก่อนเปิด Bitcoin Core ครั้งแรก แล้วจำกัดสิทธิ์ให้บัญชีของคุณ, SYSTEM และ
+Administrators เท่านั้น เพราะ `bitcoin.conf` มีรหัสผ่านอยู่ข้างใน รันใน PowerShell แบบปกติ
+
+```powershell
+$dir = '<Local Disk>\Bitcoin Node'
+New-Item -ItemType Directory -Force -Path $dir
+icacls $dir /inheritance:r /grant:r "$($env:USERDOMAIN)\$($env:USERNAME):(OI)(CI)F" "SYSTEM:(OI)(CI)F" "Administrators:(OI)(CI)F"
+```
 
 ### 4.4 ตั้งค่า bitcoin.conf
 
@@ -463,7 +432,7 @@ Space ใช้ RPC user 2 ตัวที่มีสิทธิ์ต่า�
 | `rpc_space`          | เว็บ และสคริปต์ที่แค่อ่าน                        | สุ่มด้วย `openssl rand -hex 32` แล้วเก็บใน `.env`                 |
 | `rpc_space_terminal` | `tests/transfer.spec.ts`, `tests/wallet.spec.ts` | Terminal password ตั้งเอง เก็บใน password manager ไม่อยู่ในไฟล์ใด |
 
-สร้างบรรทัด `rpcauth` ทีละ user โดยรันครั้งที่สองด้วย `rpc_space_terminal`
+สร้างบรรทัด `rpcauth` ทีละ user ใน Ubuntu โดยรันครั้งที่สองด้วย `rpc_space_terminal`
 รหัสที่พิมพ์จะไม่เข้า history ของ shell
 
 ```bash
@@ -476,8 +445,8 @@ print(f"rpcauth={sys.argv[1]}:{salt}${digest}")
 PY
 ```
 
-สร้างไฟล์ด้วย `nano ~/.bitcoin/bitcoin.conf` แล้วใส่ค่าที่ได้ โดย `torpassword`
-คือรหัสผ่านตัวจริงที่สร้าง hash ในหัวข้อ 3.2
+สร้าง `<Local Disk>\Bitcoin Node\bitcoin.conf` ด้วย Notepad แล้วบันทึกเป็น UTF-8
+โดยใส่ค่าที่ได้ และ `torpassword` คือรหัสผ่านตัวจริงที่สร้าง hash ในหัวข้อ 3.2
 
 ```ini
 txindex=1
@@ -513,24 +482,21 @@ dnsseed=0
 natpmp=0
 ```
 
-จำกัดสิทธิ์ไฟล์เพราะมีรหัสผ่านอยู่ข้างใน
+| ค่า                         | เหตุผล                                                                     |
+| --------------------------- | -------------------------------------------------------------------------- |
+| `onlynet=onion`, `proxy`    | ให้ P2P ทั้งหมดวิ่งผ่าน Tor                                                |
+| `proxyrandomize=1`          | แยก circuit ต่อ connection เพื่อไม่ให้เชื่อมโยงกันได้                      |
+| `dns=0`, `dnsseed=0`        | ไม่ค้น DNS นอก Tor โดยจะหา peer จาก seed ที่ฝังมาใน Core                   |
+| `natpmp=0`                  | ปิดการเปิดพอร์ตอัตโนมัติ ซึ่งเปิดเป็นค่าเริ่มต้นตั้งแต่ Core 30            |
+| `bind=127.0.0.1:8334=onion` | รับ connection ขาเข้าผ่าน onion service เท่านั้น                           |
+| `rpcbind=127.0.0.1`         | เปิด RPC เฉพาะในเครื่อง                                                    |
+| `rpcauth`                   | เก็บแค่ hash ของรหัส ไม่เก็บรหัสจริงในไฟล์                                 |
+| `rpcwhitelist`              | จำกัดคำสั่งของแต่ละ user โดยเว็บอ่านได้อย่างเดียว                          |
+| `txindex=1`                 | Space ต้องใช้เพื่ออ่านประวัติธุรกรรม                                       |
+| `dbcache=4096`              | เร่ง sync ครั้งแรก เมื่อ sync ครบลดเหลือ `1024` ได้ แล้วค่อยเปิด node ใหม่ |
 
-```bash
-chmod 600 ~/.bitcoin/bitcoin.conf
-```
-
-| ค่า                         | เหตุผล                                                                    |
-| --------------------------- | ------------------------------------------------------------------------- |
-| `onlynet=onion`, `proxy`    | ให้ P2P ทั้งหมดวิ่งผ่าน Tor                                               |
-| `proxyrandomize=1`          | แยก circuit ต่อ connection เพื่อไม่ให้เชื่อมโยงกันได้                     |
-| `dns=0`, `dnsseed=0`        | ไม่ค้น DNS นอก Tor โดยจะหา peer จาก seed ที่ฝังมาใน Core                  |
-| `natpmp=0`                  | ปิดการเปิดพอร์ตอัตโนมัติ ซึ่งเปิดเป็นค่าเริ่มต้นตั้งแต่ Core 30           |
-| `bind=127.0.0.1:8334=onion` | รับ connection ขาเข้าผ่าน onion service เท่านั้น                          |
-| `rpcbind=127.0.0.1`         | เปิด RPC เฉพาะในเครื่อง                                                   |
-| `rpcauth`                   | เก็บแค่ hash ของรหัส ไม่เก็บรหัสจริงในไฟล์                                |
-| `rpcwhitelist`              | จำกัดคำสั่งของแต่ละ user โดยเว็บอ่านได้อย่างเดียว                         |
-| `txindex=1`                 | Space ต้องใช้เพื่ออ่านประวัติธุรกรรม                                      |
-| `dbcache=4096`              | เร่ง sync ครั้งแรก เมื่อ sync ครบลดเหลือ `1024` ได้ แล้วค่อย restart node |
+บน Windows ไม่มีด่านกันรั่วระดับระบบแบบ systemd การที่ node ใช้แค่ Tor มาจากค่าใน
+`bitcoin.conf` อย่างเดียว ทุกครั้งที่แก้ไฟล์นี้ให้ตรวจตามหัวข้อ 4.6 ซ้ำ
 
 **ห้ามมี `rpcwhitelist` สองบรรทัดสำหรับ user เดียวกัน** เพราะ Core
 จะเก็บเฉพาะคำสั่งที่อยู่ในทั้งสองบรรทัด ถ้า Space เรียกคำสั่งใหม่ในอนาคต
@@ -538,125 +504,55 @@ chmod 600 ~/.bitcoin/bitcoin.conf
 จะบอกชื่อคำสั่งนั้น
 
 บรรทัด `__cookie__` คือสิทธิ์ของ `bitcoin-cli` ในเครื่องนี้ ซึ่งอ่านสถานะได้ตามหัวข้อ 4.6
-แต่ส่งเงินหรืออ่าน wallet ไม่ได้ และ `bitcoin-cli stop` ก็ใช้ไม่ได้ ให้หยุด node ด้วย
-`systemctl` ตามหัวข้อ 4.8
+แต่ส่งเงินหรืออ่าน wallet ไม่ได้ และ `bitcoin-cli stop` ก็ใช้ไม่ได้ ให้ปิด node จากเมนูของ
+Bitcoin Core ตามหัวข้อ 4.8
 
-### 4.5 ตั้งให้เริ่มพร้อม WSL
+### 4.5 เปิดครั้งแรก
 
-VHDX ต้องสั่ง mount จากฝั่ง Windows จึงต้องมีสคริปต์ให้ systemd เรียก `wsl.exe` ก่อนเริ่ม
-node
+1. เปิด Ubuntu ค้างไว้ให้ Tor ทำงาน แล้วตรวจใน PowerShell ว่า Windows มองเห็น Tor
+   ทั้งสองคำสั่งต้องตอบ `True`
 
-1. สร้างสคริปต์ด้วย `sudo nano /usr/local/sbin/btcnode-mount` โดยแทน `<Local Disk>`
-   ด้วยไดรฟ์ของคุณ
-
-   ```sh
-   #!/bin/sh
-   # Attach <Local Disk>\bitcoin-node.vhdx to WSL. Only Windows can attach it, so call wsl.exe through interop.
-   M=/mnt/wsl/btcnode
-   if ! mountpoint -q "$M"; then
-     WSL_UTF8=1 /mnt/c/Windows/System32/wsl.exe --mount --vhd '<Local Disk>\bitcoin-node.vhdx' --name btcnode </dev/null
-     i=0
-     while ! mountpoint -q "$M"; do
-       i=$((i + 1))
-       if [ "$i" -gt 30 ]; then
-         echo "VHDX did not appear at $M" >&2
-         exit 1
-       fi
-       sleep 1
-     done
-   fi
-   # WSL gives its disks an 8 MiB readahead. LevelDB reads small records through mmap, so each
-   # miss pulled megabytes it never used: 128 KiB cut the node's reads from ~1.4 GB/s to ~20 MB/s.
-   dev=$(basename "$(findmnt -no SOURCE "$M")")
-   echo 128 > "/sys/block/$dev/queue/read_ahead_kb"
+   ```powershell
+   Test-NetConnection 127.0.0.1 -Port 9050 -InformationLevel Quiet
+   Test-NetConnection 127.0.0.1 -Port 9051 -InformationLevel Quiet
    ```
 
-   บรรทัดท้ายลด readahead ของดิสก์จาก 8 MB ที่ WSL ตั้งไว้เหลือ 128 KB ถ้าไม่ลด node
-   จะอ่านดิสก์เกินจริงหลายสิบเท่าระหว่าง sync (วัดได้ราว 1.4 GB/s เทียบกับไม่ถึง 150 MB/s)
-
-   ```bash
-   sudo chmod 755 /usr/local/sbin/btcnode-mount
-   ```
-
-2. สร้าง `/etc/systemd/system/btcnode-mount.service`
-
-   ```ini
-   [Unit]
-   Description=Mount Bitcoin node VHDX
-
-   [Service]
-   Type=oneshot
-   RemainAfterExit=yes
-   ExecStart=/usr/local/sbin/btcnode-mount
-   TimeoutStartSec=120
-   ```
-
-3. สร้าง `/etc/systemd/system/bitcoind.service` โดยเปลี่ยน `User=` เป็นชื่อผู้ใช้ Linux
-   ของคุณ
-
-   ```ini
-   [Unit]
-   Description=Bitcoin Core (Tor only)
-   Requires=btcnode-mount.service
-   After=btcnode-mount.service tor.service
-   Wants=tor.service
-
-   [Service]
-   User=space-tech
-   ExecStartPre=/usr/bin/test -f /mnt/wsl/btcnode/bitcoin/bitcoin.conf
-   ExecStart=/usr/local/bin/bitcoind -datadir=/mnt/wsl/btcnode/bitcoin
-   Restart=on-failure
-   TimeoutStopSec=600
-   IPAddressDeny=any
-   IPAddressAllow=localhost
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
-
-   สองบรรทัด `IPAddress...` คือด่านกันรั่ว: ต่อให้ตั้งค่า `bitcoin.conf` ผิด `bitcoind`
-   ก็ออกเน็ตตรงไม่ได้ ไปได้แค่ localhost ซึ่งมี Tor รออยู่
-
-4. ทดสอบว่า kernel บังคับใช้ด่านนี้จริง เพราะถ้าไม่รองรับ systemd จะข้ามไปเงียบ ๆ
-   คำสั่งแรกต้องได้ `rc` ที่ไม่ใช่ `0` และคำสั่งที่สองต้องได้ `rc=0`
-
-   ```bash
-   sudo systemd-run --quiet --wait --pipe -p IPAddressDeny=any -p IPAddressAllow=localhost curl -m 8 -sS -o /dev/null https://1.1.1.1; echo "rc=$?"
-   sudo systemd-run --quiet --wait --pipe -p IPAddressDeny=any -p IPAddressAllow=localhost curl -m 60 -sS -o /dev/null --socks5-hostname 127.0.0.1:9050 https://check.torproject.org; echo "rc=$?"
-   ```
-
-5. เปิดใช้งาน
-
-   ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl enable bitcoind
-   sudo systemctl start bitcoind
-   ```
+2. เปิด Bitcoin Core จาก Start menu ครั้งแรกจะถามโฟลเดอร์ข้อมูล ให้เลือก **Use a custom
+   data directory** แล้วเลือก `<Local Disk>\Bitcoin Node` และ **อย่าเปิดตัวเลือกจำกัดขนาด
+   blockchain (prune)** เพราะ `txindex=1` ใช้กับ prune ไม่ได้
 
 ### 4.6 ตรวจผล
 
-ทุกคำสั่งรันใน Ubuntu ครั้งแรกอาจต้องรอราว 1–3 นาทีกว่าจะมี peer
+ทุกคำสั่งรันใน PowerShell ครั้งแรกอาจต้องรอราว 1–3 นาทีกว่าจะมี peer
+เริ่มจากสร้างคำสั่งย่อ `btc` ไว้ใน session นั้น
 
-| ตรวจอะไร    | คำสั่ง                          | ผลที่ถูกต้อง                    |
-| ----------- | ------------------------------- | ------------------------------- |
-| Service     | `systemctl is-active bitcoind`  | `active`                        |
-| VHDX        | `findmnt /mnt/wsl/btcnode`      | เห็น `ext4`                     |
-| ความคืบหน้า | `bitcoin-cli getblockchaininfo` | `blocks` เพิ่มขึ้นเรื่อย ๆ      |
-| Socket      | `ss -tnp \| grep bitcoind`      | ปลายทางเป็น `127.0.0.1` ทั้งหมด |
+```powershell
+function btc { & 'C:\Program Files\Bitcoin\daemon\bitcoin-cli.exe' '-datadir=<Local Disk>\Bitcoin Node' @args }
+```
 
-Network ที่ใช้ได้ต้องมีแค่ `['onion']`
+Network ที่ใช้ได้ต้องมีแค่ `onion`
 
-```bash
-bitcoin-cli getnetworkinfo | python3 -c 'import json,sys; print([n["name"] for n in json.load(sys.stdin)["networks"] if n["reachable"]])'
+```powershell
+((btc getnetworkinfo) -join "`n" | ConvertFrom-Json).networks | Where-Object reachable | Select-Object -ExpandProperty name
 ```
 
 Peer ทุกตัวต้องเป็น `onion`
 
-```bash
-bitcoin-cli getpeerinfo | python3 -c 'import json,sys,collections; print(collections.Counter(p["network"] for p in json.load(sys.stdin)))'
+```powershell
+((btc getpeerinfo) -join "`n" | ConvertFrom-Json) | Group-Object network | Select-Object Count, Name
 ```
 
-ดู log แบบต่อเนื่องได้ด้วย `tail -f ~/.bitcoin/debug.log`
+Connection ทั้งหมดของ Bitcoin Core ต้องไปที่ `127.0.0.1` เท่านั้น
+
+```powershell
+Get-NetTCPConnection -OwningProcess (Get-Process bitcoin-qt).Id -State Established | Select-Object -ExpandProperty RemoteAddress -Unique
+```
+
+ความคืบหน้าดูได้จาก `blocks` ที่เพิ่มขึ้นเรื่อย ๆ
+
+```powershell
+((btc getblockchaininfo) -join "`n" | ConvertFrom-Json) | Select-Object blocks, headers, verificationprogress
+```
 
 ### 4.7 ต่อกับ Space
 
@@ -701,15 +597,18 @@ bitcoin-cli getpeerinfo | python3 -c 'import json,sys,collections; print(collect
    \q
    ```
 
-ตรวจผล:
+ตรวจผลใน PowerShell โดยใช้คำสั่ง `btc` จากหัวข้อ 4.6:
 
-| ตรวจอะไร                 | คำสั่ง                                                                                                                                  | ผลที่ถูกต้อง                            |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| เว็บอ่าน node ได้        | `bun tests/node.spec.ts` บน Windows                                                                                                     | แสดงสถานะ node                          |
-| Terminal password ใช้ได้ | `bun tests/wallet.spec.ts load` บน Windows                                                                                              | จบโดยไม่มี error                        |
-| `bitcoin-cli` อ่านได้    | `bitcoin-cli getblockchaininfo`                                                                                                         | ตอบปกติ                                 |
-| `bitcoin-cli` ถูกจำกัด   | `bitcoin-cli listwallets`                                                                                                               | `error: server returned HTTP error 403` |
-| เว็บถูกจำกัด             | `curl -s -o /dev/null -w '%{http_code}\n' -u rpc_space --data-binary '{"jsonrpc":"2.0","id":1,"method":"help"}' http://127.0.0.1:8332/` | ถาม password แล้วพิมพ์ `403`            |
+| ตรวจอะไร                 | คำสั่ง                                                                                                                                        | ผลที่ถูกต้อง                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| เว็บอ่าน node ได้        | `bun tests/node.spec.ts`                                                                                                                      | แสดงสถานะ node                          |
+| Terminal password ใช้ได้ | `bun tests/wallet.spec.ts load`                                                                                                               | จบโดยไม่มี error                        |
+| `bitcoin-cli` อ่านได้    | `btc getblockchaininfo`                                                                                                                       | ตอบปกติ                                 |
+| `bitcoin-cli` ถูกจำกัด   | `btc listwallets`                                                                                                                             | `error: server returned HTTP error 403` |
+| เว็บถูกจำกัด             | `curl.exe -s -o NUL -w "%{http_code}" -u rpc_space --data-binary '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"help\"}' http://127.0.0.1:8332/` | ถาม password แล้วพิมพ์ `403`            |
+
+ในคำสั่งสุดท้ายต้องใช้ `curl.exe` ไม่ใช่ `curl` เพราะใน PowerShell 5.1 คำว่า `curl` คือ
+`Invoke-WebRequest`
 
 Space จะแสดงคำเตือนแทนหน้า wallet จนกว่า node จะ sync เกิน 97% ส่วนการสร้างและกู้ wallet
 ทำจาก terminal ตามหัวข้อ Wallets ใน `README.md` และการส่งเงินทำจาก terminal ตามหัวข้อ
@@ -720,24 +619,33 @@ Sending
 
 ### 4.8 การใช้งานประจำวัน
 
-**เปิด:** พิมพ์ `wsl -d Ubuntu` อย่างเดียว VHDX และ node จะเริ่มเอง
+**เปิด:** ทำตามลำดับนี้
 
-**ให้ sync ต่อ:** เปิด terminal ของ WSL ค้างไว้อย่างน้อยหนึ่งหน้าต่าง
-เพราะเมื่อปิดหน้าต่างสุดท้าย WSL จะดับและ node จะหยุด แต่เปิดกลับมาแล้วจะ sync ต่อจากเดิม
+1. เข้า `wsl -d Ubuntu` แล้วเปิดหน้าต่างค้างไว้ ถ้าปิดหน้าต่างสุดท้าย WSL จะดับพร้อม Tor
+   และ node จะหา peer ไม่ได้ แต่ข้อมูลไม่เสีย
+2. เปิด container ถ้าต้องใช้ โดยต้องรันจากจุดที่ไฟล์ compose นั้นอยู่
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. เปิด Bitcoin Core จาก Start menu
 
 **ปิด:** ทำตามลำดับนี้
 
-1. หยุด container ที่เปิดโดยต้องรันจากจุดที่ไฟล์ compose นั้นอยู่
+1. ปิด Bitcoin Core จากเมนู **File → Exit** หรือคลิกขวาที่ไอคอนใน system tray แล้วเลือก
+   Exit ปุ่ม X มุมหน้าต่างแค่ย่อลง tray เพราะตั้ง Minimize on close ไว้ จากนั้น
+   **รอจนหน้าต่าง "Bitcoin Core is shutting down" หายไป** เพราะ node ต้องเขียนข้อมูลใน
+   `dbcache` ลงดิสก์ อาจใช้เวลาหลายนาที คำสั่งนี้ต้องไม่แสดงอะไร
+
+   ```powershell
+   Get-Process bitcoin-qt -ErrorAction SilentlyContinue
+   ```
+
+2. หยุด container ที่เปิดโดยต้องรันจากจุดที่ไฟล์ compose นั้นอยู่
 
    ```bash
    docker compose down
-   ```
-
-2. ใน Ubuntu หยุด node แล้ว **รอให้ prompt กลับมาก่อน** เพราะ node ต้องเขียนข้อมูลใน
-   `dbcache` ลงดิสก์ อาจใช้เวลาหลายนาที
-
-   ```bash
-   sudo systemctl stop bitcoind
    ```
 
 3. ออกจาก Ubuntu ด้วย `logout`
@@ -748,23 +656,55 @@ Sending
    exit
    ```
 
-ถ้าจะปิดหรือรีสตาร์ต Windows ก็ควรหยุด node ตามข้อ 2 ก่อนเช่นกัน ถ้าสั่ง stop
-แล้วเปลี่ยนใจโดยยังไม่ได้ออกจาก WSL ให้รัน `sudo systemctl start bitcoind`
+ถ้าจะปิดหรือรีสตาร์ต Windows ให้ปิด Bitcoin Core ตามข้อ 1 ก่อนเสมอ
 
-### 4.9 อัปเกรด Bitcoin Core
+### 4.9 Sync ผ่าน clearnet ชั่วคราว
+
+การ sync ตั้งแต่ศูนย์ผ่าน Tor ใช้เวลาหลายวัน ถ้าต้องการเร็วกว่า ให้ sync ผ่าน clearnet
+แล้วค่อยกลับเป็น Tor-only ระหว่างนั้น ISP และ peer จะเห็นว่า IP นี้รัน node
+
+1. ปิด Bitcoin Core ตามหัวข้อ 4.8 แล้วสำรอง config ใน PowerShell
+
+   ```powershell
+   Copy-Item '<Local Disk>\Bitcoin Node\bitcoin.conf' '<Local Disk>\Bitcoin Node\bitcoin.conf.tor'
+   ```
+
+2. ใน `bitcoin.conf` ลบบรรทัดตั้งแต่ `onlynet=onion` ถึง `natpmp=0` แล้วใส่ชุดนี้แทน
+
+   ```ini
+   blocksonly=1
+   listen=0
+   discover=0
+   natpmp=0
+   dns=1
+   dnsseed=1
+   ```
+
+3. เปิด Bitcoin Core ระหว่างนี้ **อย่าส่ง bitcoin** เพราะธุรกรรมจะผูกกับ IP ของคุณได้ และ
+   `blocksonly=1` ทำให้ `estimatesmartfee` ประมาณค่าธรรมเนียมได้ไม่แม่น
+4. เมื่อ sync ถึงปลาย chain ให้ปิด Bitcoin Core คืน config เดิม
+   แล้วเปิดใหม่และตรวจตามหัวข้อ 4.6 ว่ากลับเป็น `onion` อย่างเดียว
+
+   ```powershell
+   Copy-Item '<Local Disk>\Bitcoin Node\bitcoin.conf.tor' '<Local Disk>\Bitcoin Node\bitcoin.conf' -Force
+   ```
+
+### 4.10 อัปเกรด Bitcoin Core
 
 1. อ่าน release notes ของรุ่นใหม่ก่อน
-2. หยุด node ด้วย `sudo systemctl stop bitcoind`
-3. ทำตามหัวข้อ 4.3 โดยเปลี่ยน `V=` เป็นรุ่นใหม่
-4. เริ่ม node ด้วย `sudo systemctl start bitcoind` แล้วตรวจตามหัวข้อ 4.6
+2. ดาวน์โหลดและตรวจตามหัวข้อ 4.1 โดยเปลี่ยน `V=` และชื่อไฟล์เป็นรุ่นใหม่
+3. ปิด Bitcoin Core ตามหัวข้อ 4.8
+4. ติดตั้งตามหัวข้อ 4.2 ตัวติดตั้งจะเขียนทับรุ่นเดิม และข้อมูลใน
+   `<Local Disk>\Bitcoin Node` ยังอยู่
+5. เปิด Bitcoin Core แล้วตรวจตามหัวข้อ 4.6
 
-### 4.10 แก้ปัญหา
+### 4.11 แก้ปัญหา
 
-| อาการ                                                                | สาเหตุ                                                                    | วิธีแก้                                                               |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Mount แล้วขึ้น `Wsl/Service/AttachDisk/MountDisk/HCS/E_ACCESSDENIED` | VHDX มีเจ้าของเป็น `Administrators`                                       | ทำขั้นที่ 3 ของหัวข้อ 4.1 ตอนไฟล์ยังว่าง                              |
-| `bitcoind` เป็น `failed` หลังเข้า WSL                                | Mount ไม่สำเร็จ เช่น `<Local Disk>` ไม่อยู่ หรือปิด interop ใน `wsl.conf` | ดู `systemctl status btcnode-mount` และ `journalctl -u btcnode-mount` |
-| `connections` เป็น `0` ช่วงแรก                                       | Tor กำลังหา peer ซึ่งปกติใช้เวลาราว 1–3 นาที                              | ถ้านานกว่านั้นให้ตรวจ Tor ตามหัวข้อ 3.3                               |
-| `headers` เป็น `0` แต่ log ขึ้น `Pre-synchronizing blockheaders`     | เป็นขั้น pre-sync ซึ่งปกติ และจะเริ่มนับใหม่ถ้า restart ระหว่างทาง        | รอจนขึ้น `Synchronizing blockheaders`                                 |
-| Node หยุดเองหลังปิด terminal                                         | WSL ดับเมื่อไม่มี session เหลือ                                           | เปิด terminal ค้างไว้ตามหัวข้อ 4.8                                    |
-| `wsl --unmount` หรือ mount ไม่ได้เพราะไฟล์ถูกใช้อยู่                 | Windows mount VHDX อยู่จากการดับเบิลคลิก                                  | Eject ไดรฟ์นั้นใน File Explorer ก่อน                                  |
+| อาการ                                                              | สาเหตุ                                                                  | วิธีแก้                                                                                 |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Peer เป็น `0` นานเกิน 3 นาที                                       | WSL ไม่ได้เปิดอยู่ หรือ Tor ไม่ทำงาน                                    | เปิด Ubuntu ค้างไว้ แล้วตรวจตามข้อ 1 ของหัวข้อ 4.5 และหัวข้อ 3.3                        |
+| `bitcoin-cli` ขึ้น `Could not locate RPC credentials` หลังเปิดใหม่ | Node ยังสร้างไฟล์ `.cookie` ไม่เสร็จ                                    | รอสักครู่แล้วรันใหม่ หรือใส่ `-rpcwait` ไว้หน้าคำสั่ง                                   |
+| `error: server returned HTTP error 403`                            | คำสั่งนั้นไม่อยู่ใน `rpcwhitelist` ของ user ที่ใช้                      | เพิ่มคำสั่งลงในบรรทัดเดิมของ user นั้นตามหัวข้อ 4.4                                     |
+| `headers` เป็น `0` แต่ log ขึ้น `Pre-synchronizing blockheaders`   | เป็นขั้น pre-sync ซึ่งปกติ และจะเริ่มนับใหม่ถ้าเปิด node ใหม่ระหว่างทาง | รอจนขึ้น `Synchronizing blockheaders`                                                   |
+| กด X แล้ว node ยังทำงาน                                            | ตั้ง Minimize on close ไว้ หน้าต่างจึงแค่ย่อลง tray                     | ปิดจากเมนู File → Exit ตามหัวข้อ 4.8                                                    |
+| Space ขึ้น `CONNECT_TIMEOUT 127.0.0.1:5432`                        | WSL Relay รับ connection ไม่ได้ ตามที่อธิบายไว้ต้นหัวข้อ 4              | ดูว่า node ไม่ได้รันใน WSL และใน Ubuntu ดู `sudo dmesg \| grep -c 'allocation failure'` |
