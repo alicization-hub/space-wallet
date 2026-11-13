@@ -71,7 +71,52 @@ export async function requireSyncedNode(rpcClient: RPCClient) {
   }
 }
 
-export async function chooseAccount() {
+/**
+ * Asks which active wallet to use. Nothing secret is selected: the caller reads what it needs by the
+ * ID.
+ */
+export async function chooseWallet() {
+  const wallets = await db
+    .select({
+      id: schema.wallets.id,
+      slug: schema.wallets.slug,
+      name: schema.wallets.name
+    })
+    .from(schema.wallets)
+    .where(eq(schema.wallets.isActive, true))
+    .orderBy(asc(schema.wallets.createdAt))
+
+  if (wallets.length === 0) {
+    throw new Error("No wallet yet. Create one with: bun tests/wallet.spec.ts create")
+  }
+
+  console.table(
+    toChoices(
+      wallets.map(({ slug, name }) => ({
+        Slug: toPrintable(slug),
+        Name: toPrintable(name)
+      }))
+    )
+  )
+
+  const choice = await ask(
+    { label: "Wallet", description: "Type the number of the wallet." },
+    choiceValidator(wallets.length)
+  )
+
+  return wallets[choice - 1]
+}
+
+/**
+ * Asks which active account to use.
+ *
+ * @param options.walletId - Only that wallet's accounts are offered
+ * @param options.description - What the account is for, under the question
+ */
+export async function chooseAccount({
+  walletId,
+  description = "Type the number of the account."
+}: { walletId?: string; description?: string } = {}) {
   const accounts = await db
     .select({
       id: schema.accounts.id,
@@ -79,11 +124,18 @@ export async function chooseAccount() {
       slug: schema.wallets.slug,
       label: schema.accounts.label,
       purpose: schema.accounts.purpose,
-      index: schema.accounts.index
+      index: schema.accounts.index,
+      startedAt: schema.accounts.startedAt
     })
     .from(schema.accounts)
     .innerJoin(schema.wallets, eq(schema.wallets.id, schema.accounts.walletId))
-    .where(and(eq(schema.accounts.isActive, true), eq(schema.wallets.isActive, true)))
+    .where(
+      and(
+        eq(schema.accounts.isActive, true),
+        eq(schema.wallets.isActive, true),
+        walletId === undefined ? undefined : eq(schema.accounts.walletId, walletId)
+      )
+    )
     .orderBy(
       asc(schema.wallets.createdAt),
       asc(schema.accounts.purpose),
@@ -104,7 +156,7 @@ export async function chooseAccount() {
   )
 
   const choice = await ask(
-    { label: "Account", description: "Type the number of the account to send from." },
+    { label: "Account", description },
     choiceValidator(accounts.length)
   )
 

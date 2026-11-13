@@ -68,7 +68,7 @@ async function readAddressRows(account: TransferAccount, coins: Unspent.List[]) 
 
   if (!change) {
     throw new Error(
-      `No unused change address left. Run: bun tests/wallet.spec.ts addresses --wallet ${toPrintable(account.slug)}`
+      `No unused change address left. Run: bun tests/wallet.spec.ts addresses`
     )
   }
 
@@ -125,7 +125,7 @@ function toInput(
   const row = rows.find(({ address }) => address === coin.address)
   if (!row) {
     throw new Error(
-      `The coin ${toPrintable(coin.txid)}:${coin.vout} is on an address this wallet hasn't generated yet. Run: bun tests/wallet.spec.ts addresses --wallet ${toPrintable(account.slug)}`
+      `The coin ${toPrintable(coin.txid)}:${coin.vout} is on an address this wallet hasn't generated yet. Run: bun tests/wallet.spec.ts addresses`
     )
   }
 

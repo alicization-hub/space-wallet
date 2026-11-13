@@ -29,8 +29,7 @@ export const optionsValidator = z.object({
   "started-at": z.iso
     .date()
     .transform((value) => new Date(value))
-    .optional(),
-  "wallet": z.string().optional()
+    .optional()
 })
 
 export type OptionsValidator = z.infer<typeof optionsValidator>

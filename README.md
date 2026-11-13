@@ -121,7 +121,7 @@ never arguments.
 ```bash
 bun tests/wallet.spec.ts create --name "My Wallet"         # generate a new seed
 bun tests/wallet.spec.ts recover --name "Old Wallet"       # from an existing seed
-bun tests/wallet.spec.ts addresses --wallet my-wallet      # generate more addresses
+bun tests/wallet.spec.ts addresses                         # generate more addresses
 bun tests/wallet.spec.ts load                              # load the node's wallets
 bun tests/wallet.spec.ts list                              # show the wallets
 bun tests/wallet.spec.ts balance                           # show and save an account's balance

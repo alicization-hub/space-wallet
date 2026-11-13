@@ -20,8 +20,8 @@ Usage: bun tests/wallet.spec.ts <command> [options]
   recover   --name <name> [--started-at YYYY-MM-DD] [--account <n>]
             Sets up a wallet from an existing seed. Without --started-at it rescans the whole chain.
 
-  addresses --wallet <name> [--account <n>]
-            Generates the next batch of addresses for a wallet's accounts.
+  addresses Asks for a wallet and one of its accounts, and generates the account's next batch of
+            addresses.
 
   load      Loads the node's wallets, and keeps them loaded across restarts.
 
@@ -45,8 +45,7 @@ async function main() {
       "name": { type: "string" },
       "words": { type: "string" },
       "account": { type: "string" },
-      "started-at": { type: "string" },
-      "wallet": { type: "string" }
+      "started-at": { type: "string" }
     }
   })
 

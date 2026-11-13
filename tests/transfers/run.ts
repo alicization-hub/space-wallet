@@ -20,7 +20,9 @@ export async function runTransfer() {
   const rpcClient = new RPCClient()
   await requireSyncedNode(rpcClient)
 
-  const account = await chooseAccount()
+  const account = await chooseAccount({
+    description: "Type the number of the account to send from."
+  })
   await rpcClient.setWallet(account.id)
   await confirmPending(rpcClient)
 

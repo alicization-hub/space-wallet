@@ -8,28 +8,30 @@ import { logger } from "@/libs/logger"
 import { verifyPassword } from "@/libs/password"
 import { passphraseInputValidator } from "@/libs/validator.zod"
 
-import { commandInput } from "../cmd.spec"
+import { commandInput, toPrintable } from "../cmd.spec"
+import { chooseAccount, chooseWallet } from "../transfers/ask"
 import {
   createAddressRows,
   createSeedPlan,
   readNextIndex,
-  watchAddresses,
-  type OptionsValidator
+  watchAddresses
 } from "./shared"
 
 /**
- * Generates the next batch of addresses for a wallet's accounts. Run it when the app says no unused
- * address is left.
+ * Generates the next batch of addresses for one account. Run it when the app says no unused address
+ * is left.
  */
-export async function extendAddresses(options: OptionsValidator) {
-  if (!options.wallet) throw new Error("--wallet is required.")
+export async function extendAddresses() {
+  const { id: walletId } = await chooseWallet()
+  const account = await chooseAccount({
+    walletId,
+    description: "Type the number of the account that needs more addresses."
+  })
 
   const [wallet] = await db
-    .select()
+    .select({ bio: schema.wallets.bio, passkey: schema.wallets.passkey })
     .from(schema.wallets)
-    .where(eq(schema.wallets.slug, options.wallet))
-
-  if (!wallet) throw new Error(`No wallet with the name "${options.wallet}".`)
+    .where(eq(schema.wallets.id, walletId))
 
   const passphrase = passphraseInputValidator.parse(
     await commandInput({
@@ -43,22 +45,9 @@ export async function extendAddresses(options: OptionsValidator) {
 
   const mnemonic = await Cipher.decrypt(wallet.bio, passphrase)
   const rootKey = await createRootKey(mnemonic, passphrase)
+  const plan = createSeedPlan(rootKey, account.purpose, account.index)
 
-  const accounts = await db
-    .select()
-    .from(schema.accounts)
-    .where(
-      and(
-        eq(schema.accounts.walletId, wallet.id),
-        options.account === undefined
-          ? undefined
-          : eq(schema.accounts.index, options.account)
-      )
-    )
-
-  for (const account of accounts) {
-    const plan = createSeedPlan(rootKey, account.purpose, account.index)
-
+  try {
     const [last] = await db
       .select({ index: schema.addresses.index })
       .from(schema.addresses)
@@ -80,8 +69,8 @@ export async function extendAddresses(options: OptionsValidator) {
       .insert(schema.addresses)
       .values(createAddressRows(account.id, plan, start, end))
 
-    logger(`✅ ${account.label}: addresses ${start} to ${end} are ready.`)
+    logger(`✅ ${toPrintable(account.label)}: addresses ${start} to ${end} are ready.`)
+  } finally {
+    rootKey.wipePrivateData()
   }
-
-  rootKey.wipePrivateData()
 }

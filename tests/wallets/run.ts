@@ -18,7 +18,7 @@ export async function runWallet(command: string, values: unknown) {
       return recoverWallet(options)
 
     case "addresses":
-      return extendAddresses(options)
+      return extendAddresses()
 
     case "load":
       return loadWallets()
